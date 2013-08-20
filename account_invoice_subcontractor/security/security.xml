@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  account_invoice_subcontractor for OpenERP
+  Copyright (C) 2013-TODAY Akretion <http://www.akretion.com>.
+  The licence is in the file __openerp__.py
+-->
+
+<openerp>
+    <data>
+
+        <record model="res.groups" id="group_have_subcontractor">
+            <field name="name">Have Subcontractor</field>
+        </record>
+
+        <record model="res.groups" id="group_is_subcontractor">
+            <field name="name">Is Subcontractor</field>
+        </record>
+    
+    </data>
+</openerp>
+

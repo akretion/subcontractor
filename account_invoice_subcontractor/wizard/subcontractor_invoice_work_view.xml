@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  account_invoice_subcontractor for OpenERP
+  Copyright (C) 2013-TODAY Akretion <http://www.akretion.com>.
+  The licence is in the file __openerp__.py
+-->
+
+<openerp>
+    <data>
+    
+
+        <!-- VIEW FOR THE OBJECT : subcontractor_invoice_work -->
+        <record id="view_subcontract_work_form" model="ir.ui.view">
+            <field name="name">subcontractor.invoice.work.form</field>
+            <field name="model">subcontractor.invoice.work</field>
+            <field name="priority" eval="8"/>
+            <field name="arch" type="xml">
+                <form string="Generate Invoice" version="7.0">
+                    <separator string="Generate Invoice"/>
+                    <group>
+                        <field name="product_id"/>
+                    </group>
+                    <footer>
+                        <button name="generate_invoice" string="Generate Invoice" type="object" class="oe_highlight"/>
+                        or
+                        <button string="Cancel" class="oe_link" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        
+        <record model="ir.actions.act_window" id="action_subcontract_work_view">
+            <field name="name">Generate Invoice</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">subcontractor.invoice.work</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">form</field>
+            <field name="domain">[]</field>
+            <field name="context">{}</field>
+            <field name="target">new</field>
+        </record>
+        
+        <record model="ir.values" id="wizard_subcontract_work">
+            <field name="name">Generate Invoice</field>
+            <field name="object" eval="1"/>
+            <field name="key">action</field>
+            <field name="key2">client_action_multi</field>
+            <field name="model">subcontractor.work</field>
+            <field name="value" eval="'ir.actions.act_window,' + str(ref('action_subcontract_work_view'))" />
+        </record>
+                
+    </data>
+</openerp>

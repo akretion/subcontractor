@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_subcontractor_work_edit,access_subcontractor_work_edit,model_subcontractor_work,account_invoice_subcontractor.group_have_subcontractor,1,1,1,1
+access_subcontractor_invoice_read,access_subcontractor_invoice_read,model_subcontractor_work,account_invoice_subcontractor.group_is_subcontractor,1,0,0,0

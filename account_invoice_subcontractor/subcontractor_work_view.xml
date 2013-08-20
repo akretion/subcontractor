@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  account_invoice_subcontractor for OpenERP
+  Copyright (C) 2013-TODAY Akretion <http://www.akretion.com>.
+  The licence is in the file __openerp__.py
+-->
+
+<openerp>
+    <data>
+
+        <!-- VIEW FOR THE OBJECT : subcontractor_work -->
+        <record id="view_subcontractor_work_view_form" model="ir.ui.view">
+            <field name="model">subcontractor.work</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="subcontractor_work">
+                    <field name="name"/>
+                    <field name="employee_id"/>
+                    <field name="quantity"/>
+                    <field name="sale_price_unit"/>
+                    <field name="cost_price_unit"/>
+                    <field name="state"/>
+                    <field name="subcontractor_state"/>
+                    <field name="supplier_invoice_line_id"/>
+                    <field name="subcontractor_invoice_line_id"/>
+                    <field name="customer_id"/>
+                    <field name="subcontract_company_id"/>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_subcontractor_work_view_tree" model="ir.ui.view">
+            <field name="model">subcontractor.work</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <tree string="subcontractor_work" editable="bottom">
+                    <field name="name"/>
+                    <field name="employee_id"/>
+                    <field name="quantity"/>
+                    <field name="sale_price_unit"/>
+                    <field name="cost_price_unit"/>
+                    <field name="state"/>
+                    <field name="subcontractor_state"/>
+                    <field name="supplier_invoice_line_id"/>
+                    <field name="subcontractor_invoice_line_id"/>
+                    <field name="customer_id"/>
+                    <field name="subcontract_company_id"/>
+               </tree>
+            </field>
+        </record>
+
+        <record id="action_subcontractor_work" model="ir.actions.act_window">
+            <field name="name">Subcontractor Work</field>
+            <field name="res_model">subcontractor.work</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form,calendar,graph</field>
+        </record>
+        
+        <menuitem action="action_subcontractor_work"
+            id="menu_action_subcontractor_work"
+            parent="account.menu_finance_receivables"
+            sequence="100"/>
+
+
+    </data>
+</openerp>
