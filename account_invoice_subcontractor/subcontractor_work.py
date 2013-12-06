@@ -48,6 +48,29 @@ class subcontractor_work(orm.Model):
                 result[work.id]['subcontractor_state'] = work.supplier_invoice_line_id.invoice_id.state
         return result
 
+    def _get_total_price(self, cr, uid, ids, fields, args, context=None):
+        result = {}
+        for work in self.browse(cr, uid, ids, context=context):
+            result[work.id] = {
+                 'cost_price': work.quantity * work.cost_price_unit,
+                 'sale_price': work.quantity * work.sale_price_unit,
+                 }
+        return result
+
+    def _get_work_from_sup_invoice(self, cr, uid, ids, context=None):
+        work_obj = self.pool['subcontractor.work']
+        work_ids = work_obj.search(cr, uid,
+                                   [('supplier_invoice_line_id.invoice_id', 'in', ids)],
+                                   context=context)
+        return work_ids
+
+    def _get_work_from_invoice(self, cr, uid, ids, context=None):
+        work_obj = self.pool['subcontractor.work']
+        work_ids = work_obj.search(cr, uid,
+                                   [('invoice_line_id.invoice_id', 'in', ids)],
+                                   context=context)
+        return work_ids
+
     _columns = {
         'name': fields.related('invoice_line_id', 'name',
                                     type='text',
@@ -56,10 +79,12 @@ class subcontractor_work(orm.Model):
 
         'employee_id':fields.many2one('hr.employee', 'Employee',
                                     required=True),
-
+        
         'invoice_line_id':fields.many2one('account.invoice.line', 'Invoice Line',
                                     required=True),
-
+        'invoice_id': fields.related('invoice_line_id', 'invoice_id',
+                            type='many2one', relation='account.invoice',
+                            string='Invoice'),
         'supplier_invoice_line_id':fields.many2one('account.invoice.line',
                                             'Supplier Invoice Line'),
 
@@ -69,8 +94,28 @@ class subcontractor_work(orm.Model):
         'sale_price_unit': fields.float('Sale Unit Price',
                                     digits_compute= dp.get_precision('Account')),
 
-        'cost_price_unit': fields.float('Cost Unit Price', readonly=True,
+        'cost_price_unit': fields.float('Cost Unit Price', #readonly=True,
                                     digits_compute= dp.get_precision('Account')),
+        'cost_price': fields.function(_get_total_price,
+                            string='Total Cost Price',
+                            type='float',
+                            digits_compute= dp.get_precision('Account'),
+                            store={
+                                'subcontractor.work': (lambda self, cr, uid, ids, c={}: ids, 
+                                                      ['cost_price_unit', 'quantity'], 20),
+                                },
+                            multi='price',
+                            ),
+        'sale_price': fields.function(_get_total_price,
+                            string='Total Sale Price',
+                            type='float',
+                            digits_compute= dp.get_precision('Account'),
+                            store={
+                                'subcontractor.work': (lambda self, cr, uid, ids, c={}: ids, 
+                                                      ['sale_price_unit', 'quantity'], 20),
+                                },
+                            multi='price',
+                            ),
 
         'company_id':fields.related('invoice_line_id', 'company_id',
                                     type='many2one',
@@ -87,24 +132,41 @@ class subcontractor_work(orm.Model):
         'subcontractor_invoice_line_id':fields.many2one('account.invoice.line',
                                             'Subcontractor Invoice Line'),
 
-        'subcontract_company_id': fields.related('employee_id', 'subcontractor_company_id',
+        'subcontractor_company_id': fields.related('employee_id', 'subcontractor_company_id',
                                     type='many2one',
                                     relation='res.company',
                                     readonly=True,
+                                    store=True, 
                                     string='Subcontractor Company'),
-
-        #TODO add store and invalidation function
         'subcontractor_state': fields.function(_get_state,
                                     string='Subcontractor State',
                                     type='selection',
                                     selection = INVOICE_STATE,
-                                    multi='state'),
-
+                                    multi='state',
+                                    store={
+                                        'subcontractor.work':
+                                            (lambda self, cr, uid, ids, c={}:
+                                                ids,
+                                                ['supplier_invoice_line_id'],
+                                                10),
+                                        'account.invoice':
+                                            (_get_work_from_sup_invoice, ['state'], 20)
+                                        }),
         'state': fields.function(_get_state,
                                     string='State',
                                     type='selection',
                                     selection = INVOICE_STATE,
-                                    multi='state'),
+                                    multi='state',
+                                    store={
+                                        'subcontractor.work':
+                                            (lambda self, cr, uid, ids, c={}:
+                                                ids,
+                                                ['invoice_line_id'],
+                                                10),
+                                        'account.invoice':
+                                            (_get_work_from_invoice, ['state'], 20)
+                                        }),
+        'uos_id': fields.many2one('product.uom', 'Product UOS'),
     }
 
     _defaults = {
@@ -112,6 +174,8 @@ class subcontractor_work(orm.Model):
         'subcontractor_state': 'draft',
     }
 
+    #TODO FIXME replace me by a function field
+    #TODO ADD the posibility to have "special product" without rate (frais de refacuration)
     def _update_cost_price(self, cr, uid, vals, context=None):
         #TODO take me from some configuration (on partner or company)
         if vals.get('sale_price_unit'):

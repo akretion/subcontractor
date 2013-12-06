@@ -53,7 +53,7 @@ class subcontractor_invoice_work(orm.TransientModel):
         onchange_vals = inv_obj.onchange_partner_id(cr, uid, False, 'out_invoice',
                                                  works[0].customer_id.id)
         invoice_vals = onchange_vals['value']
-        journal_ids = journal_obj.search(cr, uid, [('company_id','=', works[0].subcontract_company_id.id),
+        journal_ids = journal_obj.search(cr, uid, [('company_id','=', works[0].subcontractor_company_id.id),
                                                    ('type', '=', 'sale')],
                                          context=context)
         invoice_vals.update({
@@ -61,9 +61,9 @@ class subcontractor_invoice_work(orm.TransientModel):
                         'partner_id': works[0].customer_id.id,
                         'journal_id': journal_ids and journal_ids[0] or False,
                         'invoice_line': [],
+                        'currency_id': works[0].subcontractor_company_id.currency_id.id,
         })
         return invoice_vals
-
 
     def _prepare_invoice_line(self, cr, uid, invoice_vals, work, wizard, context=None):
         invoice_line_obj = self.pool['account.invoice.line']
@@ -82,6 +82,7 @@ class subcontractor_invoice_work(orm.TransientModel):
         line_vals.update({
                 'price_unit': work.cost_price_unit,
                 'quantity': work.quantity,
+                'uos_id': work.uos_id.id,
                 'product_id': wizard.product_id.id,
                 'invoice_line_tax_id': [(6, 0, onchange_vals['value']['invoice_line_tax_id'])],
                 'subcontractor_work_invoiced_id': work.id,

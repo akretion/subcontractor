@@ -21,7 +21,7 @@
 ###############################################################################
 
 from openerp.osv import orm, fields
-
+from openerp import SUPERUSER_ID
 
 class account_invoice_line(orm.Model):
     _inherit = "account.invoice.line"
@@ -45,10 +45,27 @@ class account_invoice_line(orm.Model):
                         [line_key, '=', line_id]],
                         context=context)
         if work_id:
-            work_obj.write(cr, uid, value, {line_key: False}, context=context)
+            work_obj.write(cr, SUPERUSER_ID, value, {line_key: False}, context=context)
         if value:
-            work_obj.write(cr, uid, value, {line_key: line_id}, context=context)
+            work_obj.write(cr, SUPERUSER_ID, value, {line_key: line_id}, context=context)
         return True
+
+    def _is_work_amount_invalid(self, cr, uid, ids, field_name, args, context=None):
+        result = {}
+        for line in self.browse(cr, uid, ids, context=context):
+            if line.invoice_id.type in ['out_invoice', 'in_invoice']:
+                if line.no_subcontractor_work:
+                    result[line.id] = False
+                else:
+                    if line.invoice_id.type == 'in_invoice':
+                        subtotal = line.supplier_work_invoiced_id.cost_price or 0
+                    else:
+                        subtotal = sum([work.sale_price for work in line.subcontractor_work_ids])
+                    result[line.id] = abs(subtotal - line.price_subtotal) > 0.01
+            else:
+                result[line.id] = False
+        return result
+
 
     _columns = {
         'subcontractor_work_ids': fields.one2many('subcontractor.work',
@@ -63,8 +80,25 @@ class account_invoice_line(orm.Model):
                             string='Invoiced Work',
                             type='many2one',
                             relation='subcontractor.work'),
+        'invalid_work_amount': fields.function(_is_work_amount_invalid,
+                            string='Work Amount Invalid',
+                            type='boolean'),
+        'no_subcontractor_work': fields.boolean('No Subcontractor work',
+            help=('This analytic account is incompatible with the workitem'
+                'If you tick this box the workitem will'
+                'be invisible on the invoice')
+            ), 
     }
 
+    def on_analytic_account_change(self, cr, uid, ids, account_analytic_id, context=None): 
+        analytic_obj = self.pool['account.analytic.account']
+        no_subcontractor_work = False
+        if account_analytic_id:
+            account = analytic_obj.browse(cr, uid, account_analytic_id, context=context)
+            no_subcontractor_work = account.no_subcontractor_work
+        return {'value': {'no_subcontractor_work': no_subcontractor_work}}
+        
+        
 class account_invoice(orm.Model):
     _inherit = "account.invoice"
 
@@ -76,10 +110,20 @@ class account_invoice(orm.Model):
         #TODO
         return result
 
+    def _is_work_amount_valid(self, cr, uid, ids, field_name, args, context=None):
+        result = {}
+        for invoice in self.browse(cr, uid, ids, context=context):
+            result[invoice.id] = any([line.invalid_work_amount for line in invoice.invoice_line])
+        return result
+
+
     _columns = {
         'amount_to_pay': fields.function(_get_amount_to_pay,
                             type='float',
                             string='Amount To Pay'),
+        'invalid_work_amount': fields.function(_is_work_amount_valid,
+                            string='Work Amount Invalid',
+                            type='boolean'),
     }
 
 
@@ -88,3 +132,15 @@ class account_invoice(orm.Model):
                                                     line, *args, **kwargs)
         res['supplier_work_invoiced_id'] = line.subcontractor_work_invoiced_id.id
         return res
+
+class account_analytic_account(orm.Model):
+    _inherit = 'account.analytic.account'
+    
+    _columns = {
+        'no_subcontractor_work': fields.boolean('No Subcontractor work',
+            help=('This analytic account is incompatible with the '
+                'workitem. If you tick this box the workitem '
+                'will be invisible on the invoice')
+            ), 
+    }
+

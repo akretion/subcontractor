@@ -9,42 +9,62 @@
     <data>
 
         <!-- VIEW FOR THE OBJECT : subcontractor_work -->
+        <record id="view_subcontractor_work_view_search" model="ir.ui.view">
+            <field name="model">subcontractor.work</field>
+            <field name="arch" type="xml">
+                <search string="Subcontractor work">
+                    <field name="invoice_id"/>
+                    <field name="employee_id"/>
+                    <separator/>
+                    <filter string="To invoice" name="to_invoice"
+                            domain="[('subcontractor_invoice_line_id','=',False)]"/>
+                    <filter string="To pay" name="to_pay"
+                            domain="[('state','=', 'paid'),('subcontractor_state', '!=', 'paid')]"/>
+                </search>
+            </field>
+        </record>
+
         <record id="view_subcontractor_work_view_form" model="ir.ui.view">
             <field name="model">subcontractor.work</field>
-            <field name="type">form</field>
             <field name="arch" type="xml">
-                <form string="subcontractor_work">
+                <form string="Subcontractor work">
+                    <field name="invoice_id"/>
                     <field name="name"/>
                     <field name="employee_id"/>
                     <field name="quantity"/>
+                    <field name="uos_id"/>
                     <field name="sale_price_unit"/>
-                    <field name="cost_price_unit"/>
+                    <field name="sale_price"/>
+                    <field name="cost_price"/>
                     <field name="state"/>
                     <field name="subcontractor_state"/>
                     <field name="supplier_invoice_line_id"/>
                     <field name="subcontractor_invoice_line_id"/>
                     <field name="customer_id"/>
-                    <field name="subcontract_company_id"/>
+                    <field name="subcontractor_company_id"/>
                 </form>
             </field>
         </record>
 
         <record id="view_subcontractor_work_view_tree" model="ir.ui.view">
             <field name="model">subcontractor.work</field>
-            <field name="type">tree</field>
             <field name="arch" type="xml">
-                <tree string="subcontractor_work" editable="bottom">
+                <tree string="Subcontractor work" editable="bottom">
+                    <field name="invoice_id"/>
                     <field name="name"/>
                     <field name="employee_id"/>
                     <field name="quantity"/>
-                    <field name="sale_price_unit"/>
+                    <field name="uos_id"/>
                     <field name="cost_price_unit"/>
+                    <field name="sale_price_unit"/>
+                    <field name="sale_price" sum="Total Sale Amount"/>
+                    <field name="cost_price" sum="Total Cost Amount"/>
                     <field name="state"/>
                     <field name="subcontractor_state"/>
                     <field name="supplier_invoice_line_id"/>
                     <field name="subcontractor_invoice_line_id"/>
                     <field name="customer_id"/>
-                    <field name="subcontract_company_id"/>
+                    <field name="subcontractor_company_id"/>
                </tree>
             </field>
         </record>
@@ -54,8 +74,9 @@
             <field name="res_model">subcontractor.work</field>
             <field name="view_type">form</field>
             <field name="view_mode">tree,form,calendar,graph</field>
+            <field name="context">{"search_default_to_invoice":1}</field>
         </record>
-        
+
         <menuitem action="action_subcontractor_work"
             id="menu_action_subcontractor_work"
             parent="account.menu_finance_receivables"

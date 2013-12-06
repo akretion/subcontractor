@@ -14,9 +14,24 @@
             <field name="type">form</field>
             <field name="inherit_id" ref="account.view_invoice_line_form" />
             <field name="arch" type="xml">
+                <xpath expr="//field[@name='account_analytic_id']" position="attributes">
+                    <attribute name="on_change">on_analytic_account_change(account_analytic_id, context)</attribute>
+                </xpath>
+ 
                 <xpath expr="//field[@name='name']" position="after">
                     <field name="price_subtotal" invisible="True"/>
-                    <field name="subcontractor_work_ids" context="{'default_sale_price_unit': price_subtotal/quantity, 'default_quantity': quantity}" groups="account_invoice_subcontractor.group_have_subcontractor"/>
+                    <field name="no_subcontractor_work" invisible="True"/>
+                    <field name="subcontractor_work_ids" context="{'default_sale_price_unit': price_subtotal/quantity, 'default_quantity': quantity, 'default_uos_id': uos_id}" groups="account_invoice_subcontractor.group_have_subcontractor" attrs="{'invisible': [('no_subcontractor_work','=', True)]}"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_account_invoice_line_tree" model="ir.ui.view">
+            <field name="model">account.invoice.line</field>
+            <field name="inherit_id" ref="account.view_invoice_line_tree" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='price_subtotal']" position="after">
+                    <field name="invalid_work_amount"/>
                 </xpath>
             </field>
         </record>
@@ -29,6 +44,7 @@
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='amount_total']" position="after">
                     <field name="amount_to_pay"/>
+                    <field name="invalid_work_amount"/>
                 </xpath>
             </field>
         </record>
@@ -43,6 +59,17 @@
                 </xpath>
             </field>
         </record>
+        
 
+         <record id="view_account_analytic_account_form" model="ir.ui.view">
+             <field name="model">account.analytic.account</field>
+             <field name="inherit_id" ref="analytic.view_account_analytic_account_form" />
+             <field name="arch" type="xml">
+                 <field name="manager_id" position="after">
+                     <field name="no_subcontractor_work"/>
+                 </field>
+             </field>
+         </record>
+ 
     </data>
 </openerp>
