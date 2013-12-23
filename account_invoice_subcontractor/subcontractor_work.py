@@ -81,7 +81,7 @@ class subcontractor_work(orm.Model):
                                     required=True),
         
         'invoice_line_id':fields.many2one('account.invoice.line', 'Invoice Line',
-                                    required=True),
+                                    required=True, ondelete='cascade'),
         'invoice_id': fields.related('invoice_line_id', 'invoice_id',
                             type='many2one', relation='account.invoice',
                             string='Invoice'),
