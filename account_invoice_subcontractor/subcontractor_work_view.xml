@@ -53,7 +53,7 @@
                     <field name="invoice_id"/>
                     <field name="name"/>
                     <field name="employee_id"/>
-                    <field name="quantity"/>
+                    <field name="quantity" sum="Total Qty"/>
                     <field name="uos_id"/>
                     <field name="cost_price_unit"/>
                     <field name="sale_price_unit"/>
