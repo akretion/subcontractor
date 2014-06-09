@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ###############################################################################
 #
-#   Module for OpenERP 
+#   Module for OpenERP
 #   Copyright (C) 2013 Akretion (http://www.akretion.com).
 #   @author Sébastien BEAU <sebastien.beau@akretion.com>
 #
@@ -20,41 +20,50 @@
 #
 ###############################################################################
 
-from openerp.osv import fields, orm
+from openerp.osv import orm
 
 
 class HrAnalyticTimesheet(orm.Model):
     _inherit = "hr.analytic.timesheet"
 
-    def _prepare_subcontractor_vals(self, cr, uid, line, inv_line_vals, context=None):
+    def _prepare_subcontractor_vals(self, cr, uid, line, inv_line_vals,
+                                    context=None):
         uom_id, qty = self._get_qty2invoice(cr, uid, line, context=context)
         return {
-            'employee_id': line.user_id.employee_ids[0].id, #TODO FIXME do not take the first one
+            #TODO FIXME do not take the first employee
+            'employee_id': line.user_id.employee_ids[0].id,
             'quantity': qty,
             'uos_id': uom_id,
             'sale_price_unit': inv_line_vals['price_unit'],
         }
 
-    def _prepare_invoice_line_vals(self, cr, uid, line, account, invoice_vals, context=None):
-        inv_line_vals = super(HrAnalyticTimesheet, self).\
-                _prepare_invoice_line_vals(cr, uid, line, account,
-                    invoice_vals, context=context)
-        subcontractor_vals = self._prepare_subcontractor_vals(cr, uid, line, inv_line_vals, context=context)
+    def _prepare_invoice_line_vals(self, cr, uid, line, account, invoice_vals,
+                                   context=None):
+        inv_line_vals = \
+            super(HrAnalyticTimesheet, self)._prepare_invoice_line_vals(
+                cr, uid, line, account, invoice_vals, context=context)
+        subcontractor_vals = self._prepare_subcontractor_vals(
+            cr, uid, line, inv_line_vals, context=context)
         inv_line_vals['subcontractor_work_ids'] = [(0, 0, subcontractor_vals)]
         return inv_line_vals
-    
-    def _update_invoice_line_vals(self, cr, uid, line, inv_line_vals, context=None):
-        inv_line_vals = super(HrAnalyticTimesheet, self).\
-                _update_invoice_line_vals(cr, uid, line,
-                    inv_line_vals, context=context)
-        employee_id = line.user_id.employee_ids[0].id #TODO FIXME do not take the first one
-        
+
+    def _update_invoice_line_vals(self, cr, uid, line, inv_line_vals,
+                                  context=None):
+        inv_line_vals = \
+            super(HrAnalyticTimesheet, self)._update_invoice_line_vals(
+                cr, uid, line, inv_line_vals, context=context)
+        #TODO FIXME do not take the first employee
+        employee_id = line.user_id.employee_ids[0].id
+
         for subcontractor_work in inv_line_vals['subcontractor_work_ids']:
             if subcontractor_work[2]['employee_id'] == employee_id:
-                uom_id, qty = self._get_qty2invoice(cr, uid, line, context=context)
+                uom_id, qty = self._get_qty2invoice(
+                    cr, uid, line, context=context)
                 subcontractor_work[2]['quantity'] += qty
                 return inv_line_vals
-        
-        subcontractor_vals = self._prepare_subcontractor_vals(cr, uid, line, inv_line_vals, context=context)
-        inv_line_vals['subcontractor_work_ids'].append((0, 0, subcontractor_vals))
+
+        subcontractor_vals = self._prepare_subcontractor_vals(
+            cr, uid, line, inv_line_vals, context=context)
+        inv_line_vals['subcontractor_work_ids'].\
+            append((0, 0, subcontractor_vals))
         return inv_line_vals
