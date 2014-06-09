@@ -136,7 +136,12 @@ class subcontractor_work(orm.Model):
                                     type='many2one',
                                     relation='res.company',
                                     readonly=True,
-                                    store=True, 
+                                    store={
+                                        'subcontractor.work': (
+                                            lambda self, cr, uid, ids, c={}: ids,
+                                            ['employee_id'],
+                                            10),
+                                        },
                                     string='Subcontractor Company'),
         'subcontractor_state': fields.function(_get_state,
                                     string='Subcontractor State',
@@ -183,9 +188,22 @@ class subcontractor_work(orm.Model):
         return True
 
     def create(self, cr, uid, vals, context=None):
-        self._update_cost_price(cr, uid, vals, context=context)
-        return super(subcontractor_work, self).create(cr, uid, vals, context=context)
+        ctx = context.copy()
+        #Subcontractor work can be created from the account.invoice
+        #or the account.invoice.line are a o2m from the invoice
+        #and o2m inject a no_store_function=True in the context
+        #this broke all computed field on the subcontractor work
+        ctx['no_store_function'] = False
+        self._update_cost_price(cr, uid, vals, context=ctx)
+        res = super(subcontractor_work, self).create(cr, uid, vals, context=ctx)
+        return res
 
     def write(self, cr, uid, ids, vals, context=None):
-        self._update_cost_price(cr, uid, vals, context=context)
-        return super(subcontractor_work, self).write(cr, uid, ids, vals, context=context)
+        ctx = context.copy()
+        #Subcontractor work can be created from the account.invoice
+        #or the account.invoice.line are a o2m from the invoice
+        #and o2m inject a no_store_function=True in the context
+        #this broke all computed field on the subcontractor work
+        ctx['no_store_function'] = False
+        self._update_cost_price(cr, uid, vals, context=ctx)
+        return super(subcontractor_work, self).write(cr, uid, ids, vals, context=ctx)

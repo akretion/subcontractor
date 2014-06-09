@@ -17,7 +17,7 @@
                     <field name="employee_id"/>
                     <separator/>
                     <filter string="To invoice" name="to_invoice"
-                            domain="[('subcontractor_invoice_line_id','=',False)]"/>
+                            domain="[('subcontractor_invoice_line_id','=',False), ('state', 'not in', ['draft', 'cancel'])]"/>
                     <filter string="To pay" name="to_pay"
                             domain="[('state','=', 'paid'),('subcontractor_state', '!=', 'paid')]"/>
                 </search>

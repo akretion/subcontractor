@@ -28,15 +28,16 @@ class project_task(orm.Model):
     def _prepare_subcontractor_vals(self, cr, uid, task, inv_line_vals, context=None):
         uom_id, qty = self._get_qty2invoice(cr, uid, task, context=context)
         return {
-            'employee_id': task.user_id.employee_ids[0].id, #TODO FIXME do not take the first one
+            #TODO FIXME do not take the first employee
+            'employee_id': task.user_id.employee_ids[0].id,
             'quantity': qty,
             'uos_id': uom_id,
             'sale_price_unit': inv_line_vals['price_unit'],
         }
 
-    def _prepare_invoice_line_vals(self, cr, uid, task, context=None):
+    def _prepare_invoice_line_vals(self, cr, uid, task, invoice_vals, context=None):
         inv_line_vals = super(project_task, self).\
-            _prepare_invoice_line_vals(cr, uid, task, context=context)
+            _prepare_invoice_line_vals(cr, uid, task, invoice_vals, context=context)
         subcontractor_vals = self._prepare_subcontractor_vals(cr, uid, task,
             inv_line_vals, context=context)
         inv_line_vals['subcontractor_work_ids'] = [(0, 0, subcontractor_vals)]
