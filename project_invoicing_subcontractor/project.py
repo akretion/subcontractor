@@ -20,6 +20,24 @@
 #
 ###############################################################################
 
-import hr_timesheet
-import project
+from openerp.osv import fields, orm
 
+class project_task(orm.Model):
+    _inherit = 'project.task'
+    
+    def _prepare_subcontractor_vals(self, cr, uid, task, inv_line_vals, context=None):
+        uom_id, qty = self._get_qty2invoice(cr, uid, task, context=context)
+        return {
+            'employee_id': task.user_id.employee_ids[0].id, #TODO FIXME do not take the first one
+            'quantity': qty,
+            'uos_id': uom_id,
+            'sale_price_unit': inv_line_vals['price_unit'],
+        }
+
+    def _prepare_invoice_line_vals(self, cr, uid, task, context=None):
+        inv_line_vals = super(project_task, self).\
+            _prepare_invoice_line_vals(cr, uid, task, context=context)
+        subcontractor_vals = self._prepare_subcontractor_vals(cr, uid, task,
+            inv_line_vals, context=context)
+        inv_line_vals['subcontractor_work_ids'] = [(0, 0, subcontractor_vals)]
+        return inv_line_vals
