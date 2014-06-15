@@ -19,22 +19,37 @@
                 </xpath>
  
                 <xpath expr="//field[@name='name']" position="after">
-                    <field name="price_subtotal" invisible="True"/>
-                    <field name="no_subcontractor_work" invisible="True"/>
-                    <field name="subcontractor_work_ids" context="{'default_sale_price_unit': price_subtotal/quantity, 'default_quantity': quantity, 'default_uos_id': uos_id}" groups="account_invoice_subcontractor.group_have_subcontractor" attrs="{'invisible': [('no_subcontractor_work','=', True)]}"/>
+                    <!--<field name="price_subtotal" invisible="True"/>-->
+                    <group name="subcontractor information" string="Subcontractor Information">
+                    	<field name="no_subcontractor_work"/>
+                    	<field name="subcontractor_work_invoiced_id" groups="account_invoice_subcontractor.group_is_subcontractor"/>
+                    	<field name="subcontractor_work_ids" context="{'default_sale_price_unit': price_unit, 'default_quantity': quantity, 'default_uos_id': uos_id}" groups="account_invoice_subcontractor.group_have_subcontractor" attrs="{'invisible': [('no_subcontractor_work','=', True)]}"/>
+                    </group>
                 </xpath>
             </field>
         </record>
 
-        <record id="view_account_invoice_line_tree" model="ir.ui.view">
-            <field name="model">account.invoice.line</field>
-            <field name="inherit_id" ref="account.view_invoice_line_tree" />
+        <record id="view_invoice_form" model="ir.ui.view">
+            <field name="model">account.invoice</field>
+            <field name="inherit_id" ref="account.invoice_form" />
             <field name="arch" type="xml">
-                <xpath expr="//field[@name='price_subtotal']" position="after">
+                <xpath expr="//tree/field[@name='price_subtotal']" position="after">
                     <field name="invalid_work_amount"/>
                 </xpath>
             </field>
         </record>
+
+        <record id="invoice_supplier_form" model="ir.ui.view">
+            <field name="model">account.invoice</field>
+            <field name="inherit_id" ref="account.invoice_supplier_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//tree/field[@name='price_subtotal']" position="after">
+                    <field name="invalid_work_amount"/>
+                </xpath>
+            </field>
+        </record>
+
+
 
         <!-- VIEW FOR THE OBJECT : account_invoice -->
         <record id="view_account_invoice_tree" model="ir.ui.view">
@@ -43,7 +58,7 @@
             <field name="inherit_id" ref="account.invoice_tree" />
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='amount_total']" position="after">
-                    <field name="amount_to_pay"/>
+                    <field name="to_pay"/>
                     <field name="invalid_work_amount"/>
                 </xpath>
             </field>

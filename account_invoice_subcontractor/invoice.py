@@ -59,9 +59,19 @@ class account_invoice_line(orm.Model):
                 else:
                     if line.invoice_id.type == 'in_invoice':
                         subtotal = line.supplier_work_invoiced_id.cost_price or 0
+                        result[line.id] = abs(subtotal - line.price_subtotal) > 0.01
                     else:
-                        subtotal = sum([work.sale_price for work in line.subcontractor_work_ids])
-                    result[line.id] = abs(subtotal - line.price_subtotal) > 0.01
+                        #TODO FIXME
+                        if line.invoice_id.company_id.id != 1:
+                            if line.invoice_id.partner_id.id == 1:#this mean Akretion
+                                subtotal = line.subcontractor_work_invoiced_id.cost_price or 0
+                                result[line.id] = abs(subtotal - line.price_subtotal) > 0.01
+                            else:
+                                result[line.id]=False
+                        else:
+                            subtotal = sum([work.sale_price for work in line.subcontractor_work_ids])
+                            print subtotal, line.price_subtotal
+                            result[line.id] = abs(subtotal - line.price_subtotal) > 0.01
             else:
                 result[line.id] = False
         return result
@@ -102,12 +112,13 @@ class account_invoice_line(orm.Model):
 class account_invoice(orm.Model):
     _inherit = "account.invoice"
 
-
-    def _get_amount_to_pay(self, cr, uid, ids, field_name, args, context=None):
+    def _get_to_pay(self, cr, uid, ids, field_name, args, context=None):
         result = {}
         for invoice in self.browse(cr, uid, ids, context=context):
-            result[invoice.id] = 0
-        #TODO
+            if invoice.state == 'paid':
+                result[invoice.id] = False
+            else:
+                result[invoice.id] = all([line.supplier_work_invoiced_id.state == 'paid' for line in invoice.invoice_line])
         return result
 
     def _is_work_amount_valid(self, cr, uid, ids, field_name, args, context=None):
@@ -118,9 +129,9 @@ class account_invoice(orm.Model):
 
 
     _columns = {
-        'amount_to_pay': fields.function(_get_amount_to_pay,
-                            type='float',
-                            string='Amount To Pay'),
+        'to_pay': fields.function(_get_to_pay,
+                            type='boolean',
+                            string='To Paid'),
         'invalid_work_amount': fields.function(_is_work_amount_valid,
                             string='Work Amount Invalid',
                             type='boolean'),

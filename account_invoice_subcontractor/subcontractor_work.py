@@ -37,7 +37,6 @@ class subcontractor_work(orm.Model):
     _name = "subcontractor.work"
     _description = "subcontractor work"
 
-
     def _get_state(self, cr, uid, ids, fields, args, context=None):
         result = {}
         for work in self.browse(cr, SUPERUSER_ID, ids, context=context):
@@ -81,13 +80,15 @@ class subcontractor_work(orm.Model):
                                     required=True),
         
         'invoice_line_id':fields.many2one('account.invoice.line', 'Invoice Line',
-                                    required=True, ondelete='cascade'),
+                                    required=True, ondelete="cascade"),
         'invoice_id': fields.related('invoice_line_id', 'invoice_id',
                             type='many2one', relation='account.invoice',
                             string='Invoice'),
         'supplier_invoice_line_id':fields.many2one('account.invoice.line',
                                             'Supplier Invoice Line'),
-
+        'supplier_invoice_id': fields.related('supplier_invoice_line_id', 'invoice_id',
+                            type='many2one', relation='account.invoice',
+                            string='Supplier Invoice'),
         'quantity': fields.float('Quantity', 
                                     digits_compute= dp.get_precision('Product UoS')),
 
@@ -129,6 +130,14 @@ class subcontractor_work(orm.Model):
                                     readonly=True,
                                     string='Customer'),
 
+        'end_customer_id': fields.related('invoice_id', 'partner_id',
+                                    type='many2one',
+                                    relation='res.partner',
+                                    readonly=True,
+                                    string='Customer'),
+
+
+
         'subcontractor_invoice_line_id':fields.many2one('account.invoice.line',
                                             'Subcontractor Invoice Line'),
 
@@ -137,11 +146,12 @@ class subcontractor_work(orm.Model):
                                     relation='res.company',
                                     readonly=True,
                                     store={
-                                        'subcontractor.work': (
-                                            lambda self, cr, uid, ids, c={}: ids,
-                                            ['employee_id'],
-                                            10),
-                                        },
+                                        'subcontractor.work':
+                                            (lambda self, cr, uid, ids, c={}:
+                                                ids,
+                                                ['employee_id'],
+                                                10),
+                                         }, 
                                     string='Subcontractor Company'),
         'subcontractor_state': fields.function(_get_state,
                                     string='Subcontractor State',
@@ -176,7 +186,7 @@ class subcontractor_work(orm.Model):
 
     _defaults = {
         'state': 'draft',
-        'subcontractor_state': 'draft',
+#        'subcontractor_state': 'draft',
     }
 
     #TODO FIXME replace me by a function field
@@ -184,7 +194,13 @@ class subcontractor_work(orm.Model):
     def _update_cost_price(self, cr, uid, vals, context=None):
         #TODO take me from some configuration (on partner or company)
         if vals.get('sale_price_unit'):
-            vals['cost_price_unit'] = vals['sale_price_unit'] * 0.9
+            if False:#vals.get('product_id') == 15:
+                vals['cost_price_unit'] = vals['sale_price_unit']
+            else:
+                if vals['employee_id'] in [25, 15, 27]:
+                     vals['cost_price_unit'] = vals['sale_price_unit'] * 0.93
+                else:
+                     vals['cost_price_unit'] = vals['sale_price_unit'] * 0.9
         return True
 
     def create(self, cr, uid, vals, context=None):
@@ -208,5 +224,11 @@ class subcontractor_work(orm.Model):
         #and o2m inject a no_store_function=True in the context
         #this broke all computed field on the subcontractor work
         ctx['no_store_function'] = False
-        self._update_cost_price(cr, uid, vals, context=ctx)
-        return super(subcontractor_work, self).write(cr, uid, ids, vals, context=ctx)
+        if not isinstance(ids, (list, tuple)):
+            ids = [ids]
+        for work in self.browse(cr, uid, ids, context=context):
+            if not 'employee_id' in vals:
+                vals['employee_id'] = work.employee_id.id
+       	    self._update_cost_price(cr, uid, vals, context=context)
+            super(subcontractor_work, self).write(cr, uid, [work.id], vals, context=context)
+        return True

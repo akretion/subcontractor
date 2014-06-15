@@ -33,6 +33,11 @@ class subcontractor_invoice_work(orm.TransientModel):
         'product_id': fields.many2one('product.product', 'Product', domain=[('sale_ok', '=', True)]),
     }
 
+    #TODO FIXME
+    _defaults = {
+        'product_id': 5,
+    }
+
     def _check(self, cr, uid, works, context=None):
         partner_id = works[0].customer_id.id
         for work in works:
@@ -79,6 +84,7 @@ class subcontractor_invoice_work(orm.TransientModel):
                                currency_id=invoice_vals.get('currency_id'),
                                context=context)
         line_vals = onchange_vals['value']
+        work_read = work.read()[0]
         line_vals.update({
                 'price_unit': work.cost_price_unit,
                 'quantity': work.quantity,
@@ -86,7 +92,8 @@ class subcontractor_invoice_work(orm.TransientModel):
                 'product_id': wizard.product_id.id,
                 'invoice_line_tax_id': [(6, 0, onchange_vals['value']['invoice_line_tax_id'])],
                 'subcontractor_work_invoiced_id': work.id,
-                'name': work.name,
+                'name': "Client final : %s (%s)\n%s"%(work.end_customer_id.name, work_read['invoice_id'][1], work.name),
+                'no_subcontractor_work': True,
             })
         return line_vals
 

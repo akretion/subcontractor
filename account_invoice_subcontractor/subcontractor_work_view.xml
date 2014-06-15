@@ -28,7 +28,9 @@
             <field name="model">subcontractor.work</field>
             <field name="arch" type="xml">
                 <form string="Subcontractor work">
+                    <field name="end_customer_id"/>
                     <field name="invoice_id"/>
+                    <field name="supplier_invoice_id"/>
                     <field name="name"/>
                     <field name="employee_id"/>
                     <field name="quantity"/>
@@ -50,7 +52,9 @@
             <field name="model">subcontractor.work</field>
             <field name="arch" type="xml">
                 <tree string="Subcontractor work" editable="bottom">
+                    <field name="end_customer_id"/>
                     <field name="invoice_id"/>
+                    <field name="supplier_invoice_id"/>
                     <field name="name"/>
                     <field name="employee_id"/>
                     <field name="quantity" sum="Total Qty"/>
