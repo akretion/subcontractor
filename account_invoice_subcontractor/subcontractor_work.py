@@ -188,6 +188,8 @@ class subcontractor_work(orm.Model):
         return True
 
     def create(self, cr, uid, vals, context=None):
+        if context is None:
+            context = {}
         ctx = context.copy()
         #Subcontractor work can be created from the account.invoice
         #or the account.invoice.line are a o2m from the invoice
@@ -195,10 +197,11 @@ class subcontractor_work(orm.Model):
         #this broke all computed field on the subcontractor work
         ctx['no_store_function'] = False
         self._update_cost_price(cr, uid, vals, context=ctx)
-        res = super(subcontractor_work, self).create(cr, uid, vals, context=ctx)
-        return res
+        return super(subcontractor_work, self).create(cr, uid, vals, context=ctx)
 
     def write(self, cr, uid, ids, vals, context=None):
+        if context is None:
+            context = {}
         ctx = context.copy()
         #Subcontractor work can be created from the account.invoice
         #or the account.invoice.line are a o2m from the invoice
