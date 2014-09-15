@@ -134,7 +134,7 @@ class subcontractor_work(orm.Model):
                                     type='many2one',
                                     relation='res.partner',
                                     readonly=True,
-                                    string='Customer'),
+                                    string='Customer(end)'),
 
 
 
