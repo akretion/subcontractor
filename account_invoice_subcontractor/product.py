@@ -20,10 +20,15 @@
 #
 ###############################################################################
 
-from . import subcontractor_work
-from . import hr
-from . import invoice
-from . import wizard
-from . import product
-from . import company
+from openerp.osv import orm, fields
+
+
+class product_product(orm.Model):
+    _inherit = "product.product"
+
+    _columns = {
+        'no_commission': fields.boolean(
+            'No commission',
+            help="This product has no commission for subcontractor work."),
+    }
 

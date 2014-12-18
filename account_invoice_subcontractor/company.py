@@ -20,10 +20,19 @@
 #
 ###############################################################################
 
-from . import subcontractor_work
-from . import hr
-from . import invoice
-from . import wizard
-from . import product
-from . import company
+from openerp.osv import orm, fields
+
+
+class res_company(orm.Model):
+    _inherit = "res.company"
+
+    _columns = {
+        'commission_rate': fields.float(
+            'Commisson rate',
+            help="Rate in % for the commission on subcontractor work"),
+    }
+
+    _defaults = {
+        'commission_rate': 10.00,
+    }
 

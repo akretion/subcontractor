@@ -97,18 +97,20 @@ class account_invoice_line(orm.Model):
             help=('This analytic account is incompatible with the workitem'
                 'If you tick this box the workitem will'
                 'be invisible on the invoice')
-            ), 
+            ),
     }
 
-    def on_analytic_account_change(self, cr, uid, ids, account_analytic_id, context=None): 
+    def on_analytic_account_change(
+            self, cr, uid, ids, account_analytic_id, context=None):
         analytic_obj = self.pool['account.analytic.account']
         no_subcontractor_work = False
         if account_analytic_id:
-            account = analytic_obj.browse(cr, uid, account_analytic_id, context=context)
+            account = analytic_obj.browse(cr, uid, account_analytic_id,
+                                          context=context)
             no_subcontractor_work = account.no_subcontractor_work
         return {'value': {'no_subcontractor_work': no_subcontractor_work}}
-        
-        
+
+
 class account_invoice(orm.Model):
     _inherit = "account.invoice"
 
@@ -127,31 +129,34 @@ class account_invoice(orm.Model):
             result[invoice.id] = any([line.invalid_work_amount for line in invoice.invoice_line])
         return result
 
-
     _columns = {
-        'to_pay': fields.function(_get_to_pay,
-                            type='boolean',
-                            string='To Paid'),
-        'invalid_work_amount': fields.function(_is_work_amount_valid,
-                            string='Work Amount Invalid',
-                            type='boolean'),
+        'to_pay': fields.function(
+            _get_to_pay,
+            type='boolean',
+            string='To Paid'),
+        'invalid_work_amount': fields.function(
+            _is_work_amount_valid,
+            string='Work Amount Invalid',
+            type='boolean'),
     }
 
 
     def _prepare_intercompany_line(self, cr, uid, line, *args, **kwargs):
-        res = super(account_invoice, self)._prepare_intercompany_line(cr, uid,
-                                                    line, *args, **kwargs)
+        res = super(account_invoice, self)._prepare_intercompany_line(
+            cr, uid, line, *args, **kwargs)
         res['supplier_work_invoiced_id'] = line.subcontractor_work_invoiced_id.id
         return res
 
+
 class account_analytic_account(orm.Model):
     _inherit = 'account.analytic.account'
-    
+
     _columns = {
-        'no_subcontractor_work': fields.boolean('No Subcontractor work',
+        'no_subcontractor_work': fields.boolean(
+            'No Subcontractor work',
             help=('This analytic account is incompatible with the '
                 'workitem. If you tick this box the workitem '
                 'will be invisible on the invoice')
-            ), 
+            ),
     }
 

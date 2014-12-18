@@ -190,17 +190,19 @@ class subcontractor_work(orm.Model):
     }
 
     #TODO FIXME replace me by a function field
-    #TODO ADD the posibility to have "special product" without rate (frais de refacuration)
     def _update_cost_price(self, cr, uid, vals, context=None):
-        #TODO take me from some configuration (on partner or company)
+        inv_line_obj = self.pool['account.invoice.line']
+        hr_emp_obj = self.pool['hr.employee']
         if vals.get('sale_price_unit'):
-            if False:#vals.get('product_id') == 15:
+            inv_line = inv_line_obj.browse(cr, uid, vals['invoice_line_id'],
+                                           context=context)
+            if inv_line. product_id and inv_line.product_id.no_commission:
                 vals['cost_price_unit'] = vals['sale_price_unit']
             else:
-                if vals['employee_id'] in [25, 15, 27]:
-                     vals['cost_price_unit'] = vals['sale_price_unit'] * 0.93
-                else:
-                     vals['cost_price_unit'] = vals['sale_price_unit'] * 0.9
+                employee = hr_emp_obj.browse(
+                    cr, uid, vals['employee_id'], context=context)
+                rate = 1 - employee.subcontractor_company_id.commission_rate/100.0
+                vals['cost_price_unit'] = vals['sale_price_unit'] * rate
         return True
 
     def create(self, cr, uid, vals, context=None):
@@ -229,6 +231,8 @@ class subcontractor_work(orm.Model):
         for work in self.browse(cr, uid, ids, context=context):
             if not 'employee_id' in vals:
                 vals['employee_id'] = work.employee_id.id
-       	    self._update_cost_price(cr, uid, vals, context=context)
+            if not 'invoice_line_id' in vals:
+                vals['invoice_line_id'] = work.invoice_line_id.id
+            self._update_cost_price(cr, uid, vals, context=context)
             super(subcontractor_work, self).write(cr, uid, [work.id], vals, context=context)
         return True
