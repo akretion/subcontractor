@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Module for OpenERP
+  Copyright (C) 2014 Akretion Benoît GUILLOT <benoit.guillot@akretion.com>
+  The licence is in the file __openerp__.py
+-->
+
+<openerp>
+    <data>
+    
+        <!-- INHERITED VIEW FOR THE OBJECT : res_company -->
+
+        <record id="res_company_view_form" model="ir.ui.view">
+            <field name="name">subcontractory.res_company.view_form</field>
+            <field name="model">res.company</field>
+            <field name="inherit_id" ref="base.view_company_form" />
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <data>
+                    <page string="Configuration" position="inside">
+                        <separator string="Subcontractor work" colspan="4"/>
+                        <field name="commission_rate"/>
+                    </page> 
+                </data>
+            </field>
+        </record>
+
+    </data>
+</openerp>

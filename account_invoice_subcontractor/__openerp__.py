@@ -40,6 +40,8 @@
            'subcontractor_work_view.xml',
            'invoice_view.xml',
            'wizard/subcontractor_invoice_work_view.xml',
+           'company_view.xml',
+           'product_view.xml',
     ],
     'demo_xml': [],
     'installable': True,
