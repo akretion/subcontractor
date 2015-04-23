@@ -54,7 +54,6 @@ class HrAnalyticTimesheet(orm.Model):
                 cr, uid, line, inv_line_vals, context=context)
         #TODO FIXME do not take the first employee
         employee_id = line.user_id.employee_ids[0].id
-
         for subcontractor_work in inv_line_vals['subcontractor_work_ids']:
             if subcontractor_work[2]['employee_id'] == employee_id:
                 uom_id, qty = self._get_qty2invoice(
