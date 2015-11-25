@@ -25,7 +25,6 @@
     'version': '0.1',
     'category': 'Generic Modules/Others',
     'license': 'AGPL-3',
-    'description': """empty""",
     'author': 'Akretion',
     'website': 'http://www.akretion.com/',
     'depends': [
