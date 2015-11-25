@@ -2,7 +2,7 @@
 ###############################################################################
 #
 #   account_invoice_subcontractor for OpenERP
-#   Copyright (C) 2013-TODAY Akretion <http://www.akretion.com>.
+#   Copyright (C) 2015-TODAY Akretion <http://www.akretion.com>.
 #   @author Sébastien BEAU <sebastien.beau@akretion.com>
 #
 #   This program is free software: you can redistribute it and/or modify
@@ -30,19 +30,17 @@
     'depends': [
         'account',
         'hr',
-    ], 
-    'init_xml': [],
-    'update_xml': [ 
-           'security/security.xml',
-           'security/ir.model.access.csv',
-           'hr_view.xml',
-           'subcontractor_work_view.xml',
-           'invoice_view.xml',
-           'wizard/subcontractor_invoice_work_view.xml',
-           'company_view.xml',
-           'product_view.xml',
     ],
-    'demo_xml': [],
+    'init_xml': [],
+    'data': [
+        'security/security.xml',
+        'security/ir.model.access.csv',
+        'hr_view.xml',
+        'subcontractor_work_view.xml',
+        'invoice_view.xml',
+        'wizard/subcontractor_invoice_work_view.xml',
+        'company_view.xml',
+        'product_view.xml',
+    ],
     'installable': True,
-    'active': False,
 }
