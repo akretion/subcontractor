@@ -37,11 +37,11 @@ class SubcontractorWork(models.Model):
     _description = "subcontractor work"
 
     @api.multi
-    @api.depend('invoice_line_id',
-                'invoice_line_id.invoice_id.state',
-                'supplier_invoice_line_id',
-                'supplier_invoice_line_id.invoice_id.state'
-                )
+    @api.depends('invoice_line_id',
+                 'invoice_line_id.invoice_id.state',
+                 'supplier_invoice_line_id',
+                 'supplier_invoice_line_id.invoice_id.state'
+                 )
     def _get_state(self):
         self.ensure_one()
         for work in self.sudo().browse():
@@ -52,8 +52,8 @@ class SubcontractorWork(models.Model):
                                             invoice_id.state)
 
     @api.multi
-    @api.depend('sale_price_unit',
-                'quantity')
+    @api.depends('sale_price_unit',
+                 'quantity')
     def _get_total_price(self):
         self.ensure_one()
         for work in self.browse():

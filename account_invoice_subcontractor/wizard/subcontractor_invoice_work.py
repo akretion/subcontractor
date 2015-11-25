@@ -46,7 +46,7 @@ class SubcontractorInvoiceWork(models.TransientModel):
                 raise Warning(
                     _('User Error'),
                     _('This work have been already invoiced!'))
-            elif not work.state in ('open', 'paid'):
+            elif work.state not in ('open', 'paid'):
                 raise Warning(
                     _('User Error'),
                     _("Only works with the state 'open' "

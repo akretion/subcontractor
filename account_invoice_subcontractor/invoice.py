@@ -21,33 +21,61 @@
 ###############################################################################
 
 from openerp import models, fields, api
+from openerp import SUPERUSER_ID
 
 
 class AccountInvoiceLine(models.Model):
     _inherit = 'account.invoice.line'
 
     # TODO migrate not complete
-    @api.multi
-    def _get_work_invoiced(self):
-        line_type = field_name.split('_')[0]
-        work_obj = self.pool['subcontractor.work']
-        for line in self:
-            work_ids = work_obj.search([
-                ['%s_invoice_line_id' % line_type, '=', line.id]])
-            line.subcontractor_work_invoiced_id = work_ids and work_ids[0] or None
-            line.supplier_work_invoiced_id = work_ids and work_ids[0] or None
+    # @api.multi
+    # def _get_work_invoiced(self):
+    #     line_type = field_name.split('_')[0]
+    #     work_obj = self.pool['subcontractor.work']
+    #     for line in self:
+    #         work_ids = work_obj.search([
+    #             ['%s_invoice_line_id' % line_type, '=', line.id]])
+    #         line.subcontractor_work_invoiced_id = work_ids and work_ids[0]
+    # or None
+    #         line.supplier_work_invoiced_id = work_ids and work_ids[0] or None
+    #
+    # # TODO migrate not complete
+    # @api.multi
+    # def _set_work_invoiced(self):
+    #     work_obj = self.pool['subcontractor.work']
+    #     line_type = field_name.split('_')[0]
+    #     line_key = '%s_invoice_line_id' % line_type
+    #     work_ids = work_obj.search([[line_key, '=', self.id]])
+    #     if work_ids:
+    #         work_obj.sudo().write(value, {line_key: False})
+    #     if value:
+    #         work_obj.sudo().write(value, {line_key: self.id})
 
-    # TODO migrate not complete
-    @api.multi
-    def _set_work_invoiced(self):
+    def _get_work_invoiced(self, cr, uid, ids, field_name, args, context=None):
+        line_type = field_name.split('_')[0]
+        result = {}
+        work_obj = self.pool['subcontractor.work']
+        for line in self.browse(cr, uid, ids, context=context):
+            work_id = work_obj.search(cr, uid, [
+                ['%s_invoice_line_id' % line_type, '=', line.id]],
+                context=context)
+            result[line.id] = work_id and work_id[0] or None
+        return result
+
+    def _set_work_invoiced(
+            self, cr, uid, line_id, field_name, value, args, context=None):
         work_obj = self.pool['subcontractor.work']
         line_type = field_name.split('_')[0]
         line_key = '%s_invoice_line_id' % line_type
-        work_ids = work_obj.search([[line_key, '=', self.id]])
-        if work_ids:
-            work_obj.sudo().write(value, {line_key: False})
+        work_id = work_obj.search(cr, uid, [
+            [line_key, '=', line_id]],
+            context=context)
+        if work_id:
+            work_obj.write(
+                cr, SUPERUSER_ID, value, {line_key: False}, context=context)
         if value:
-            work_obj.sudo().write(value, {line_key: self.id})
+            work_obj.write(
+                cr, SUPERUSER_ID, value, {line_key: line_id}, context=context)
         return True
 
     @api.multi
