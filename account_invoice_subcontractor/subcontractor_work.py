@@ -91,11 +91,11 @@ class SubcontractorWork(models.Model):
     supplier_invoice_line_id = fields.Many2one(
         'account.invoice.line',
         string='Supplier Invoice Line')
-    supplier_invoice_id = fields.many2one(
+    supplier_invoice_id = fields.Many2one(
         'account.invoice',
         related='supplier_invoice_line_id.invoice_id',
         string='Supplier Invoice')
-    quantity = fields.float('Quantity',
+    quantity = fields.Float('Quantity',
                             digits=dp.get_precision('Product UoS'))
     sale_price_unit = fields.Float('Sale Unit Price',
                                    digits=dp.get_precision('Account'))
@@ -121,7 +121,7 @@ class SubcontractorWork(models.Model):
                                       related='invoice_id.partner_id',
                                       readonly=True,
                                       string='Customer(end)')
-    subcontractor_invoice_line_id = fields.many2one(
+    subcontractor_invoice_line_id = fields.Many2one(
         'account.invoice.line',
         string='Subcontractor Invoice Line')
     subcontractor_company_id = fields.Many2one(
