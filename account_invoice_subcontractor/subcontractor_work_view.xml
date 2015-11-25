@@ -20,6 +20,11 @@
                             domain="[('subcontractor_invoice_line_id','=',False), ('state', 'not in', ['draft', 'cancel'])]"/>
                     <filter string="To pay" name="to_pay"
                             domain="[('state','=', 'paid'),('subcontractor_state', '!=', 'paid')]"/>
+                    <group expand="0" string="Group By...">
+                        <filter string="Invoice" context="{'group_by':'invoice_id'}"/>
+                        <filter string="Subcontractor" context="{'group_by':'employee_id'}"/>
+                    </group>
+ 
                 </search>
             </field>
         </record>
