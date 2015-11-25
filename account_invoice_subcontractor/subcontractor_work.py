@@ -162,20 +162,12 @@ class SubcontractorWork(models.Model):
 
     @api.model
     def create(self, vals):
-        # Subcontractor work can be created from the account.invoice
-        # or the account.invoice.line are a o2m from the invoice
-        # and o2m inject a no_store_function=True in the context
-        # this broke all computed field on the subcontractor work
         self.with_context(no_store_function=False)._update_cost_price(vals)
         return super(SubcontractorWork, self).with_context(
             no_store_function=False).create(vals)
 
     @api.multi
     def write(self, vals):
-        # Subcontractor work can be created from the account.invoice
-        # or the account.invoice.line are a o2m from the invoice
-        # and o2m inject a no_store_function=True in the context
-        # this broke all computed field on the subcontractor work
         if not isinstance(self.ids, (list, tuple)):
             self.ids = [self.ids]
         for work in self.browse():
