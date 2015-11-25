@@ -20,17 +20,25 @@
 #
 ###############################################################################
 
-from openerp.osv import orm, fields
+from openerp import models, fields, api
 
-class hr_employee(orm.Model):
-    _inherit = "hr.employee"
 
-    _columns = {
-        'subcontractor_company_id':fields.many2one('res.company',
-                                                   'Subcontractor COmpany'),
-        'type': fields.selection((
-                ('employee','Employee'),
-                ('subcontractor','Subcontractor')),
-                'Type'),
-    }
+class MixinHrEmployee(models.Model):
+    _name = 'mixin.hr.employee'
 
+    @api.model
+    def get_type(self):
+        return [
+            ('employee', 'Employee'),
+            ('subcontractor', 'Subcontractor')
+        ]
+
+
+class HrEmployee(models.Model):
+    _inherit = ['hr.employee', 'mixin.hr.employee']
+    _name = 'hr.employee'
+
+    subcontractor_company_id = fields.Many2one('res.company',
+                                               string='Subcontractor Company')
+    type = fields.Selection(selection='get_type',
+                            string='Type')

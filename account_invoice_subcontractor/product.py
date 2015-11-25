@@ -20,15 +20,12 @@
 #
 ###############################################################################
 
-from openerp.osv import orm, fields
+from openerp import models, fields
 
 
-class product_product(orm.Model):
+class ProductProduct(models.Model):
     _inherit = "product.product"
 
-    _columns = {
-        'no_commission': fields.boolean(
-            'No commission',
-            help="This product has no commission for subcontractor work."),
-    }
-
+    no_commission = fields.Boolean(
+        string='No commission',
+        help="This product has no commission for subcontractor work.")
