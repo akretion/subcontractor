@@ -22,7 +22,7 @@
 
 from openerp import models, fields, api
 from openerp.tools.translate import _
-from openerp.exceptions import Warning
+from openerp.exceptions import Warning as UserError
 
 
 class SubcontractorInvoiceWork(models.TransientModel):
@@ -39,16 +39,13 @@ class SubcontractorInvoiceWork(models.TransientModel):
         partner_id = works[0].customer_id.id
         for work in works:
             if partner_id != work.customer_id.id:
-                raise Warning(
-                    _('User Error'),
+                raise UserError(
                     _('All the work should believe to the same supplier'))
             elif work.subcontractor_invoice_line_id:
-                raise Warning(
-                    _('User Error'),
+                raise UserError(
                     _('This work have been already invoiced!'))
             elif work.state not in ('open', 'paid'):
-                raise Warning(
-                    _('User Error'),
+                raise UserError(
                     _("Only works with the state 'open' "
                       " or 'paid' can be invoiced"))
 

@@ -88,7 +88,7 @@ class SubcontractorWork(models.Model):
                                  related='invoice_line_id.invoice_id',
                                  string='Invoice',
                                  store=True)
-    supplier_invoice_line_id = fields.Mny2one(
+    supplier_invoice_line_id = fields.Many2one(
         'account.invoice.line',
         string='Supplier Invoice Line')
     supplier_invoice_id = fields.many2one(

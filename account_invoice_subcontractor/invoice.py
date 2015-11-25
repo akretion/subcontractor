@@ -38,8 +38,8 @@ class AccountInvoiceLine(models.Model):
     #         line.subcontractor_work_invoiced_id = work_ids and work_ids[0]
     # or None
     #         line.supplier_work_invoiced_id = work_ids and work_ids[0] or None
-    #
-    # # TODO migrate not complete
+
+    # TODO migrate not complete
     # @api.multi
     # def _set_work_invoiced(self):
     #     work_obj = self.pool['subcontractor.work']
