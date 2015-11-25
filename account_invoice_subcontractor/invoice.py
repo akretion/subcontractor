@@ -27,29 +27,29 @@ from openerp import SUPERUSER_ID
 class AccountInvoiceLine(models.Model):
     _inherit = 'account.invoice.line'
 
-    # TODO migrate not complete
-    # @api.multi
-    # def _get_work_invoiced(self):
-    #     line_type = field_name.split('_')[0]
-    #     work_obj = self.pool['subcontractor.work']
-    #     for line in self:
-    #         work_ids = work_obj.search([
-    #             ['%s_invoice_line_id' % line_type, '=', line.id]])
-    #         line.subcontractor_work_invoiced_id = work_ids and work_ids[0]
-    # or None
-    #         line.supplier_work_invoiced_id = work_ids and work_ids[0] or None
+     #TODO migrate not complete
+     #@api.multi
+     #def _get_work_invoiced(self):
+     #    line_type = field_name.split('_')[0]
+     #    work_obj = self.pool['subcontractor.work']
+     #    for line in self:
+     #        work_ids = work_obj.search([
+     #            ['%s_invoice_line_id' % line_type, '=', line.id]])
+     #        line.subcontractor_work_invoiced_id = work_ids and work_ids[0]
+     #or None
+     #        line.supplier_work_invoiced_id = work_ids and work_ids[0] or None
 
-    # TODO migrate not complete
-    # @api.multi
-    # def _set_work_invoiced(self):
-    #     work_obj = self.pool['subcontractor.work']
-    #     line_type = field_name.split('_')[0]
-    #     line_key = '%s_invoice_line_id' % line_type
-    #     work_ids = work_obj.search([[line_key, '=', self.id]])
-    #     if work_ids:
-    #         work_obj.sudo().write(value, {line_key: False})
-    #     if value:
-    #         work_obj.sudo().write(value, {line_key: self.id})
+     #TODO migrate not complete
+     #@api.multi
+     #def _set_work_invoiced(self):
+     #    work_obj = self.pool['subcontractor.work']
+     #    line_type = field_name.split('_')[0]
+     #    line_key = '%s_invoice_line_id' % line_type
+     #    work_ids = work_obj.search([[line_key, '=', self.id]])
+     #    if work_ids:
+     #        work_obj.sudo().write(value, {line_key: False})
+     #    if value:
+     #        work_obj.sudo().write(value, {line_key: self.id})
 
     def _get_work_invoiced(self, cr, uid, ids, field_name, args, context=None):
         line_type = field_name.split('_')[0]
@@ -106,7 +106,6 @@ class AccountInvoiceLine(models.Model):
                             subtotal = sum([
                                 work.sale_price for work in (
                                     line.subcontractor_work_ids)])
-                            print subtotal, line.price_subtotal
                             line.invalid_work_amount = abs(
                                 subtotal - line.price_subtotal) > 0.01
             else:
