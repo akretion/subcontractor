@@ -49,7 +49,8 @@ class SubcontractorInvoiceWork(models.TransientModel):
             elif not work.state in ('open', 'paid'):
                 raise Warning(
                     _('User Error'),
-                    _("Only works with the state 'open' or 'paid' can be invoiced"))
+                    _("Only works with the state 'open' "
+                      " or 'paid' can be invoiced"))
 
     @api.model
     def _prepare_invoice(self, works, wizard):
