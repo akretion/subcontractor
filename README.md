@@ -1,15 +1,9 @@
-[![Build Status](https://travis-ci.org/OCA/${REPO_NAME}.svg?branch=${BRANCH_NAME})](https://travis-ci.org/akretion/${REPO_NAME})
-[![Coverage Status](https://coveralls.io/repos/akretion/${REPO_NAME}/badge.svg?branch=${BRANCH_NAME}&service=github)](https://coveralls.io/github/akretion/${REPO_NAME}?branch=${BRANCH_NAME})
-[![Code Climate](https://codeclimate.com/github/akretion/${REPO_NAME}/badges/gpa.svg)](https://codeclimate.com/github/akretion/${REPO_NAME})
+[![Build Status](https://travis-ci.org/akretion/subcontractor.svg?branch=8.0)](https://travis-ci.org/akretion/)
+[![Coverage Status](https://coveralls.io/repos/akretion/subcontractor/badge.svg?branch=${BRANCH_NAME}&service=github)](https://coveralls.io/github/akretion/subcontractor?branch=8.0)
+[![Code Climate](https://codeclimate.com/github/akretion/subcontractor/badges/gpa.svg)](https://codeclimate.com/github/akretion/8.0)
 
-# ${REPO_NAME_VERBOSE}
-
-${REPO_DESCRIPTION}
-
-[//]: # (addons)
-This part will be replaced when running the oca-gen-addons-table script from OCA/maintainer-tools.
-[//]: # (end addons)
-
+Sucontractor
 
 Akretion custom module to management subcontractor for service.
 This module add the concept subcontractor_type on employee. Want you invoice a customer you must affect a subcontrator repartition for each invoice line in order to invoice automatically the subcontractor
+
