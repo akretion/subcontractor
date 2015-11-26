@@ -33,7 +33,6 @@ INVOICE_STATE = [
 
 
 class SubcontractorWork(models.Model):
-    _inherit = 'mixin.hr.employee'
     _name = "subcontractor.work"
     _description = "subcontractor work"
 
@@ -44,22 +43,12 @@ class SubcontractorWork(models.Model):
                  'supplier_invoice_line_id.invoice_id.state'
                  )
     def _get_state(self):
-        self.ensure_one()
         for work in self.sudo().browse():
             if work.invoice_line_id:
                 work.state = work.invoice_line_id.invoice_id.state
             if work.supplier_invoice_line_id:
                 work.subcontractor_state = (work.supplier_invoice_line_id.
                                             invoice_id.state)
-
-    @api.multi
-    @api.depends('sale_price_unit',
-                 'quantity')
-    def _get_total_price(self):
-        self.ensure_one()
-        for work in self.browse():
-            work.cost_price = work.quantity * work.cost_price_unit
-            work.sale_price = work.quantity * work.sale_price_unit
 
     @api.onchange('employee_id')
     def employee_id_onchange(self):
@@ -79,6 +68,10 @@ class SubcontractorWork(models.Model):
         work_ids = work_obj.search(
             [('invoice_line_id.invoice_id', 'in', self.ids)])
         return work_ids
+
+    @api.model
+    def _get_subcontractor_type(self):
+        return self.env['hr.employee']._get_subcontractor_type()
 
     name = fields.Text(
         related='invoice_line_id.name',
@@ -109,13 +102,15 @@ class SubcontractorWork(models.Model):
     sale_price_unit = fields.Float(
         digits=dp.get_precision('Account'))
     cost_price_unit = fields.Float(
-        digits=dp.get_precision('Account'))
+        compute='_compute_price',
+        digits=dp.get_precision('Account'),
+        store=True)
     cost_price = fields.Float(
-        compute='_get_total_price',
+        compute='_compute_price',
         digits=dp.get_precision('Account'),
         store=True)
     sale_price = fields.Float(
-        compute='_get_total_price',
+        compute='_compute_price',
         digits=dp.get_precision('Account'),
         store=True)
     company_id = fields.Many2one(
@@ -146,8 +141,7 @@ class SubcontractorWork(models.Model):
         compute='_get_state',
         selection=INVOICE_STATE,
         store=True)
-    subcontractor_type = fields.Selection(
-        selection='get_type'),
+    subcontractor_type = fields.Selection(selection=_get_subcontractor_type)
     state = fields.Selection(
         compute='_get_state',
         selection=INVOICE_STATE,
@@ -157,38 +151,14 @@ class SubcontractorWork(models.Model):
         'product.uom',
         string='Product UOS')
 
-    # TODO FIXME replace me by a function field
-    @api.model
-    def _update_cost_price(self, vals):
-        inv_line_obj = self.pool['account.invoice.line']
-        hr_emp_obj = self.pool['hr.employee']
-        if vals.get('sale_price_unit'):
-            inv_line = inv_line_obj.browse(vals['invoice_line_id'])
-            if inv_line.product_id and inv_line.product_id.no_commission:
-                vals['cost_price_unit'] = vals['sale_price_unit']
-            else:
-                employee = hr_emp_obj.browse(vals['employee_id'])
-                value = employee.subcontractor_company_id.commission_rate/100.0
-                rate = 1 - value
-                vals['cost_price_unit'] = vals['sale_price_unit'] * rate
-        return True
-
-    @api.model
-    def create(self, vals):
-        self.with_context(no_store_function=False)._update_cost_price(vals)
-        return super(SubcontractorWork, self).with_context(
-            no_store_function=False).create(vals)
-
     @api.multi
-    def write(self, vals):
-        if not isinstance(self.ids, (list, tuple)):
-            self.ids = [self.ids]
-        for work in self.browse():
-            if 'employee_id' not in vals:
-                vals['employee_id'] = work.employee_id.id
-            if 'invoice_line_id' not in vals:
-                vals['invoice_line_id'] = work.invoice_line_id.id
-            self.with_context(no_store_function=False)._update_cost_price(vals)
-            super(SubcontractorWork, self).with_context(
-                no_store_function=False).write(vals)
-        return True
+    @api.depends('sale_price_unit', 'quantity')
+    def _compute_price(self):
+        for work in self:
+            rate = 1
+            if work.invoice_line_id.product_id.no_commission:
+                rate -= work.employee_id.\
+                    subcontractor_company_id.commission_rate/100.
+            work.cost_price_unit = work.sale_price_unit * rate
+            work.cost_price = work.quantity * work.cost_price_unit
+            work.sale_price = work.quantity * work.sale_price_unit

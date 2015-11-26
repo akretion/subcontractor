@@ -23,25 +23,20 @@
 from openerp import models, fields, api
 
 
-class MixinHrEmployee(models.Model):
-    _name = 'mixin.hr.employee'
+class HrEmployee(models.Model):
+    _inherit = 'hr.employee'
 
     @api.model
-    def get_type(self):
+    def _get_subcontractor_type(self):
         return [
             ('trainee', 'Trainee'),
             ('internal', 'Internal'),
             ('external', 'External')
         ]
 
-
-class HrEmployee(models.Model):
-    _inherit = ['hr.employee', 'mixin.hr.employee']
-    _name = 'hr.employee'
-
     subcontractor_company_id = fields.Many2one(
         'res.company',
         string='Subcontractor Company')
     subcontractor_type = fields.Selection(
-        selection='get_type',
+        selection='_get_subcontractor_type',
         required=True)
