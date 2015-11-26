@@ -27,5 +27,4 @@ class ProductProduct(models.Model):
     _inherit = "product.product"
 
     no_commission = fields.Boolean(
-        string='No commission',
         help="This product has no commission for subcontractor work.")

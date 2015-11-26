@@ -26,7 +26,6 @@ from openerp import models, fields
 class ResCompany(models.Model):
     _inherit = "res.company"
 
-    commission_rate = fields.Float('Commisson rate',
-                                   help="Rate in % for the commission "
-                                   "on subcontractor work",
-                                   default=10.00)
+    commission_rate = fields.Float(
+        help="Rate in % for the commission on subcontractor work",
+        default=10.00)

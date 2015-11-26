@@ -80,20 +80,23 @@ class SubcontractorWork(models.Model):
             [('invoice_line_id.invoice_id', 'in', self.ids)])
         return work_ids
 
-    name = fields.Text(related='invoice_line_id.name',
-                       string='Name',
-                       readonly=True)
-    employee_id = fields.Many2one('hr.employee',
-                                  string='Employee',
-                                  required=True)
-    invoice_line_id = fields.Many2one('account.invoice.line',
-                                      string='Invoice Line',
-                                      required=True,
-                                      ondelete="cascade")
-    invoice_id = fields.Many2one('account.invoice',
-                                 related='invoice_line_id.invoice_id',
-                                 string='Invoice',
-                                 store=True)
+    name = fields.Text(
+        related='invoice_line_id.name',
+        readonly=True)
+    employee_id = fields.Many2one(
+        'hr.employee',
+        string='Employee',
+        required=True)
+    invoice_line_id = fields.Many2one(
+        'account.invoice.line',
+        string='Invoice Line',
+        required=True,
+        ondelete="cascade")
+    invoice_id = fields.Many2one(
+        'account.invoice',
+        related='invoice_line_id.invoice_id',
+        string='Invoice',
+        store=True)
     supplier_invoice_line_id = fields.Many2one(
         'account.invoice.line',
         string='Supplier Invoice Line')
@@ -101,32 +104,35 @@ class SubcontractorWork(models.Model):
         'account.invoice',
         related='supplier_invoice_line_id.invoice_id',
         string='Supplier Invoice')
-    quantity = fields.Float('Quantity',
-                            digits=dp.get_precision('Product UoS'))
-    sale_price_unit = fields.Float('Sale Unit Price',
-                                   digits=dp.get_precision('Account'))
-    cost_price_unit = fields.Float('Cost Unit Price',
-                                   digits=dp.get_precision('Account'))
-    cost_price = fields.Float(compute='_get_total_price',
-                              string='Total Cost Price',
-                              digits=dp.get_precision('Account'),
-                              store=True)
-    sale_price = fields.Float(compute='_get_total_price',
-                              string='Total Sale Price',
-                              digits=dp.get_precision('Account'),
-                              store=True)
-    company_id = fields.Many2one('res.company',
-                                 related='invoice_line_id.company_id',
-                                 string='Company',
-                                 readonly=True)
-    customer_id = fields.Many2one('res.partner',
-                                  related='company_id.partner_id',
-                                  readonly=True,
-                                  string='Customer')
-    end_customer_id = fields.Many2one('res.partner',
-                                      related='invoice_id.partner_id',
-                                      readonly=True,
-                                      string='Customer(end)')
+    quantity = fields.Float(
+        digits=dp.get_precision('Product UoS'))
+    sale_price_unit = fields.Float(
+        digits=dp.get_precision('Account'))
+    cost_price_unit = fields.Float(
+        digits=dp.get_precision('Account'))
+    cost_price = fields.Float(
+        compute='_get_total_price',
+        digits=dp.get_precision('Account'),
+        store=True)
+    sale_price = fields.Float(
+        compute='_get_total_price',
+        digits=dp.get_precision('Account'),
+        store=True)
+    company_id = fields.Many2one(
+        'res.company',
+        related='invoice_line_id.company_id',
+        string='Company',
+        readonly=True)
+    customer_id = fields.Many2one(
+        'res.partner',
+        related='company_id.partner_id',
+        readonly=True,
+        string='Customer')
+    end_customer_id = fields.Many2one(
+        'res.partner',
+        related='invoice_id.partner_id',
+        readonly=True,
+        string='Customer(end)')
     subcontractor_invoice_line_id = fields.Many2one(
         'account.invoice.line',
         string='Subcontractor Invoice Line')
@@ -138,19 +144,18 @@ class SubcontractorWork(models.Model):
         string='Subcontractor Company')
     subcontractor_state = fields.Selection(
         compute='_get_state',
-        string='Subcontractor State',
         selection=INVOICE_STATE,
         store=True)
     subcontractor_type = fields.Selection(
-        selection='get_type',
-        string='Subcontractor Type')
-    state = fields.Selection(compute='_get_state',
-                             string='State',
-                             selection=INVOICE_STATE,
-                             store=True,
-                             default='draft')
-    uos_id = fields.Many2one('product.uom',
-                             string='Product UOS')
+        selection='get_type'),
+    state = fields.Selection(
+        compute='_get_state',
+        selection=INVOICE_STATE,
+        store=True,
+        default='draft')
+    uos_id = fields.Many2one(
+        'product.uom',
+        string='Product UOS')
 
     # TODO FIXME replace me by a function field
     @api.model

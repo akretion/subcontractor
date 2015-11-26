@@ -44,5 +44,4 @@ class HrEmployee(models.Model):
         string='Subcontractor Company')
     subcontractor_type = fields.Selection(
         selection='get_type',
-        string='Subcontractor Type',
         required=True)
