@@ -29,8 +29,9 @@ class MixinHrEmployee(models.Model):
     @api.model
     def get_type(self):
         return [
-            ('employee', 'Employee'),
-            ('subcontractor', 'Subcontractor')
+            ('trainee', 'Trainee'),
+            ('internal', 'Internal'),
+            ('external', 'External')
         ]
 
 
@@ -38,7 +39,10 @@ class HrEmployee(models.Model):
     _inherit = ['hr.employee', 'mixin.hr.employee']
     _name = 'hr.employee'
 
-    subcontractor_company_id = fields.Many2one('res.company',
-                                               string='Subcontractor Company')
-    type = fields.Selection(selection='get_type',
-                            string='Type')
+    subcontractor_company_id = fields.Many2one(
+        'res.company',
+        string='Subcontractor Company')
+    subcontractor_type = fields.Selection(
+        selection='get_type',
+        string='Subcontractor Type',
+        required=True)

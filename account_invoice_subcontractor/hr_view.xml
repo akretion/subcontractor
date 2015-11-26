@@ -16,9 +16,9 @@
             <field name="arch" type="xml">
                 <xpath expr="//page[@string='HR Settings']" position="inside">
                     <group name="subcontractor">
-                        <field name="type"/>
-                        <field name="subcontractor_company_id"  
-                            attrs="{'required': [('type','=', 'subcontractor')], 'invisible': [('type','!=', 'subcontractor')]}"/>
+                        <field name="subcontractor_type"/>
+                        <field name="subcontractor_company_id"
+                            attrs="{'required': [('subcontractor_type','=', 'internal')], 'invisible': [('subcontractor_type','!=', 'internal')]}"/>
                     </group>
                 </xpath>
             </field>
