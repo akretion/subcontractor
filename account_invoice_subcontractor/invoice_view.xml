@@ -21,8 +21,23 @@
                     <!--<field name="price_subtotal" invisible="True"/>-->
                     <group name="subcontractor information" string="Subcontractor Information">
                         <field name="no_subcontractor_work"/>
-                        <field name="subcontractor_work_invoiced_id" groups="account_invoice_subcontractor.group_is_subcontractor"/>
-                        <field name="subcontractor_work_ids" context="{'default_sale_price_unit': price_unit, 'default_quantity': quantity, 'default_uos_id': uos_id}" groups="account_invoice_subcontractor.group_have_subcontractor" attrs="{'invisible': [('no_subcontractor_work','=', True)]}"/>
+                        <field name="subcontractor_work_invoiced_id"
+                               groups="account_invoice_subcontractor.group_is_subcontractor"/>
+                        <field name="subcontractor_work_ids"
+                               context="{'default_sale_price_unit': price_unit, 'default_quantity': quantity, 'default_uos_id': uos_id}"
+                               groups="account_invoice_subcontractor.group_have_subcontractor"
+                               attrs="{'invisible': [('no_subcontractor_work','=', True)]}">
+                            <tree string="Subcontractor work" editable="bottom">
+                                <field name="employee_id"/>
+                                <field name="subcontractor_type" invisible="True"/>
+                                <field name="quantity" sum="Total Qty"/>
+                                <field name="uos_id"/>
+                                <field name="cost_price_unit"/>
+                                <field name="sale_price_unit"/>
+                                <field name="sale_price" sum="Total Sale Amount"/>
+                                <field name="cost_price" sum="Total Cost Amount"/>
+                           </tree>
+                        </field>
                     </group>
                 </xpath>
             </field>
@@ -47,8 +62,6 @@
                 </xpath>
             </field>
         </record>
-
-
 
         <!-- VIEW FOR THE OBJECT : account_invoice -->
         <record id="view_account_invoice_tree" model="ir.ui.view">

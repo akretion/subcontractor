@@ -36,39 +36,6 @@ class SubcontractorWork(models.Model):
     _name = "subcontractor.work"
     _description = "subcontractor work"
 
-    @api.multi
-    @api.depends('invoice_line_id',
-                 'invoice_line_id.invoice_id.state',
-                 'supplier_invoice_line_id',
-                 'supplier_invoice_line_id.invoice_id.state'
-                 )
-    def _get_state(self):
-        for work in self.sudo().browse():
-            if work.invoice_line_id:
-                work.state = work.invoice_line_id.invoice_id.state
-            if work.supplier_invoice_line_id:
-                work.subcontractor_state = (work.supplier_invoice_line_id.
-                                            invoice_id.state)
-
-    @api.onchange('employee_id')
-    def employee_id_onchange(self):
-        if self.employee_id:
-            self.subcontractor_type = self.employee_id.subcontractor_type
-
-    @api.multi
-    def _get_work_from_sup_invoice(self):
-        work_obj = self.pool['subcontractor.work']
-        work_ids = work_obj.search(
-            [('supplier_invoice_line_id.invoice_id', 'in', self.ids)])
-        return work_ids
-
-    @api.multi
-    def _get_work_from_invoice(self):
-        work_obj = self.pool['subcontractor.work']
-        work_ids = work_obj.search(
-            [('invoice_line_id.invoice_id', 'in', self.ids)])
-        return work_ids
-
     @api.model
     def _get_subcontractor_type(self):
         return self.env['hr.employee']._get_subcontractor_type()
@@ -99,18 +66,14 @@ class SubcontractorWork(models.Model):
         string='Supplier Invoice')
     quantity = fields.Float(
         digits=dp.get_precision('Product UoS'))
-    sale_price_unit = fields.Float(
-        digits=dp.get_precision('Account'))
-    cost_price_unit = fields.Float(
-        compute='_compute_price',
-        digits=dp.get_precision('Account'),
-        store=True)
+    sale_price_unit = fields.Float(digits=dp.get_precision('Account'))
+    cost_price_unit = fields.Float(digits=dp.get_precision('Account'))
     cost_price = fields.Float(
-        compute='_compute_price',
+        compute='_compute_total_price',
         digits=dp.get_precision('Account'),
         store=True)
     sale_price = fields.Float(
-        compute='_compute_price',
+        compute='_compute_total_price',
         digits=dp.get_precision('Account'),
         store=True)
     company_id = fields.Many2one(
@@ -151,14 +114,37 @@ class SubcontractorWork(models.Model):
         'product.uom',
         string='Product UOS')
 
-    @api.multi
-    @api.depends('sale_price_unit', 'quantity')
+    @api.onchange('sale_price_unit', 'employee_id')
     def _compute_price(self):
         for work in self:
             rate = 1
-            if work.invoice_line_id.product_id.no_commission:
+            if not work.invoice_line_id.product_id.no_commission:
                 rate -= work.employee_id.\
                     subcontractor_company_id.commission_rate/100.
             work.cost_price_unit = work.sale_price_unit * rate
+
+    @api.onchange('employee_id')
+    def employee_id_onchange(self):
+        if self.employee_id:
+            self.subcontractor_type = self.employee_id.subcontractor_type
+
+    @api.multi
+    @api.depends('sale_price_unit', 'quantity', 'cost_price_unit')
+    def _compute_total_price(self):
+        for work in self:
             work.cost_price = work.quantity * work.cost_price_unit
             work.sale_price = work.quantity * work.sale_price_unit
+
+    @api.multi
+    @api.depends('invoice_line_id',
+                 'invoice_line_id.invoice_id.state',
+                 'supplier_invoice_line_id',
+                 'supplier_invoice_line_id.invoice_id.state'
+                 )
+    def _get_state(self):
+        for work in self.sudo().browse():
+            if work.invoice_line_id:
+                work.state = work.invoice_line_id.invoice_id.state
+            if work.supplier_invoice_line_id:
+                work.subcontractor_state = (work.supplier_invoice_line_id.
+                                            invoice_id.state)
