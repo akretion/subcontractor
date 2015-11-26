@@ -33,6 +33,7 @@ INVOICE_STATE = [
 
 
 class SubcontractorWork(models.Model):
+    _inherit = 'mixin.hr.employee'
     _name = "subcontractor.work"
     _description = "subcontractor work"
 
@@ -59,6 +60,11 @@ class SubcontractorWork(models.Model):
         for work in self.browse():
             work.cost_price = work.quantity * work.cost_price_unit
             work.sale_price = work.quantity * work.sale_price_unit
+
+    @api.onchange('employee_id')
+    def employee_id_onchange(self):
+        if self.employee_id:
+            self.subcontractor_type = self.employee_id.subcontractor_type
 
     @api.multi
     def _get_work_from_sup_invoice(self):
@@ -130,17 +136,19 @@ class SubcontractorWork(models.Model):
         readonly=True,
         store=True,
         string='Subcontractor Company')
-
-    subcontractor_state = fields.Selection(compute='_get_state',
-                                           string='Subcontractor State',
-                                           selection=INVOICE_STATE,
-                                           store=True)
+    subcontractor_state = fields.Selection(
+        compute='_get_state',
+        string='Subcontractor State',
+        selection=INVOICE_STATE,
+        store=True)
+    subcontractor_type = fields.Selection(
+        selection='get_type',
+        string='Subcontractor Type')
     state = fields.Selection(compute='_get_state',
                              string='State',
                              selection=INVOICE_STATE,
                              store=True,
                              default='draft')
-
     uos_id = fields.Many2one('product.uom',
                              string='Product UOS')
 

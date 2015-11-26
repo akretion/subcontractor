@@ -38,6 +38,7 @@
                     <field name="supplier_invoice_id"/>
                     <field name="name"/>
                     <field name="employee_id"/>
+                    <field name="subcontractor_type" invisible="True"/>
                     <field name="quantity"/>
                     <field name="uos_id"/>
                     <field name="sale_price_unit"/>
@@ -62,6 +63,7 @@
                     <field name="supplier_invoice_id"/>
                     <field name="name"/>
                     <field name="employee_id"/>
+                    <field name="subcontractor_type" invisible="True"/>
                     <field name="quantity" sum="Total Qty"/>
                     <field name="uos_id"/>
                     <field name="cost_price_unit"/>
@@ -90,7 +92,6 @@
             id="menu_action_subcontractor_work"
             parent="account.menu_finance_receivables"
             sequence="100"/>
-
 
     </data>
 </openerp>
