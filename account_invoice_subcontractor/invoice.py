@@ -32,6 +32,7 @@ class AccountInvoiceLine(models.Model):
         'out_invoice': 'subcontractor_invoice_line_id',
         }
 
+    subcontracted = fields.Boolean()
     subcontractor_work_ids = fields.One2many(
         'subcontractor.work',
         'invoice_line_id',
@@ -44,11 +45,19 @@ class AccountInvoiceLine(models.Model):
     invalid_work_amount = fields.Boolean(
         compute='_is_work_amount_invalid',
         string='Work Amount Invalid')
-    no_subcontractor_work = fields.Boolean(
-        string='No Subcontractor work',
-        help=('This analytic account is incompatible with the workitem'
-              'If you tick this box the workitem will'
-              'be invisible on the invoice'))
+
+    @api.multi
+    def product_id_change(self, product, uom_id, qty=0, name='',
+            type='out_invoice', partner_id=False, fposition_id=False,
+            price_unit=False, currency_id=False, company_id=None):
+        res = super(AccountInvoiceLine, self).product_id_change(
+            product, uom_id, qty=qty, name=name,
+            type=type, partner_id=partner_id, fposition_id=fposition_id,
+            price_unit=price_unit, currency_id=currency_id,
+            company_id=company_id)
+        product = self.env['product.product'].browse(product)
+        res['value']['subcontracted'] = product.subcontracted
+        return res
 
     @api.multi
     def _get_work_invoiced(self):
@@ -68,7 +77,7 @@ class AccountInvoiceLine(models.Model):
     def _is_work_amount_invalid(self):
         for line in self:
             if line.invoice_id.type in ['out_invoice', 'in_invoice']:
-                if line.no_subcontractor_work:
+                if not line.subcontracted:
                     line.invalid_work_amount = False
                 else:
                     if line.invoice_id.type == 'in_invoice':
@@ -93,15 +102,6 @@ class AccountInvoiceLine(models.Model):
                                 subtotal - line.price_subtotal) > 0.01
             else:
                 line.invalid_work_amount = False
-
-    @api.multi
-    def on_analytic_account_change(self, account_analytic_id):
-        analytic_obj = self.pool['account.analytic.account']
-        no_subcontractor_work = False
-        if account_analytic_id:
-            account = analytic_obj.browse(account_analytic_id)
-            no_subcontractor_work = account.no_subcontractor_work
-        return {'value': {'no_subcontractor_work': no_subcontractor_work}}
 
 
 class AccountInvoice(models.Model):
@@ -135,13 +135,3 @@ class AccountInvoice(models.Model):
         res['subcontractor_work_invoiced_id'] =\
             line.subcontractor_work_invoiced_id.id
         return res
-
-
-class AccountAnalyticAccount(models.Model):
-    _inherit = 'account.analytic.account'
-
-    no_subcontractor_work = fields.Boolean(
-        string='No Subcontractor work',
-        help=('This analytic account is incompatible with the '
-              'workitem. If you tick this box the workitem '
-              'will be invisible on the invoice'))

@@ -98,7 +98,6 @@ class SubcontractorInvoiceWork(models.TransientModel):
                 work.end_customer_id.name,
                 work_read['invoice_id'][1],
                 work.name),
-            'no_subcontractor_work': True,
         })
         return line_vals
 

@@ -112,6 +112,8 @@ class SubcontractorWork(models.Model):
         default='draft')
     uos_id = fields.Many2one(
         'product.uom',
+        related='invoice_line_id.uos_id',
+        readonly=True,
         string='Product UOS')
 
     @api.onchange('sale_price_unit', 'employee_id')

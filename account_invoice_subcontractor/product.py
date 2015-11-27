@@ -23,8 +23,12 @@
 from openerp import models, fields
 
 
-class ProductProduct(models.Model):
-    _inherit = "product.product"
+class ProductTemplate(models.Model):
+    _inherit = "product.template"
 
     no_commission = fields.Boolean(
         help="This product has no commission for subcontractor work.")
+    subcontracted = fields.Boolean(
+        company_dependent=True,
+        help="This product is subcontracted, and so the subcontractor work"
+            "will be required on the invoice")

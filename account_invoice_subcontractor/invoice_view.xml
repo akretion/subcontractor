@@ -14,19 +14,17 @@
             <field name="type">form</field>
             <field name="inherit_id" ref="account.view_invoice_line_form" />
             <field name="arch" type="xml">
-                <xpath expr="//field[@name='account_analytic_id']" position="attributes">
-                    <attribute name="on_change">on_analytic_account_change(account_analytic_id, context)</attribute>
-                </xpath> 
-                <xpath expr="//field[@name='name']" position="after">
-                    <!--<field name="price_subtotal" invisible="True"/>-->
-                    <group name="subcontractor information" string="Subcontractor Information">
-                        <field name="no_subcontractor_work"/>
+                <xpath expr="//label[@for='name']" position="before">
+                    <group name="subcontractor information"
+                           string="Subcontractor Information"
+                           attrs="{'invisible': [('subcontracted','=', False)]}">
+                        <field name="subcontracted" invisible="True"/>
                         <field name="subcontractor_work_invoiced_id"
                                groups="account_invoice_subcontractor.group_is_subcontractor"/>
                         <field name="subcontractor_work_ids"
-                               context="{'default_sale_price_unit': price_unit, 'default_quantity': quantity, 'default_uos_id': uos_id}"
+                               context="{'default_sale_price_unit': price_unit, 'default_quantity': quantity}"
                                groups="account_invoice_subcontractor.group_have_subcontractor"
-                               attrs="{'invisible': [('no_subcontractor_work','=', True)]}">
+                               nolabel="1">
                             <tree string="Subcontractor work" editable="bottom">
                                 <field name="employee_id"/>
                                 <field name="subcontractor_type" invisible="True"/>
@@ -94,16 +92,6 @@
                 <filter name="unpaid" position="after">
                     <filter name="to_pay" string="To pay" domain="[('to_pay','=',True)]" help="Invoices to be pay"/>
                 </filter>
-            </field>
-        </record>
-
-        <record id="view_account_analytic_account_form" model="ir.ui.view">
-            <field name="model">account.analytic.account</field>
-            <field name="inherit_id" ref="analytic.view_account_analytic_account_form" />
-            <field name="arch" type="xml">
-                <field name="manager_id" position="after">
-                    <field name="no_subcontractor_work"/>
-                </field>
             </field>
         </record>
 
