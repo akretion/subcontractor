@@ -21,7 +21,6 @@
 ###############################################################################
 
 from openerp import models, fields, api
-from openerp import SUPERUSER_ID
 
 
 class AccountInvoiceLine(models.Model):
@@ -30,7 +29,7 @@ class AccountInvoiceLine(models.Model):
     _map_type = {
         'in_invoice': 'supplier_invoice_line_id',
         'out_invoice': 'subcontractor_invoice_line_id',
-        }
+    }
 
     subcontracted = fields.Boolean()
     subcontractor_work_ids = fields.One2many(
@@ -91,7 +90,7 @@ class AccountInvoiceLine(models.Model):
                         if line.invoice_id.company_id.id != 1:
                             # this mean Akretion
                             if line.invoice_id.partner_id.id == 1:
-                               line.invalid_work_amount = abs(
+                                line.invalid_work_amount = abs(
                                     line.subcontractor_work_invoiced_id\
                                     .cost_price - line.price_subtotal) > 0.01
                             else:

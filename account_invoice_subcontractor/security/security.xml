@@ -10,13 +10,15 @@
 
         <record model="res.groups" id="group_have_subcontractor">
             <field name="name">Have Subcontractor</field>
+            <field name="category_id" ref="base.module_category_account"/>
         </record>
 
         <record model="res.groups" id="group_is_subcontractor">
             <field name="name">Is Subcontractor</field>
+            <field name="category_id" ref="base.module_category_account"/>
         </record>
     </data>
-    
+
     <data>
         <record id="subcontractor_rule" model="ir.rule">
             <field name="name">Subcontractor_rule</field>
@@ -27,4 +29,3 @@
 
     </data>
 </openerp>
-

@@ -20,7 +20,10 @@
 #
 ###############################################################################
 from openerp import models, fields, api
+from datetime import timedelta, date
+from openerp.exceptions import Warning as UserError
 import openerp.addons.decimal_precision as dp
+
 
 INVOICE_STATE = [
     ('draft', 'Draft'),
@@ -155,3 +158,80 @@ class SubcontractorWork(models.Model):
             if work.supplier_invoice_line_id:
                 work.subcontractor_state = (work.supplier_invoice_line_id.
                                             invoice_id.state)
+
+    @api.model
+    def _prepare_subcontractor_invoice_data(self, work):
+        journal = self.env['account.journal'].search([
+            ('type', '=', 'sale'),
+            ('company_id', '=', work.subcontractor_company_id.id)
+        ], limit=1)
+        if not journal:
+            raise UserError(
+                _('Please define %s journal for this company: "%s" (id:%d).')
+                % (journal_type, company.name, company.id))
+        subcontractor_company = work.subcontractor_company_id
+        users = self.pool['res.users'].search([
+            ('company_id', '=', subcontractor_company.id)])
+        return {
+            'origin': self.company_id.name + _(' Invoice: ') + str(
+                work.invoice_id.number),
+            'type': 'out_invoice',
+            'date_invoice': date.today(),
+            'account_id': (self.company_id.partner_id.
+                           property_account_receivable.id),
+            'partner_id': self.company_id.partner_id.id,
+            'journal_id': journal.id,
+            'invoice_line': [(6, 0, [])],
+            'currency_id': (subcontractor_company.currency_id
+                            and subcontractor_company.currency_id.id),
+            'fiscal_position': (self.company_id.partner_id.
+                                property_account_position),
+            'company_id': subcontractor_company.id,
+            'partner_bank_id': subcontractor_company.bank_ids[0].id,
+            'user_id': users[0].id
+        }
+
+    @api.model
+    def _prepare_subcontractor_invoice_line_data(self, line_data, work):
+
+        return res
+
+    @api.multi
+    def _scheduler_action_subcontractor_invoice_create(self):
+        invoice_line_obj = self.pool['account.invoice.line']
+        invoice_obj = self.pool['account.invoice']
+        date_filter = date.today() - timedelta(days=7)
+        subcontractor_works = self.search([
+            ('invoice_id.date_invoice', '<=', date_filter),
+            ('subcontractor_invoice_line_id', '=', False),
+            ('subcontractor_type', '=', 'internal'),
+            order=['employee_id', 'invoice_id']
+        ])
+        current_employee_id = None
+        current_invoice_id = None
+        for work in subcontractor_works:
+            if (current_employee_id != work.employee_id
+                    or current_invoice_id != work.invoice_id):
+                # create invoice, as the internal subcontrator
+                invoice_vals = self.sudo()._prepare_subcontractor_invoice_data(
+                    work)
+                invoice = invoice_obj.sudo().create(invoice_vals)
+                current_employee_id = work.employee_id
+                current_invoice_id = work.invoice_id
+
+            line_data = invoice_line_obj.sudo().product_id_change(
+                line.product_id.id,
+                product_uom_id,
+                qty=line.quantity,
+                name='',
+                type=inv_type,
+                partner_id=origin_partner_id.id,
+                fposition_id=origin_partner_id.property_account_position.id,
+                company_id=company.id)
+            # create invoice line, as the internal subcontractor
+            inv_line_data = self.sudo()._prepare_subcontractor_invoice_line_data(
+                line_data, work)
+            inv_line_id = invoice_line_obj.sudo().create(inv_line_data)
+            # update invoice with invoice line created
+            invoice.write({'invoice_line': [(6, 0, [inv_line_id])]})
+        return True
