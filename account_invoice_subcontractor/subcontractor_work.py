@@ -127,8 +127,13 @@ class SubcontractorWork(models.Model):
 
     @api.onchange('employee_id')
     def employee_id_onchange(self):
+        self.ensure_one()
         if self.employee_id:
             self.subcontractor_type = self.employee_id.subcontractor_type
+            line = self.invoice_line_id
+            #TODO find a good way to get the right qty
+            self.quantity = line.quantity
+            self.sale_price_unit = line.price_unit * (1 - line.discount / 100.)
 
     @api.multi
     @api.depends('sale_price_unit', 'quantity', 'cost_price_unit')

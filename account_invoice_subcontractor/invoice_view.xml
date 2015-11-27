@@ -22,7 +22,6 @@
                         <field name="subcontractor_work_invoiced_id"
                                groups="account_invoice_subcontractor.group_is_subcontractor"/>
                         <field name="subcontractor_work_ids"
-                               context="{'default_sale_price_unit': price_unit, 'default_quantity': quantity}"
                                groups="account_invoice_subcontractor.group_have_subcontractor"
                                nolabel="1">
                             <tree string="Subcontractor work" editable="bottom">
