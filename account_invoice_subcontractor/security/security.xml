@@ -10,12 +10,12 @@
 
         <record model="res.groups" id="group_have_subcontractor">
             <field name="name">Have Subcontractor</field>
-            <field name="category_id" ref="base.module_category_account"/>
+            <field name="category_id" ref="base.module_category_accounting_and_finance"/>
         </record>
 
         <record model="res.groups" id="group_is_subcontractor">
             <field name="name">Is Subcontractor</field>
-            <field name="category_id" ref="base.module_category_account"/>
+            <field name="category_id" ref="base.module_category_accounting_and_finance"/>
         </record>
     </data>
 
