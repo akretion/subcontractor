@@ -91,8 +91,8 @@ class AccountInvoiceLine(models.Model):
                             # this mean Akretion
                             if line.invoice_id.partner_id.id == 1:
                                 line.invalid_work_amount = abs(
-                                    line.subcontractor_work_invoiced_id\
-                                    .cost_price - line.price_subtotal) > 0.01
+                                    (line.subcontractor_work_invoiced_id
+                                     .cost_price - line.price_subtotal)) > 0.01
                             else:
                                 line.invalid_work_amount = False
                         else:

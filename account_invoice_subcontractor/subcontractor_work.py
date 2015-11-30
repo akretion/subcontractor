@@ -207,9 +207,7 @@ class SubcontractorWork(models.Model):
             currency_id=invoice_vals.get('currency_id'),
             company_id=invoice_vals.get('company_id'))
         line_data.update({
-            #'quantity': work.quantity,
             'uos_id': work.uos_id.id,
-            #'price_unit': work.cost_price_unit,
             'invoicing_type': work.invoice_line_id.invoicing_type,
             'discount': work.invoice_line_id.discount,
             'invoice_line_tax_id': [
