@@ -19,7 +19,7 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-from openerp import models, fields, api
+from openerp import models, fields, api, _
 from datetime import timedelta, date
 from openerp.exceptions import Warning as UserError
 import openerp.addons.decimal_precision as dp
@@ -166,9 +166,10 @@ class SubcontractorWork(models.Model):
             ('company_id', '=', work.subcontractor_company_id.id)
         ], limit=1)
         if not journal:
+            company = work.subcontractor_company_id
             raise UserError(
-                _('Please define %s journal for this company: "%s" (id:%d).')
-                % (journal_type, company.name, company.id))
+                _('Please define sale journal for this company: "%s" (id:%d).')
+                % (company.name, company.id))
         subcontractor_company = work.subcontractor_company_id
         users = self.pool['res.users'].search([
             ('company_id', '=', subcontractor_company.id)])
@@ -192,9 +193,32 @@ class SubcontractorWork(models.Model):
         }
 
     @api.model
-    def _prepare_subcontractor_invoice_line_data(self, line_data, work):
-
-        return res
+    def _prepare_subcontractor_invoice_line_data(self, invoice_vals, work):
+        invoice_line_obj = self.pool['account.invoice.line']
+        line_data = invoice_line_obj.sudo().product_id_change(
+            product=work.invoice_line_id.product_id.id,
+            uom_id=False,
+            qty=work.quantity,
+            name=work.name,
+            type='out_invoice',
+            partner_id=invoice_vals.get('partner_id'),
+            fposition_id=invoice_vals.get('fiscal_position'),
+            price_unit=work.cost_price_unit,
+            currency_id=invoice_vals.get('currency_id'),
+            company_id=invoice_vals.get('company_id'))
+        line_data.update({
+            #'quantity': work.quantity,
+            'uos_id': work.uos_id.id,
+            #'price_unit': work.cost_price_unit,
+            'invoicing_type': work.invoice_line_id.invoicing_type,
+            'discount': work.invoice_line_id.discount,
+            'invoice_line_tax_id': [
+                (6, 0, line_data['value']['invoice_line_tax_id'])],
+            'name': "Client final %s: %s" % (work.end_customer_id.name,
+                                             work.name),
+            'subcontractor_work_invoiced_id': work.id,
+        })
+        return line_data
 
     @api.multi
     def _scheduler_action_subcontractor_invoice_create(self):
@@ -205,8 +229,8 @@ class SubcontractorWork(models.Model):
             ('invoice_id.date_invoice', '<=', date_filter),
             ('subcontractor_invoice_line_id', '=', False),
             ('subcontractor_type', '=', 'internal'),
-            order=['employee_id', 'invoice_id']
-        ])
+            ('state', 'in', ['open', 'paid'])
+        ], order=['employee_id', 'invoice_id'])
         current_employee_id = None
         current_invoice_id = None
         for work in subcontractor_works:
@@ -218,19 +242,10 @@ class SubcontractorWork(models.Model):
                 invoice = invoice_obj.sudo().create(invoice_vals)
                 current_employee_id = work.employee_id
                 current_invoice_id = work.invoice_id
-
-            line_data = invoice_line_obj.sudo().product_id_change(
-                line.product_id.id,
-                product_uom_id,
-                qty=line.quantity,
-                name='',
-                type=inv_type,
-                partner_id=origin_partner_id.id,
-                fposition_id=origin_partner_id.property_account_position.id,
-                company_id=company.id)
             # create invoice line, as the internal subcontractor
-            inv_line_data = self.sudo()._prepare_subcontractor_invoice_line_data(
-                line_data, work)
+            inv_line_data = (
+                self.sudo()._prepare_subcontractor_invoice_line_data(
+                    invoice_vals, work))
             inv_line_id = invoice_line_obj.sudo().create(inv_line_data)
             # update invoice with invoice line created
             invoice.write({'invoice_line': [(6, 0, [inv_line_id])]})
