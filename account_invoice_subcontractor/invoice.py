@@ -21,7 +21,6 @@
 ###############################################################################
 
 from openerp import models, fields, api
-from openerp import SUPERUSER_ID
 
 
 class AccountInvoiceLine(models.Model):
@@ -70,7 +69,6 @@ class AccountInvoiceLine(models.Model):
     @api.multi
     def _set_work_invoiced(self):
         for line in self:
-            work = line.subcontractor_work_invoiced_id
             if work:
                 field = self._map_type[line.invoice_id.type]
                 work.sudo().write({field: line.id})

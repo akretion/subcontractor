@@ -24,8 +24,6 @@ import openerp.addons.decimal_precision as dp
 
 INVOICE_STATE = [
     ('draft', 'Draft'),
-    ('proforma', 'Pro-forma'),
-    ('proforma2', 'Pro-forma'),
     ('open', 'Open'),
     ('paid', 'Paid'),
     ('cancel', 'Cancelled'),
@@ -104,7 +102,10 @@ class SubcontractorWork(models.Model):
         compute='_get_state',
         selection=INVOICE_STATE,
         store=True)
-    subcontractor_type = fields.Selection(selection=_get_subcontractor_type)
+    subcontractor_type = fields.Selection(
+        string='Subcontractor Type',
+        selection='_get_subcontractor_type',
+        related='employee_id.subcontractor_type')
     state = fields.Selection(
         compute='_get_state',
         selection=INVOICE_STATE,
