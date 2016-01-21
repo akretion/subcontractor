@@ -1,9 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  account_invoice_subcontractor for OpenERP
-  Copyright (C) 2013-TODAY Akretion <http://www.akretion.com>.
-  The licence is in the file __openerp__.py
--->
 
 <openerp>
     <data>
@@ -24,7 +19,7 @@
                         <filter string="Invoice" context="{'group_by':'invoice_id'}"/>
                         <filter string="Subcontractor" context="{'group_by':'employee_id'}"/>
                     </group>
- 
+
                 </search>
             </field>
         </record>

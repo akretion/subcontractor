@@ -33,6 +33,7 @@
     ],
     'init_xml': [],
     'data': [
+        'data/cron_data.xml',
         'security/security.xml',
         'security/ir.model.access.csv',
         'hr_view.xml',
