@@ -36,17 +36,17 @@ class SubcontractorInvoiceWork(models.TransientModel):
         for work in works:
             if partner_id != work.customer_id.id:
                 raise UserError(
-                    _('All the work should believe to the same supplier'))
+                    _('All the work should belong to the same supplier'))
             elif work.supplier_invoice_line_id:
                 raise UserError(
-                    _('This work have been already invoiced!'))
+                    _('This work has been already invoiced!'))
             elif work.state not in ('open', 'paid'):
                 raise UserError(
                     _("Only works with the state 'open' "
                       " or 'paid' can be invoiced"))
-            elif work.subcontractor_type != 'external':
+            elif work.subcontractor_type != 'internal':
                 raise UserError(
-                    _("Only external subcontarctors"))
+                    _("You can invoice on only the internal subcontractors"))
 
     @api.model
     def _prepare_invoice(self, work):

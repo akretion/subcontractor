@@ -104,16 +104,17 @@ class SubcontractorWork(models.Model):
     subcontractor_state = fields.Selection(
         compute='_get_state',
         selection=INVOICE_STATE,
-        store=True)
+        store=True,
+        compute_sudo=True)
     subcontractor_type = fields.Selection(
         string='Subcontractor Type',
-        selection='_get_subcontractor_type',
-        related='employee_id.subcontractor_type')
+        selection='_get_subcontractor_type')
     state = fields.Selection(
         compute='_get_state',
         selection=INVOICE_STATE,
         store=True,
-        default='draft')
+        default='draft',
+        compute_sudo=True)
     uos_id = fields.Many2one(
         'product.uom',
         related='invoice_line_id.uos_id',
@@ -153,7 +154,7 @@ class SubcontractorWork(models.Model):
                  'supplier_invoice_line_id.invoice_id.state'
                  )
     def _get_state(self):
-        for work in self.sudo().browse():
+        for work in self:
             if work.invoice_line_id:
                 work.state = work.invoice_line_id.invoice_id.state
             if work.supplier_invoice_line_id:
