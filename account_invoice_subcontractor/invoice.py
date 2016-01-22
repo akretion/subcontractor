@@ -119,15 +119,15 @@ class AccountInvoice(models.Model):
                     invoice.to_pay = False
                 else:
                     invoice.to_pay = all([
-                        (line.subcontrator_work_invoiced_id.state == 'paid'
-                         for line in invoice.invoice_line)])
+                        line.subcontrator_work_invoiced_id.state == 'paid'
+                        for line in invoice.invoice_line])
 
     @api.multi
     def _is_work_amount_valid(self):
         for invoice in self:
             invoice.invalid_work_amount = any([
-                (line.invalid_work_amount
-                 for line in invoice.invoice_line)])
+                line.invalid_work_amount
+                for line in invoice.invoice_line])
 
     @api.model
     def _prepare_invoice_line_data(self, line_data, line):
