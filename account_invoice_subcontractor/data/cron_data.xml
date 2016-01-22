@@ -12,7 +12,7 @@
             <field eval="False" name="doall"/>
             <field eval="'subcontractor.work'" name="model"/>
             <field eval="'_scheduler_action_subcontractor_invoice_create'" name="function"/>
-            <field eval="'([],)'" name="args"/>
+            <field eval="'()'" name="args"/>
         </record>
 
     </data>
