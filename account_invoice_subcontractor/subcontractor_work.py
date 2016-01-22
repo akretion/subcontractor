@@ -273,14 +273,18 @@ class SubcontractorWork(models.Model):
             [('subcontractor_type', '=', 'internal'),
              ('subcontractor_company_id', '!=', False)])
         for subcontractor in subcontractors:
-            if not subcontractor.subcontractor_company_id.intercompany_user_id:
+            user = subcontractor.subcontractor_company_id.intercompany_user_id
+            if not user or user.id !=55:
                 continue
-            subcontractor_works = self.sudo(
-                subcontractor.subcontractor_company_id.intercompany_user_id).search([
-                    ('invoice_id.date_invoice', '<=', date_filter),
+            if user.company_id != subcontractor.subcontractor_company_id:
+                user.company_id = subcontractor.subcontractor_company_id
+            subcontractor_works = self.sudo(user).search([
+#                    ('invoice_id.date_invoice', '<=', date_filter),
                     ('subcontractor_invoice_line_id', '=', False),
                     ('subcontractor_type', '=', 'internal'),
-                    ('state', 'in', ['open', 'paid'])
+                    ('state', 'in', ['open', 'paid']),
+                    ('employee_id', '=', subcontractor.id)
                 ], order='employee_id, invoice_id')
-            subcontractor_works.invoice_from_work()
+            invoices = subcontractor_works.invoice_from_work()
+            invoices.signal_workflow('invoice_open')
         return True
