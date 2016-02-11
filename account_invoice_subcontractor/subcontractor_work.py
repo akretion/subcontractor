@@ -262,7 +262,7 @@ class SubcontractorWork(models.Model):
             # Need sudo because odoo prefetch de work.invoice_id
             # and try to read fields on it and that makes access rules fail
             inv_line = invoice_line_obj.sudo().create(inv_line_data)
-            invoice.sudo().write({'invoice_line': [(6, 0, [inv_line.id])]})
+            invoice.sudo().write({'invoice_line': [(4, inv_line.id)]})
         invoices.button_reset_taxes()
         return invoices
 
