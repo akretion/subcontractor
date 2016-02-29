@@ -272,18 +272,20 @@ class SubcontractorWork(models.Model):
         subcontractors = self.env['hr.employee'].search(
             [('subcontractor_type', '=', 'internal'),
              ('subcontractor_company_id', '!=', False)])
+        # Need to search on all subcontractor work because of the filter on date invoice
+        all_works = self.search([
+            ('invoice_id.date_invoice', '<=', date_filter),
+            ('subcontractor_invoice_line_id', '=', False),
+            ('subcontractor_type', '=', 'internal'),
+            ('state', 'in', ['open', 'paid']),
+        ])
         for subcontractor in subcontractors:
             user = subcontractor.subcontractor_company_id.intercompany_user_id
-            if not user or user.id !=55:
-                continue
             if user.company_id != subcontractor.subcontractor_company_id:
                 user.company_id = subcontractor.subcontractor_company_id
             subcontractor_works = self.sudo(user).search([
-#                    ('invoice_id.date_invoice', '<=', date_filter),
-                    ('subcontractor_invoice_line_id', '=', False),
-                    ('subcontractor_type', '=', 'internal'),
-                    ('state', 'in', ['open', 'paid']),
-                    ('employee_id', '=', subcontractor.id)
+                ('id', 'in', all_works.ids),
+                ('employee_id', '=', subcontractor.id)
                 ], order='employee_id, invoice_id')
             invoices = subcontractor_works.invoice_from_work()
             invoices.signal_workflow('invoice_open')
