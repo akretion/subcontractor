@@ -114,12 +114,12 @@ class AccountInvoice(models.Model):
     @api.multi
     def _get_to_pay(self):
         for invoice in self:
-            if invoice.type == 'in':
+            if invoice.type == 'in_invoice':
                 if invoice.state == 'paid':
                     invoice.to_pay = False
                 else:
                     invoice.to_pay = all([
-                        line.subcontrator_work_invoiced_id.state == 'paid'
+                        line.subcontractor_work_invoiced_id.state == 'paid'
                         for line in invoice.invoice_line])
 
     @api.multi
