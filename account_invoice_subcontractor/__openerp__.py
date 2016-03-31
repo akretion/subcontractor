@@ -30,6 +30,7 @@
     'depends': [
         'account',
         'hr',
+        'inter_company_rules',
     ],
     'init_xml': [],
     'data': [
