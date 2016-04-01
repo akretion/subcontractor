@@ -126,8 +126,7 @@ class SubcontractorWork(models.Model):
         for work in self:
             rate = 1
             if not work.invoice_line_id.product_id.no_commission:
-                rate -= work.employee_id.\
-                    subcontractor_company_id.commission_rate/100.
+                rate -= work.employee_id.commission_rate/100.
             work.cost_price_unit = work.sale_price_unit * rate
 
     @api.onchange('employee_id')

@@ -19,6 +19,7 @@
                         <field name="subcontractor_type"/>
                         <field name="subcontractor_company_id"
                             attrs="{'required': [('subcontractor_type', '=', 'internal'), ('active', '=', True)], 'invisible': [('subcontractor_type','!=', 'internal')]}"/>
+                        <field name="commission_rate"/>
                     </group>
                 </xpath>
             </field>
