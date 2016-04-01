@@ -20,29 +20,30 @@
 #
 ###############################################################################
 
-{
-    'name': 'account_invoice_subcontractor',
-    'version': '0.1',
-    'category': 'Generic Modules/Others',
-    'license': 'AGPL-3',
-    'author': 'Akretion',
-    'website': 'http://www.akretion.com/',
-    'depends': [
-        'account',
-        'hr',
-        'inter_company_rules',
-    ],
-    'init_xml': [],
-    'data': [
-        'data/cron_data.xml',
-        'security/security.xml',
-        'security/ir.model.access.csv',
-        'hr_view.xml',
-        'subcontractor_work_view.xml',
-        'invoice_view.xml',
-        'wizard/subcontractor_invoice_work_view.xml',
-        'wizard/supplier_invoice_work_view.xml',
-        'product_view.xml',
-    ],
-    'installable': True,
-}
+from openerp import models, api
+from openerp.tools.translate import _
+
+
+class SupplierInvoiceWork(models.TransientModel):
+    _name = 'supplier.invoice.work'
+    _description = 'supplier invoice work'
+
+    @api.multi
+    def generate_invoice(self):
+        work_obj = self.env['subcontractor.work']
+        work_ids = self._context.get('active_ids')
+        works = work_obj.browse(work_ids)
+        works.check(work_type='external')
+        invoice = works.supplier_invoice_from_work()
+        return {
+            'name': _('Supplier Invoice'),
+            'view_type': 'form',
+            'view_mode': 'form,tree',
+            'res_model': 'account.invoice',
+            'res_id': invoice.id,
+            'context': "{'type':'in_invoice'}",
+            'type': 'ir.actions.act_window',
+            'nodestroy': True,
+            'target': 'current',
+            'domain': "[('type','=', 'in_invoice')]",
+        }

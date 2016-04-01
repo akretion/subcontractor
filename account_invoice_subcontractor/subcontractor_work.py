@@ -161,7 +161,7 @@ class SubcontractorWork(models.Model):
                                             invoice_id.state)
 
     @api.multi
-    def check(self):
+    def check(self, work_type='internal'):
         partner_id = self[0].customer_id.id
         for work in self:
             if partner_id != work.customer_id.id:
@@ -174,34 +174,41 @@ class SubcontractorWork(models.Model):
                 raise UserError(
                     _("Only works with the state 'open' "
                       " or 'paid' can be invoiced"))
-            elif work.subcontractor_type != 'internal':
+            elif work.subcontractor_type != work_type:
                 raise UserError(
-                    _("You can invoice on only the internal subcontractors"))
+                    _("You can invoice on only the %s subcontractors" % work_type))
 
-    @api.multi
-    def _prepare_invoice(self):
+    @api.model
+    def _prepare_invoice(self, invoice_type='out_invoice'):
         self.ensure_one()
         journal_obj = self.env['account.journal']
         inv_obj = self.env['account.invoice']
-        company = self.subcontractor_company_id
+        if invoice_type =='out_invoice':
+            company = self.subcontractor_company_id
+            journal_type = 'sale'
+            partner = self.customer_id
+            user = self.env['res.users'].search([
+                ('company_id', '=', company.id)], limit=1)
+        elif invoice_type =='in_invoice':
+            company = self.invoice_id.company_id
+            journal_type = 'purchase'
+            partner = self.employee_id.user_id.partner_id
+            user = self.employee_id.user_id
         journal = journal_obj.search([
             ('company_id', '=', company.id),
-            ('type', '=', 'sale')],
+            ('type', '=', journal_type)],
             limit=1)
         if not journal:
             raise UserError(
-                    _('Please define sale journal for this company: "%s" (id:%d).')
-                % (company.name, company.id))
+                _('Please define %s journal for this company: "%s" (id:%d).')
+                % (journal_type, company.name, company.id))
         onchange_vals = inv_obj.onchange_partner_id(
-            'out_invoice',  self.customer_id.id)
+            invoice_type,  partner.id)
         invoice_vals = onchange_vals['value']
-        subcontractor_company = self.company_id
-        user = self.env['res.users'].search([
-            ('company_id', '=', company.id)], limit=1)
         invoice_vals.update({
             'date_invoice': date.today(),
-            'type': 'out_invoice',
-            'partner_id': self.customer_id.id,
+            'type': invoice_type,
+            'partner_id': partner.id,
             'journal_id': journal.id,
             'invoice_line': [(6, 0, [])],
             'currency_id': company.currency_id.id,
@@ -218,7 +225,7 @@ class SubcontractorWork(models.Model):
             uom_id=False,
             qty=self.quantity,
             name=self.name,
-            type='out_invoice',
+            type=invoice.type,
             partner_id=invoice.partner_id and invoice.partner_id.id or False,
             fposition_id=invoice.fiscal_position and invoice.fiscal_position.id or False,
             price_unit=self.cost_price_unit,
@@ -264,6 +271,24 @@ class SubcontractorWork(models.Model):
             invoice.sudo().write({'invoice_line': [(4, inv_line.id)]})
         invoices.button_reset_taxes()
         return invoices
+
+    @api.multi
+    def supplier_invoice_from_work(self):
+        invoice_line_obj = self.env['account.invoice.line']
+        invoice_obj = self.env['account.invoice']
+        invoice = None
+        for work in self:
+            if not invoice:
+                invoice_vals = work._prepare_invoice(invoice_type='in_invoice')
+                invoice = invoice_obj.create(invoice_vals)
+            inv_line_data = (
+                work._prepare_invoice_line(invoice))
+            # Need sudo because odoo prefetch de work.invoice_id
+            # and try to read fields on it and that makes access rules fail
+            inv_line = invoice_line_obj.sudo().create(inv_line_data)
+            invoice.sudo().write({'invoice_line': [(4, inv_line.id)]})
+        invoice.button_reset_taxes()
+        return invoice
 
     @api.multi
     def _scheduler_action_subcontractor_invoice_create(self):
