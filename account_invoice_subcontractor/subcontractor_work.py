@@ -23,7 +23,9 @@ from openerp import models, fields, api, _
 from datetime import timedelta, date
 from openerp.exceptions import Warning as UserError
 import openerp.addons.decimal_precision as dp
+import logging
 
+_logger = logging.getLogger(__name__)
 
 INVOICE_STATE = [
     ('draft', 'Draft'),
@@ -311,6 +313,7 @@ class SubcontractorWork(models.Model):
                 ('id', 'in', all_works.ids),
                 ('employee_id', '=', subcontractor.id)
                 ], order='employee_id, invoice_id')
+            _logger.info("%s lines found for subcontractor %s" % (subcontractor_works.ids, subcontractor.name))
             invoices = subcontractor_works.invoice_from_work()
             invoices.signal_workflow('invoice_open')
         return True
