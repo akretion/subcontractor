@@ -68,6 +68,7 @@ class AccountInvoiceLine(models.Model):
             work_obj.write(cr, 1, [value], {field: line.id}, context=context)
         return True
 
+    # Declare field with old api to store it with proper invalidation methods
     _columns = {
         'subcontractor_work_invoiced_id': old_fields.function(
             _get_work_invoiced,
@@ -120,7 +121,6 @@ class AccountInvoiceLine(models.Model):
     )
     @api.multi
     def _is_work_amount_invalid(self):
-        print 'start valid'
         for line in self:
             if line.invoice_id.type in ['out_invoice', 'in_invoice']:
                 if not line.subcontracted:
@@ -148,7 +148,6 @@ class AccountInvoiceLine(models.Model):
                                 subtotal - line.price_subtotal) > 0.01
             else:
                 line.invalid_work_amount = False
-        print 'end valid'
 
 
 class AccountInvoice(models.Model):
