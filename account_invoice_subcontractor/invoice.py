@@ -21,6 +21,7 @@
 ###############################################################################
 
 from openerp import models, fields, api
+from openerp.osv import fields as old_fields
 
 
 class AccountInvoiceLine(models.Model):
@@ -31,19 +32,72 @@ class AccountInvoiceLine(models.Model):
         'out_invoice': 'subcontractor_invoice_line_id',
     }
 
+    def _get_line_from_work(self, cr, uid, ids, context=None):
+        res = set()
+        for work in self.browse(cr, uid, ids, context=context):
+            if work.supplier_invoice_line_id:
+                res.add(work.supplier_invoice_line_id.id)
+            if work.subcontractor_invoice_line_id:
+                res.add(work.subcontractor_invoice_line_id.id)
+        return list(res)
+
+    def _get_line_from_invoice(self, cr, uid, ids, context=None):
+        return self.pool['account.invoice.line'].search(
+            cr, uid, [('invoice_id', 'in', ids)], context=context)
+
+    def _get_work_invoiced(self, cr, uid, ids, field_name, arg, context=None):
+        res = {}
+        for line in self.browse(cr, uid, ids, context=context):
+            field = self._map_type.get(line.invoice_id.type, False)
+            if field:
+                work_obj = self.pool['subcontractor.work']
+                work_ids = work_obj.search(
+                    cr, uid, [[field, '=', line.id]], context=context)
+                if work_ids:
+                    res[line.id] = work_ids[0]
+        return res
+
+    def _set_work_invoiced(self, cr, uid, ids, name, value, arg, context=None):
+        if not value:
+            return False
+        if isinstance(ids, (int, long)):
+            ids = [ids]
+        for line in self.browse(cr, uid, ids, context=context):
+            field = self._map_type[line.invoice_id.type]
+            work_obj = self.pool['subcontractor.work']
+            work_obj.write(cr, 1, [value], {field: line.id}, context=context)
+        return True
+
+    _columns = {
+        'subcontractor_work_invoiced_id': old_fields.function(
+            _get_work_invoiced,
+            fnct_inv=_set_work_invoiced,
+            type="many2one", copy=False,
+            relation='subcontractor.work',
+            string='Invoiced Work',
+            store={
+                'subcontractor.work': (
+                    _get_line_from_work,
+                    ['supplier_invoice_line_id',
+                     'subcontractor_invoice_line_id'],
+                    10),
+                'account.invoice': (_get_line_from_invoice, ['type'], 20),
+                'account.invoice.line': (
+                    lambda self, cr, uid, ids, c=None: ids,
+                    ['invoice_id'],
+                    30)
+            }),
+    }
+
     subcontracted = fields.Boolean()
     subcontractor_work_ids = fields.One2many(
         'subcontractor.work',
         'invoice_line_id',
         string='Subcontractor Work')
-    subcontractor_work_invoiced_id = fields.Many2one(
-        'subcontractor.work',
-        compute='_get_work_invoiced',
-        inverse='_set_work_invoiced',
-        string='Invoiced Work')
     invalid_work_amount = fields.Boolean(
         compute='_is_work_amount_invalid',
-        string='Work Amount Invalid')
+        string='Work Amount Invalid',
+        store=True)
 
     @api.multi
     def product_id_change(self, product, uom_id, qty=0, name='',
@@ -58,24 +112,15 @@ class AccountInvoiceLine(models.Model):
         res['value']['subcontracted'] = product.subcontracted
         return res
 
-    @api.multi
-    def _get_work_invoiced(self):
-        for line in self:
-            field = self._map_type[line.invoice_id.type]
-            work_obj = self.env['subcontractor.work']
-            work = work_obj.search([[field, '=', line.id]])
-            line.subcontractor_work_invoiced_id = work.id
-
-    @api.multi
-    def _set_work_invoiced(self):
-        for line in self:
-            work = line.subcontractor_work_invoiced_id
-            if work:
-                field = self._map_type[line.invoice_id.type]
-                work.sudo().write({field: line.id})
-
+    @api.depends(
+        'invoice_id', 'invoice_id.type', 'invoice_id.company_id',
+        'invoice_id.partner_id', 'subcontractor_work_invoiced_id',
+        'subcontractor_work_invoiced_id.cost_price', 'price_subtotal',
+        'subcontracted',
+    )
     @api.multi
     def _is_work_amount_invalid(self):
+        print 'start valid'
         for line in self:
             if line.invoice_id.type in ['out_invoice', 'in_invoice']:
                 if not line.subcontracted:
@@ -103,14 +148,20 @@ class AccountInvoiceLine(models.Model):
                                 subtotal - line.price_subtotal) > 0.01
             else:
                 line.invalid_work_amount = False
+        print 'end valid'
 
 
 class AccountInvoice(models.Model):
     _inherit = 'account.invoice'
 
-    to_pay = fields.Boolean(compute='_get_to_pay')
-    invalid_work_amount = fields.Boolean(compute='_is_work_amount_valid')
+    to_pay = fields.Boolean(compute='_get_to_pay', store=True)
+    invalid_work_amount = fields.Boolean(
+        compute='_is_work_amount_valid', store=True)
 
+    @api.depends(
+        'invoice_line',
+        'invoice_line.subcontractor_work_invoiced_id',
+        'invoice_line.subcontractor_work_invoiced_id.state')
     @api.multi
     def _get_to_pay(self):
         for invoice in self:
@@ -122,6 +173,7 @@ class AccountInvoice(models.Model):
                         line.subcontractor_work_invoiced_id.state == 'paid'
                         for line in invoice.invoice_line])
 
+    @api.depends('invoice_line', 'invoice_line.invalid_work_amount')
     @api.multi
     def _is_work_amount_valid(self):
         for invoice in self:

@@ -54,7 +54,8 @@ class SubcontractorWork(models.Model):
         'account.invoice.line',
         string='Invoice Line',
         required=True,
-        ondelete="cascade")
+        ondelete="cascade",
+        _prefetch=False)
     invoice_id = fields.Many2one(
         'account.invoice',
         related='invoice_line_id.invoice_id',
@@ -62,11 +63,14 @@ class SubcontractorWork(models.Model):
         store=True)
     supplier_invoice_line_id = fields.Many2one(
         'account.invoice.line',
-        string='Supplier Invoice Line')
+        string='Supplier Invoice Line',
+        _prefetch=False)
     supplier_invoice_id = fields.Many2one(
         'account.invoice',
         related='supplier_invoice_line_id.invoice_id',
-        string='Supplier Invoice')
+        string='Supplier Invoice',
+        readonly=True,
+        store=True)
     quantity = fields.Float(
         digits=dp.get_precision('Product UoS'))
     sale_price_unit = fields.Float(digits=dp.get_precision('Account'))
@@ -83,20 +87,24 @@ class SubcontractorWork(models.Model):
         'res.company',
         related='invoice_line_id.company_id',
         string='Company',
-        readonly=True)
+        readonly=True,
+        store=True)
     customer_id = fields.Many2one(
         'res.partner',
         related='company_id.partner_id',
         readonly=True,
-        string='Customer')
+        string='Customer',
+        store=True)
     end_customer_id = fields.Many2one(
         'res.partner',
         related='invoice_id.partner_id',
         readonly=True,
+        store=True,
         string='Customer(end)')
     subcontractor_invoice_line_id = fields.Many2one(
         'account.invoice.line',
-        string='Subcontractor Invoice Line')
+        string='Subcontractor Invoice Line',
+        _prefetch=False)
     subcontractor_company_id = fields.Many2one(
         'res.company',
         related='employee_id.subcontractor_company_id',
@@ -121,6 +129,7 @@ class SubcontractorWork(models.Model):
         'product.uom',
         related='invoice_line_id.uos_id',
         readonly=True,
+        store=True,
         string='Product UOS')
 
     @api.onchange('sale_price_unit', 'employee_id')
