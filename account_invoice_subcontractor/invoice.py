@@ -88,9 +88,7 @@ class AccountInvoiceLine(models.Model):
     def _is_work_amount_invalid(self):
         for line in self:
             if line.invoice_id.type in ['out_invoice', 'in_invoice']:
-                if not line.subcontracted:
-                    line.invalid_work_amount = False
-                else:
+                if line.subcontracted:
                     if line.invoice_id.type == 'in_invoice':
                         line.invalid_work_amount = abs(
                             line.subcontractor_work_invoiced_id.cost_price
@@ -103,16 +101,12 @@ class AccountInvoiceLine(models.Model):
                                 line.invalid_work_amount = abs(
                                     (line.subcontractor_work_invoiced_id
                                      .cost_price - line.price_subtotal)) > 0.01
-                            else:
-                                line.invalid_work_amount = False
                         else:
                             subtotal = sum([
                                 work.sale_price for work in (
                                     line.subcontractor_work_ids)])
                             line.invalid_work_amount = abs(
                                 subtotal - line.price_subtotal) > 0.01
-            else:
-                line.invalid_work_amount = False
 
 
 class AccountInvoice(models.Model):
