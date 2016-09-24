@@ -65,18 +65,20 @@ class AccountInvoiceLine(models.Model):
     @api.multi
     def _get_work_invoiced(self):
         for line in self:
-            field = self._map_type[line.invoice_id.type]
-            work_obj = self.env['subcontractor.work']
-            work = work_obj.search([[field, '=', line.id]])
-            line.subcontractor_work_invoiced_id = work.id
+            field = self._map_type.get(line.invoice_id.type, False)
+            if field:
+                work_obj = self.env['subcontractor.work']
+                work = work_obj.search([[field, '=', line.id]])
+                line.subcontractor_work_invoiced_id = work.id
 
     @api.multi
     def _set_work_invoiced(self):
         for line in self:
             work = line.subcontractor_work_invoiced_id
             if work:
-                field = self._map_type[line.invoice_id.type]
-                work.sudo().write({field: line.id})
+                field = self._map_type.get(line.invoice_id.type, False)
+                if field:
+                    work.sudo().write({field: line.id})
 
     @api.depends(
         'invoice_id', 'invoice_id.type', 'invoice_id.company_id',
