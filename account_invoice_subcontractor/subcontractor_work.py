@@ -61,6 +61,10 @@ class SubcontractorWork(models.Model):
         related='invoice_line_id.invoice_id',
         string='Invoice',
         store=True)
+    date_invoice = fields.Date(
+        related='invoice_line_id.invoice_id.date_invoice',
+        string='Invoice Date',
+        store=True)
     supplier_invoice_line_id = fields.Many2one(
         'account.invoice.line',
         string='Supplier Invoice Line',
@@ -70,6 +74,10 @@ class SubcontractorWork(models.Model):
         related='supplier_invoice_line_id.invoice_id',
         string='Supplier Invoice',
         readonly=True,
+        store=True)
+    date_supplier_invoice = fields.Date(
+        related='supplier_invoice_line_id.invoice_id.date_invoice',
+        string='Supplier Invoice Date',
         store=True)
     quantity = fields.Float(
         digits=dp.get_precision('Product UoS'))
@@ -131,6 +139,23 @@ class SubcontractorWork(models.Model):
         readonly=True,
         store=True,
         string='Product UOS')
+    same_fiscalyear = fields.Boolean(
+        compute='_check_same_fiscalyear',
+        store=True,
+        compute_sudo=True)
+
+    @api.multi
+    @api.depends(
+        'invoice_line_id.invoice_id.date_invoice',
+        'supplier_invoice_line_id.invoice_id.date_invoice')
+    def _check_same_fiscalyear(self):
+        fyo = self.env['account.fiscalyear']
+        for sub in self:
+            invoice_year = fyo.find(
+                sub.invoice_line_id.invoice_id.date_invoice)
+            supplier_invoice_year = fyo.find(
+                sub.supplier_invoice_line_id.invoice_id.date_invoice)
+            sub.same_fiscalyear = invoice_year == supplier_invoice_year
 
     @api.onchange('sale_price_unit', 'employee_id')
     def _compute_price(self):

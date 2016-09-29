@@ -12,9 +12,25 @@
                     <field name="employee_id"/>
                     <separator/>
                     <filter string="To invoice" name="to_invoice"
-                            domain="[('subcontractor_invoice_line_id','=',False), ('supplier_invoice_line_id', '=', False), ('state', 'not in', ['draft', 'cancel'])]"/>
+                            domain="[
+                                ('subcontractor_type','!=','trainee'),
+                                ('subcontractor_invoice_line_id','=',False),
+                                ('supplier_invoice_line_id', '=', False),
+                                ('state', 'not in', ['draft', 'cancel'])]"/>
                     <filter string="To pay" name="to_pay"
                             domain="[('state','=', 'paid'),('subcontractor_state', '!=', 'paid')]"/>
+                    <separator/>
+                    <filter string="Between FiscalYear" name="between_fiscalyear"
+                            domain="[('same_fiscalyear','=', False)]"/>
+                    <field string="Date Cloture"
+                           name="date_invoice"
+                           filter_domain="[
+                                ('state','!=', 'cancel'),
+                                ('subcontractor_type', '!=', 'trainee'),
+                                '|', ('date_supplier_invoice', '!=', False), ('date_invoice', '!=', False),
+                                '|', ('date_supplier_invoice', '&gt;', self), ('date_supplier_invoice', '=', False),
+                                '|', ('date_invoice', '&lt;=', self), ('date_invoice', '=', False),
+                               ]"/>
                     <group expand="0" string="Group By...">
                         <filter string="Invoice" context="{'group_by':'invoice_id'}"/>
                         <filter string="Subcontractor" context="{'group_by':'employee_id'}"/>
@@ -33,7 +49,7 @@
                     <field name="supplier_invoice_id"/>
                     <field name="name"/>
                     <field name="employee_id"/>
-                    <field name="subcontractor_type" invisible="True"/>
+                    <field name="subcontractor_type"/>
                     <field name="quantity"/>
                     <field name="uos_id"/>
                     <field name="sale_price_unit"/>
@@ -45,6 +61,8 @@
                     <field name="subcontractor_invoice_line_id"/>
                     <field name="customer_id"/>
                     <field name="subcontractor_company_id"/>
+                    <field name="date_invoice"/>
+                    <field name="date_supplier_invoice"/>
                 </form>
             </field>
         </record>
@@ -53,12 +71,13 @@
             <field name="model">subcontractor.work</field>
             <field name="arch" type="xml">
                 <tree string="Subcontractor work" editable="bottom">
+                    <field name="id"/>
                     <field name="end_customer_id"/>
                     <field name="invoice_id"/>
                     <field name="supplier_invoice_id"/>
                     <field name="name"/>
                     <field name="employee_id"/>
-                    <field name="subcontractor_type" invisible="True"/>
+                    <field name="subcontractor_type"/>
                     <field name="quantity" sum="Total Qty"/>
                     <field name="uos_id"/>
                     <field name="cost_price_unit"/>
@@ -71,6 +90,8 @@
                     <field name="subcontractor_invoice_line_id"/>
                     <field name="customer_id"/>
                     <field name="subcontractor_company_id"/>
+                    <field name="date_invoice"/>
+                    <field name="date_supplier_invoice"/>
                </tree>
             </field>
         </record>
