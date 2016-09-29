@@ -143,6 +143,10 @@ class SubcontractorWork(models.Model):
         compute='_check_same_fiscalyear',
         store=True,
         compute_sudo=True)
+    min_fiscalyear = fields.Char(
+        compute='_check_same_fiscalyear',
+        store=True,
+        compute_sudo=True)
 
     @api.multi
     @api.depends(
@@ -151,11 +155,21 @@ class SubcontractorWork(models.Model):
     def _check_same_fiscalyear(self):
         fyo = self.env['account.fiscalyear']
         for sub in self:
-            invoice_year = fyo.find(
+            invoice_year_id = fyo.find(
                 sub.invoice_line_id.invoice_id.date_invoice)
-            supplier_invoice_year = fyo.find(
+            supplier_invoice_year_id = fyo.find(
                 sub.supplier_invoice_line_id.invoice_id.date_invoice)
-            sub.same_fiscalyear = invoice_year == supplier_invoice_year
+            sub.same_fiscalyear = invoice_year_id == supplier_invoice_year_id
+            invoice_year = fyo.browse(invoice_year_id)
+            supplier_invoice_year = fyo.browse(supplier_invoice_year_id)
+            if invoice_year and supplier_invoice_year:
+                sub.min_fiscalyear = min(
+                    invoice_year.name,
+                    supplier_invoice_year.name)
+            else:
+                sub.min_fiscalyear = max(
+                    invoice_year.name,
+                    supplier_invoice_year.name)
 
     @api.onchange('sale_price_unit', 'employee_id')
     def _compute_price(self):

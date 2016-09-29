@@ -22,15 +22,7 @@
                     <separator/>
                     <filter string="Between FiscalYear" name="between_fiscalyear"
                             domain="[('same_fiscalyear','=', False)]"/>
-                    <field string="Date Cloture"
-                           name="date_invoice"
-                           filter_domain="[
-                                ('state','!=', 'cancel'),
-                                ('subcontractor_type', '!=', 'trainee'),
-                                '|', ('date_supplier_invoice', '!=', False), ('date_invoice', '!=', False),
-                                '|', ('date_supplier_invoice', '&gt;', self), ('date_supplier_invoice', '=', False),
-                                '|', ('date_invoice', '&lt;=', self), ('date_invoice', '=', False),
-                               ]"/>
+                    <field string="FiscalYear" name="min_fiscalyear"/>
                     <group expand="0" string="Group By...">
                         <filter string="Invoice" context="{'group_by':'invoice_id'}"/>
                         <filter string="Subcontractor" context="{'group_by':'employee_id'}"/>

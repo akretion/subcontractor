@@ -94,7 +94,7 @@ class AccountInvoiceLine(models.Model):
                     if line.invoice_id.type == 'in_invoice':
                         line.invalid_work_amount = abs(
                             line.subcontractor_work_invoiced_id.cost_price
-                            - line.price_subtotal) > 0.01
+                            - line.price_subtotal) > 0.1
                     else:
                         # TODO FIXME
                         if line.invoice_id.company_id.id != 1:
@@ -102,7 +102,7 @@ class AccountInvoiceLine(models.Model):
                             if line.invoice_id.partner_id.id == 1:
                                 line.invalid_work_amount = abs(
                                     (line.subcontractor_work_invoiced_id
-                                     .cost_price - line.price_subtotal)) > 0.01
+                                     .cost_price - line.price_subtotal)) > 0.1
                         else:
                             subtotal = sum([
                                 work.sale_price for work in (
