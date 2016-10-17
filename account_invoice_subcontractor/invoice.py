@@ -42,7 +42,8 @@ class AccountInvoiceLine(models.Model):
         compute='_get_work_invoiced',
         inverse='_set_work_invoiced',
         string='Invoiced Work',
-        store=True)
+        store=True,
+        _prefetch=False)
     invalid_work_amount = fields.Boolean(
         compute='_is_work_amount_invalid',
         string='Work Amount Invalid',

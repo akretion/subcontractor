@@ -60,7 +60,8 @@ class SubcontractorWork(models.Model):
         'account.invoice',
         related='invoice_line_id.invoice_id',
         string='Invoice',
-        store=True)
+        store=True,
+        _prefetch=False)
     date_invoice = fields.Date(
         related='invoice_line_id.invoice_id.date_invoice',
         string='Invoice Date',
@@ -74,13 +75,14 @@ class SubcontractorWork(models.Model):
         related='supplier_invoice_line_id.invoice_id',
         string='Supplier Invoice',
         readonly=True,
-        store=True)
+        store=True,
+        _prefetch=False)
     date_supplier_invoice = fields.Date(
         related='supplier_invoice_line_id.invoice_id.date_invoice',
         string='Supplier Invoice Date',
         store=True)
     quantity = fields.Float(
-        digits=dp.get_precision('Product UoS'))
+        digits=dp.get_precision('Product Unit of Measure'))
     sale_price_unit = fields.Float(digits=dp.get_precision('Account'))
     cost_price_unit = fields.Float(digits=dp.get_precision('Account'))
     cost_price = fields.Float(
