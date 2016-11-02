@@ -34,9 +34,10 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         }
         """
         res = {}
-        group_lines = self.env['hr.analytic.timesheet'].read_group(
+        line_obj = self.env['hr.analytic.timesheet']
+        group_lines = line_obj.read_group(
             [('id', 'in', self._context['active_ids'])],
-            ['task_id', 'user_id'],
+            ['task_id', 'user_id', 'unit_amount'],
             ['task_id', 'user_id'],
             lazy=False)
         for group in group_lines:
@@ -44,11 +45,11 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             user = self.env['res.users'].browse(group['user_id'][0])
             #TODO found a better solution then getting the first employee
             employee_id = user.employee_ids[0].id
-            line_ids = group['__domain'][2][2]
+            lines = line_obj.search(group['__domain'])
             if not task_id in res:
-                res[task_id] = {employee_id: line_ids}
+                res[task_id] = {employee_id: lines.ids}
             else:
-                res[task_id][employee_id] = line_ids
+                res[task_id][employee_id] = lines.ids
         return res
 
     def _prepare_subcontractor_work(self, inv_line_id, employee_id, line_ids):
