@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright <YEAR(S)> <AUTHOR(S)>
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+
+<openerp>
+<data>
+
+<record id="subcontractor_timesheet_invoice_view" model="ir.ui.view">
+    <field name="model">subcontractor.timesheet.invoice</field>
+    <field name="arch" type="xml">
+        <form string="Invoice">
+                <field name='error'/>
+                <p>You can select an existing invoice to add new line on it</p>
+            <group>
+                <field name='partner_id'/>
+                <field name='invoice_id'
+                       domain="[('partner_id', '=', partner_id), ('state', '=', 'draft')]"/>
+            </group>
+            <footer>
+                <button name="action_invoice"
+                        type="object"
+                        string="Ok"
+                        class="oe_highlight"
+                        attrs="{'invisible': [('error', '!=', False)]}" />
+                or
+                <button special="cancel"
+                        string="Cancel"/>
+            </footer>
+        </form>
+    </field>
+</record>
+
+<record id="subcontractor_timesheet_invoice_action" model="ir.actions.act_window">
+    <field name="name">Invoice TimeSheet</field>
+    <field name="res_model">subcontractor.timesheet.invoice</field>
+    <field name="view_type">form</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+</record>
+
+<record model="ir.values" id="hr_timesheet_invoice_create_values">
+    <field name="model_id" ref="hr_timesheet.model_hr_analytic_timesheet" />
+    <field name="name">Create Invoice Subcontractor</field>
+    <field name="key2">client_action_multi</field>
+    <field name="value" eval="'ir.actions.act_window,' + str(ref('subcontractor_timesheet_invoice_action'))" />
+    <field name="key">action</field>
+    <field name="model">hr.analytic.timesheet</field>
+</record>
+
+</data>
+</openerp>
