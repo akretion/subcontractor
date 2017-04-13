@@ -115,7 +115,8 @@ class AccountInvoiceLine(models.Model):
 class AccountInvoice(models.Model):
     _inherit = 'account.invoice'
 
-    to_pay = fields.Boolean(compute='_get_to_pay', store=True)
+    to_pay = fields.Boolean(
+        compute='_get_to_pay', store=True, compute_sudo=True)
     invalid_work_amount = fields.Boolean(
         compute='_is_work_amount_valid', store=True)
 
