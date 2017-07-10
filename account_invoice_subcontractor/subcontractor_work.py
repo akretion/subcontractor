@@ -257,8 +257,18 @@ class SubcontractorWork(models.Model):
         onchange_vals = inv_obj.onchange_partner_id(
             invoice_type,  partner.id)
         invoice_vals = onchange_vals['value']
+        date_invoice = date.today()
+        original_date_invoice = self.sudo().invoice_id.date_invoice
+        last_invoices = inv_obj.search([
+            ('type', '=', invoice_type),
+            ('company_id', '=', company.id),
+            ('date_invoice', '>', original_date_invoice),
+            ('number', '!=', False),
+            ('internal_number', '!=', False)])
+        if not last_invoices:
+            date_invoice = original_date_invoice
         invoice_vals.update({
-            'date_invoice': date.today(),
+            'date_invoice': date_invoice,
             'type': invoice_type,
             'partner_id': partner.id,
             'journal_id': journal.id,
