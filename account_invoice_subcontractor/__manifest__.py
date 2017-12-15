@@ -20,7 +20,7 @@
         'security/ir.model.access.csv',
         'hr_view.xml',
         'subcontractor_work_view.xml',
-        # 'invoice_view.xml',
+        'invoice_view.xml',
         # 'wizard/subcontractor_invoice_work_view.xml',
         # 'wizard/supplier_invoice_work_view.xml',
         'product_view.xml',
