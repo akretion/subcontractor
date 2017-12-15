@@ -242,17 +242,16 @@ class SubcontractorWork(models.Model):
             raise UserError(
                 _('Please define %s journal for this company: "%s" (id:%d).')
                 % (journal_type, company.name, company.id))
-        # TODO migrer le onchange
-        onchange_vals = inv_obj._onchange_partner_id(partner.id)
-        invoice_vals = onchange_vals['value']
+        invoice_vals = {'partner_id': partner.id}
+        invoice_vals = self.env['account.invoice'].play_onchanges(
+            invoice_vals, ['partner_id'])
         date_invoice = date.today()
         original_date_invoice = self.sudo().invoice_id.date_invoice
         last_invoices = inv_obj.search([
             ('type', '=', invoice_type),
             ('company_id', '=', company.id),
             ('date_invoice', '>', original_date_invoice),
-            ('number', '!=', False),
-            ('internal_number', '!=', False)])
+            ('number', '!=', False)])
         if not last_invoices:
             date_invoice = original_date_invoice
         invoice_vals.update({
@@ -260,7 +259,7 @@ class SubcontractorWork(models.Model):
             'type': invoice_type,
             'partner_id': partner.id,
             'journal_id': journal.id,
-            'invoice_line': [(6, 0, [])],
+            'invoice_line_ids': [(6, 0, [])],
             'currency_id': company.currency_id.id,
             'user_id': user.id,
         })
@@ -270,36 +269,18 @@ class SubcontractorWork(models.Model):
     def _prepare_invoice_line(self, invoice):
         self.ensure_one()
         invoice_line_obj = self.env['account.invoice.line']
-        # ////////////////////  TODOOOOOOOOOOOOOOOOO
-        import pdb; pdb.set_trace()
-        line_data = invoice_line_obj.product_id_change(
-            product=self.sudo().invoice_line_id.product_id.id,
-            uom_id=False,
-            qty=self.quantity,
-            name=self.name,
-            type=invoice.type,
-            partner_id=invoice.partner_id and invoice.partner_id.id or False,
-            fposition_id=(invoice.fiscal_position and
-                          invoice.fiscal_position.id or False),
-            price_unit=self.cost_price_unit,
-            currency_id=(invoice.currency_id and
-                         invoice.currency_id.id or False),
-            company_id=invoice.company_id and invoice.company_id.id or False)
-        line_vals = line_data['value']
-        line_vals.update({
-            'uos_id': self.uos_id.id,
-            'price_unit': self.cost_price_unit,
-            'invoice_id': invoice.id,
-            'discount': self.sudo().invoice_line_id.discount,
-            'quantity': self.quantity,
+        line_vals = {
             'product_id': self.sudo().invoice_line_id.product_id.id,
-            'invoice_line_tax_id': [
-                (6, 0, line_data['value']['invoice_line_tax_id'])],
-            'subcontractor_work_invoiced_id': self.id,
+            'quantity': self.quantity,
             'name': "Client final %s :%s" % (
                 self.end_customer_id.name,
                 self.name),
-        })
+            'price_unit': self.cost_price_unit,
+            'invoice_id': invoice.id,
+            'discount': self.sudo().invoice_line_id.discount,
+            'subcontractor_work_invoiced_id': self.id,
+        }
+        line_vals = invoice_line_obj.play_onchanges(line_vals, ['product_id'])
         return line_vals
 
     @api.multi
@@ -322,7 +303,7 @@ class SubcontractorWork(models.Model):
             # Need sudo because odoo prefetch de work.invoice_id
             # and try to read fields on it and that makes access rules fail
             inv_line = invoice_line_obj.sudo().create(inv_line_data)
-            invoice.sudo().write({'invoice_line': [(4, inv_line.id)]})
+            invoice.sudo().write({'invoice_line_ids': [(4, inv_line.id)]})
         invoices.button_reset_taxes()
         return invoices
 
@@ -340,7 +321,7 @@ class SubcontractorWork(models.Model):
             # Need sudo because odoo prefetch de work.invoice_id
             # and try to read fields on it and that makes access rules fail
             inv_line = invoice_line_obj.sudo().create(inv_line_data)
-            invoice.sudo().write({'invoice_line': [(4, inv_line.id)]})
+            invoice.sudo().write({'invoice_line_ids': [(4, inv_line.id)]})
         invoice.button_reset_taxes()
         return invoice
 
