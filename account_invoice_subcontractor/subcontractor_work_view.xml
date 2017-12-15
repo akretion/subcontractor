@@ -1,105 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<openerp>
-    <data>
+<odoo>
 
-        <!-- VIEW FOR THE OBJECT : subcontractor_work -->
-        <record id="view_subcontractor_work_view_search" model="ir.ui.view">
-            <field name="model">subcontractor.work</field>
-            <field name="arch" type="xml">
-                <search string="Subcontractor work">
-                    <field name="invoice_id"/>
-                    <field name="employee_id"/>
-                    <separator/>
-                    <filter string="To invoice" name="to_invoice"
-                            domain="[
-                                ('subcontractor_type','!=','trainee'),
-                                ('subcontractor_invoice_line_id','=',False),
-                                ('supplier_invoice_line_id', '=', False),
-                                ('state', 'not in', ['draft', 'cancel'])]"/>
-                    <filter string="To pay" name="to_pay"
-                            domain="[('state','=', 'paid'),('subcontractor_state', '!=', 'paid')]"/>
-                    <separator/>
-                    <filter string="Between FiscalYear" name="between_fiscalyear"
-                            domain="[('same_fiscalyear','=', False)]"/>
-                    <field string="FiscalYear" name="min_fiscalyear"/>
-                    <group expand="0" string="Group By...">
-                        <filter string="Invoice" context="{'group_by':'invoice_id'}"/>
-                        <filter string="Subcontractor" context="{'group_by':'employee_id'}"/>
-                    </group>
+    <!-- VIEW FOR THE OBJECT : subcontractor_work -->
+    <record id="view_subcontractor_work_view_search" model="ir.ui.view">
+        <field name="model">subcontractor.work</field>
+        <field name="arch" type="xml">
+            <search string="Subcontractor work">
+                <field name="invoice_id"/>
+                <field name="employee_id"/>
+                <separator/>
+                <filter string="To invoice" name="to_invoice"
+                        domain="[
+                            ('subcontractor_type','!=','trainee'),
+                            ('subcontractor_invoice_line_id','=',False),
+                            ('supplier_invoice_line_id', '=', False),
+                            ('state', 'not in', ['draft', 'cancel'])]"/>
+                <filter string="To pay" name="to_pay"
+                        domain="[('state','=', 'paid'),('subcontractor_state', '!=', 'paid')]"/>
+                <separator/>
+                <filter string="Between FiscalYear" name="between_fiscalyear"
+                        domain="[('same_fiscalyear','=', False)]"/>
+                <field string="FiscalYear" name="min_fiscalyear"/>
+                <group expand="0" string="Group By...">
+                    <filter string="Invoice" context="{'group_by':'invoice_id'}"/>
+                    <filter string="Subcontractor" context="{'group_by':'employee_id'}"/>
+                </group>
 
-                </search>
-            </field>
-        </record>
+            </search>
+        </field>
+    </record>
 
-        <record id="view_subcontractor_work_view_form" model="ir.ui.view">
-            <field name="model">subcontractor.work</field>
-            <field name="arch" type="xml">
-                <form string="Subcontractor work">
-                    <field name="end_customer_id"/>
-                    <field name="invoice_id"/>
-                    <field name="supplier_invoice_id"/>
-                    <field name="name"/>
-                    <field name="employee_id"/>
-                    <field name="subcontractor_type"/>
-                    <field name="quantity"/>
-                    <field name="uos_id"/>
-                    <field name="sale_price_unit"/>
-                    <field name="sale_price"/>
-                    <field name="cost_price"/>
-                    <field name="state"/>
-                    <field name="subcontractor_state"/>
-                    <field name="supplier_invoice_line_id"/>
-                    <field name="subcontractor_invoice_line_id"/>
-                    <field name="customer_id"/>
-                    <field name="subcontractor_company_id"/>
-                    <field name="date_invoice"/>
-                    <field name="date_supplier_invoice"/>
-                </form>
-            </field>
-        </record>
+    <record id="view_subcontractor_work_view_form" model="ir.ui.view">
+        <field name="model">subcontractor.work</field>
+        <field name="arch" type="xml">
+            <form string="Subcontractor work">
+                <field name="end_customer_id"/>
+                <field name="invoice_id"/>
+                <field name="supplier_invoice_id"/>
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="subcontractor_type"/>
+                <field name="quantity"/>
+                <field name="uom_id"/>
+                <field name="sale_price_unit"/>
+                <field name="sale_price"/>
+                <field name="cost_price"/>
+                <field name="state"/>
+                <field name="subcontractor_state"/>
+                <field name="supplier_invoice_line_id"/>
+                <field name="subcontractor_invoice_line_id"/>
+                <field name="customer_id"/>
+                <field name="subcontractor_company_id"/>
+                <field name="date_invoice"/>
+                <field name="date_supplier_invoice"/>
+            </form>
+        </field>
+    </record>
 
-        <record id="view_subcontractor_work_view_tree" model="ir.ui.view">
-            <field name="model">subcontractor.work</field>
-            <field name="arch" type="xml">
-                <tree string="Subcontractor work" editable="bottom">
-                    <field name="id"/>
-                    <field name="end_customer_id"/>
-                    <field name="invoice_id"/>
-                    <field name="supplier_invoice_id"/>
-                    <field name="name"/>
-                    <field name="employee_id"/>
-                    <field name="subcontractor_type"/>
-                    <field name="quantity" sum="Total Qty"/>
-                    <field name="uos_id"/>
-                    <field name="cost_price_unit"/>
-                    <field name="sale_price_unit"/>
-                    <field name="sale_price" sum="Total Sale Amount"/>
-                    <field name="cost_price" sum="Total Cost Amount"/>
-                    <field name="state"/>
-                    <field name="subcontractor_state"/>
-                    <field name="supplier_invoice_line_id"/>
-                    <field name="subcontractor_invoice_line_id"/>
-                    <field name="customer_id"/>
-                    <field name="subcontractor_company_id"/>
-                    <field name="date_invoice"/>
-                    <field name="date_supplier_invoice"/>
-               </tree>
-            </field>
-        </record>
+    <record id="view_subcontractor_work_view_tree" model="ir.ui.view">
+        <field name="model">subcontractor.work</field>
+        <field name="arch" type="xml">
+            <tree string="Subcontractor work" editable="bottom">
+                <field name="id"/>
+                <field name="end_customer_id"/>
+                <field name="invoice_id"/>
+                <field name="supplier_invoice_id"/>
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="subcontractor_type"/>
+                <field name="quantity" sum="Total Qty"/>
+                <field name="uom_id"/>
+                <field name="cost_price_unit"/>
+                <field name="sale_price_unit"/>
+                <field name="sale_price" sum="Total Sale Amount"/>
+                <field name="cost_price" sum="Total Cost Amount"/>
+                <field name="state"/>
+                <field name="subcontractor_state"/>
+                <field name="supplier_invoice_line_id"/>
+                <field name="subcontractor_invoice_line_id"/>
+                <field name="customer_id"/>
+                <field name="subcontractor_company_id"/>
+                <field name="date_invoice"/>
+                <field name="date_supplier_invoice"/>
+           </tree>
+        </field>
+    </record>
 
-        <record id="action_subcontractor_work" model="ir.actions.act_window">
-            <field name="name">Subcontractor Work</field>
-            <field name="res_model">subcontractor.work</field>
-            <field name="view_type">form</field>
-            <field name="view_mode">tree,form,calendar,graph</field>
-            <field name="context">{"search_default_to_invoice":1}</field>
-        </record>
+    <record id="action_subcontractor_work" model="ir.actions.act_window">
+        <field name="name">Subcontractor Work</field>
+        <field name="res_model">subcontractor.work</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">tree,form,graph</field>
+        <!-- TODO Insufficient fields for Calendar View!  -->
+        <!-- <field name="view_mode">tree,form,calendar,graph</field> -->
+        <field name="context">{"search_default_to_invoice":1}</field>
+    </record>
 
-        <menuitem action="action_subcontractor_work"
-            id="menu_action_subcontractor_work"
-            parent="account.menu_finance_receivables"
-            sequence="100"/>
+    <menuitem action="action_subcontractor_work"
+        id="menu_action_subcontractor_work"
+        parent="account.menu_finance_receivables"
+        sequence="100"/>
 
-    </data>
-</openerp>
+</odoo>
