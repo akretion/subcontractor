@@ -127,37 +127,38 @@ class SubcontractorWork(models.Model):
         store=True,
         oldname='uos_id',  # ????
         string='Unit Of Measure')
-    same_fiscalyear = fields.Boolean(
-        compute='_check_same_fiscalyear',
-        store=True,
-        compute_sudo=True)
-    min_fiscalyear = fields.Char(
-        compute='_check_same_fiscalyear',
-        store=True,
-        compute_sudo=True)
+    same_fiscalyear = fields.Boolean()
+    # We keep the data here
+        # compute='_check_same_fiscalyear',
+        # store=True,
+        # compute_sudo=True)
+    min_fiscalyear = fields.Char()
+        # compute='_check_same_fiscalyear',
+        # store=True,
+        # compute_sudo=True)
 
-    @api.multi
-    @api.depends(
-        'invoice_line_id.invoice_id.date_invoice',
-        'supplier_invoice_line_id.invoice_id.date_invoice')
-    def _check_same_fiscalyear(self):
-        fyo = self.env['account.fiscalyear']
-        for sub in self:
-            invoice_year_id = fyo.find(
-                sub.invoice_line_id.invoice_id.date_invoice)
-            supplier_invoice_year_id = fyo.find(
-                sub.supplier_invoice_line_id.invoice_id.date_invoice)
-            sub.same_fiscalyear = invoice_year_id == supplier_invoice_year_id
-            invoice_year = fyo.browse(invoice_year_id)
-            supplier_invoice_year = fyo.browse(supplier_invoice_year_id)
-            if invoice_year and supplier_invoice_year:
-                sub.min_fiscalyear = min(
-                    invoice_year.name,
-                    supplier_invoice_year.name)
-            else:
-                sub.min_fiscalyear = max(
-                    invoice_year.name,
-                    supplier_invoice_year.name)
+    # @api.multi
+    # @api.depends(
+    #     'invoice_line_id.invoice_id.date_invoice',
+    #     'supplier_invoice_line_id.invoice_id.date_invoice')
+    # def _check_same_fiscalyear(self):
+    #     fyo = lf.env['account.fiscalyear']
+    #     for sub in self:
+    #         invoice_year_id = fyo.find(
+    #             sub.invoice_line_id.invoice_id.date_invoice)
+    #         supplier_invoice_year_id = fyo.find(
+    #             sub.supplier_invoice_line_id.invoice_id.date_invoice)
+    #         sub.same_fiscalyear = invoice_year_id == supplier_invoice_year_id
+    #         invoice_year = fyo.browse(invoice_year_id)
+    #         supplier_invoice_year = fyo.browse(supplier_invoice_year_id)
+    #         if invoice_year and supplier_invoice_year:
+    #             sub.min_fiscalyear = min(
+    #                 invoice_year.name,
+    #                 supplier_invoice_year.name)
+    #         else:
+    #             sub.min_fiscalyear = max(
+    #                 invoice_year.name,
+    #                 supplier_invoice_year.name)
 
     @api.onchange('sale_price_unit', 'employee_id')
     def _compute_price(self):
@@ -268,6 +269,8 @@ class SubcontractorWork(models.Model):
     def _prepare_invoice_line(self, invoice):
         self.ensure_one()
         invoice_line_obj = self.env['account.invoice.line']
+        # ////////////////////  TODOOOOOOOOOOOOOOOOO
+        import pdb; pdb.set_trace()
         line_data = invoice_line_obj.product_id_change(
             product=self.sudo().invoice_line_id.product_id.id,
             uom_id=False,

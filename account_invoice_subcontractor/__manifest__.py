@@ -25,5 +25,8 @@
         'wizard/supplier_invoice_work_view.xml',
         'product_view.xml',
     ],
+    'demo': [
+        'demo/demo.xml',
+    ],
     'installable': True,
 }
