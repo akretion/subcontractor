@@ -2,11 +2,12 @@
 #   @author Sébastien BEAU <sebastien.beau@akretion.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from openerp import models, fields, api, _
-from datetime import timedelta, date
-from openerp.exceptions import Warning as UserError
-import openerp.addons.decimal_precision as dp
 import logging
+from datetime import timedelta, date
+
+from odoo import models, fields, api, _
+from odoo.exceptions import UserError
+import odoo.addons.decimal_precision as dp
 
 _logger = logging.getLogger(__name__)
 
@@ -119,12 +120,13 @@ class SubcontractorWork(models.Model):
         store=True,
         default='draft',
         compute_sudo=True)
-    uos_id = fields.Many2one(
+    uom_id = fields.Many2one(
         'product.uom',
-        related='invoice_line_id.uos_id',
+        related='invoice_line_id.uom_id',
         readonly=True,
         store=True,
-        string='Product UOS')
+        oldname='uos_id',  # ????
+        string='Unit Of Measure')
     same_fiscalyear = fields.Boolean(
         compute='_check_same_fiscalyear',
         store=True,
@@ -162,7 +164,7 @@ class SubcontractorWork(models.Model):
         for work in self:
             rate = 1
             if not work.invoice_line_id.product_id.no_commission:
-                rate -= work.employee_id.commission_rate/100.
+                rate -= work.employee_id.commission_rate / 100.
             work.cost_price_unit = work.sale_price_unit * rate
 
     @api.onchange('employee_id')
@@ -171,7 +173,7 @@ class SubcontractorWork(models.Model):
         if self.employee_id:
             self.subcontractor_type = self.employee_id.subcontractor_type
             line = self.invoice_line_id
-            #TODO find a good way to get the right qty
+            # TODO find a good way to get the right qty
             self.quantity = line.quantity
             self.sale_price_unit = line.price_unit * (1 - line.discount / 100.)
 
@@ -212,20 +214,21 @@ class SubcontractorWork(models.Model):
                       " or 'paid' can be invoiced"))
             elif work.subcontractor_type != work_type:
                 raise UserError(
-                    _("You can invoice on only the %s subcontractors" % work_type))
+                    _("You can invoice on only the %s subcontractors"
+                      % work_type))
 
     @api.model
     def _prepare_invoice(self, invoice_type='out_invoice'):
         self.ensure_one()
         journal_obj = self.env['account.journal']
         inv_obj = self.env['account.invoice']
-        if invoice_type =='out_invoice':
+        if invoice_type == 'out_invoice':
             company = self.subcontractor_company_id
             journal_type = 'sale'
             partner = self.customer_id
             user = self.env['res.users'].search([
                 ('company_id', '=', company.id)], limit=1)
-        elif invoice_type =='in_invoice':
+        elif invoice_type == 'in_invoice':
             company = self.invoice_id.company_id
             journal_type = 'purchase'
             partner = self.employee_id.user_id.partner_id
@@ -238,8 +241,7 @@ class SubcontractorWork(models.Model):
             raise UserError(
                 _('Please define %s journal for this company: "%s" (id:%d).')
                 % (journal_type, company.name, company.id))
-        onchange_vals = inv_obj.onchange_partner_id(
-            invoice_type,  partner.id)
+        onchange_vals = inv_obj.onchange_partner_id(invoice_type, partner.id)
         invoice_vals = onchange_vals['value']
         date_invoice = date.today()
         original_date_invoice = self.sudo().invoice_id.date_invoice
@@ -273,9 +275,11 @@ class SubcontractorWork(models.Model):
             name=self.name,
             type=invoice.type,
             partner_id=invoice.partner_id and invoice.partner_id.id or False,
-            fposition_id=invoice.fiscal_position and invoice.fiscal_position.id or False,
+            fposition_id=(invoice.fiscal_position and
+                          invoice.fiscal_position.id or False),
             price_unit=self.cost_price_unit,
-            currency_id=invoice.currency_id and invoice.currency_id.id or False,
+            currency_id=(invoice.currency_id and
+                         invoice.currency_id.id or False),
             company_id=invoice.company_id and invoice.company_id.id or False)
         line_vals = line_data['value']
         line_vals.update({
@@ -302,8 +306,8 @@ class SubcontractorWork(models.Model):
         current_employee_id = None
         current_invoice_id = None
         for work in self:
-            if (current_employee_id != work.employee_id
-                    or current_invoice_id != work.invoice_id):
+            if (current_employee_id != work.employee_id or
+                    current_invoice_id != work.invoice_id):
                 invoice_vals = work._prepare_invoice()
                 invoice = invoice_obj.create(invoice_vals)
                 current_employee_id = work.employee_id
@@ -342,7 +346,8 @@ class SubcontractorWork(models.Model):
         subcontractors = self.env['hr.employee'].search(
             [('subcontractor_type', '=', 'internal'),
              ('subcontractor_company_id', '!=', False)])
-        # Need to search on all subcontractor work because of the filter on date invoice
+        # Need to search on all subcontractor work
+        # because of the filter on date invoice
         all_works = self.search([
             ('invoice_id.date_invoice', '<=', date_filter),
             ('subcontractor_invoice_line_id', '=', False),
@@ -357,7 +362,8 @@ class SubcontractorWork(models.Model):
                 ('id', 'in', all_works.ids),
                 ('employee_id', '=', subcontractor.id)
                 ], order='employee_id, invoice_id')
-            _logger.info("%s lines found for subcontractor %s" % (subcontractor_works.ids, subcontractor.name))
+            _logger.info("%s lines found for subcontractor %s" % (
+                subcontractor_works.ids, subcontractor.name))
             invoices = subcontractor_works.invoice_from_work()
             invoices.signal_workflow('invoice_open')
         return True

@@ -1,27 +1,10 @@
-# -*- coding: utf-8 -*-
-###############################################################################
-#
-#   account_invoice_subcontractor for OpenERP
-#   Copyright (C) 2015-TODAY Akretion <http://www.akretion.com>.
+# coding: utf-8
+# © 2015 Akretion
 #   @author Sébastien BEAU <sebastien.beau@akretion.com>
-#
-#   This program is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU Affero General Public License as
-#   published by the Free Software Foundation, either version 3 of the
-#   License, or (at your option) any later version.
-#
-#   This program is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU Affero General Public License for more details.
-#
-#   You should have received a copy of the GNU Affero General Public License
-#   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-###############################################################################
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from openerp import models, fields, api
-from openerp.osv import fields as old_fields
+from odoo import models, fields, api
+# from odoo.osv import fields as old_fields
 
 
 class AccountInvoiceLine(models.Model):
@@ -50,7 +33,8 @@ class AccountInvoiceLine(models.Model):
         store=True)
 
     @api.multi
-    def product_id_change(self, product, uom_id, qty=0, name='',
+    def product_id_change(
+            self, product, uom_id, qty=0, name='',
             type='out_invoice', partner_id=False, fposition_id=False,
             price_unit=False, currency_id=False, company_id=None):
         res = super(AccountInvoiceLine, self).product_id_change(
@@ -94,8 +78,8 @@ class AccountInvoiceLine(models.Model):
                 if line.subcontracted:
                     if line.invoice_id.type == 'in_invoice':
                         line.invalid_work_amount = abs(
-                            line.subcontractor_work_invoiced_id.cost_price
-                            - line.price_subtotal) > 0.1
+                            line.subcontractor_work_invoiced_id.cost_price -
+                            line.price_subtotal) > 0.1
                     else:
                         # TODO FIXME
                         if line.invoice_id.company_id.id != 1:
@@ -121,9 +105,9 @@ class AccountInvoice(models.Model):
         compute='_is_work_amount_valid', store=True)
 
     @api.depends(
-        'invoice_line',
-        'invoice_line.subcontractor_work_invoiced_id',
-        'invoice_line.subcontractor_work_invoiced_id.state')
+        'invoice_line_ids',
+        'invoice_line_ids.subcontractor_work_invoiced_id',
+        'invoice_line_ids.subcontractor_work_invoiced_id.state')
     @api.multi
     def _get_to_pay(self):
         for invoice in self:
@@ -133,15 +117,15 @@ class AccountInvoice(models.Model):
                 else:
                     invoice.to_pay = all([
                         line.subcontractor_work_invoiced_id.state == 'paid'
-                        for line in invoice.invoice_line])
+                        for line in invoice.invoice_line_ids])
 
-    @api.depends('invoice_line', 'invoice_line.invalid_work_amount')
+    @api.depends('invoice_line_ids', 'invoice_line_ids.invalid_work_amount')
     @api.multi
     def _is_work_amount_valid(self):
         for invoice in self:
             invoice.invalid_work_amount = any([
                 line.invalid_work_amount
-                for line in invoice.invoice_line])
+                for line in invoice.invoice_line_ids])
 
     @api.model
     def _prepare_invoice_line_data(self, line_data, line):
