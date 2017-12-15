@@ -9,7 +9,7 @@
         <field name="inherit_id" ref="hr.view_employee_form"/>
         <field name="arch" type="xml">
             <xpath expr="//page[@name='hr_settings']" position="inside">
-                <group name="subcontractor">
+                <group name="subcontractor" string="Sub Contractor">
                     <field name="subcontractor_type"/>
                     <field name="subcontractor_company_id"
                         attrs="{'required': [('subcontractor_type', '=', 'internal'), ('active', '=', True)], 'invisible': [('subcontractor_type','!=', 'internal')]}"/>

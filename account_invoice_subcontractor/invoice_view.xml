@@ -12,9 +12,10 @@
                 <group name="subcontractor_information"
                        string="Subcontractor Information"
                        attrs="{'invisible': [('subcontracted','=', False)]}">
-                    <field name="subcontracted" invisible="True"/>
+                    <field name="subcontracted" invisible="1"/>
                     <field name="subcontractor_work_invoiced_id"
                            groups="account_invoice_subcontractor.group_is_subcontractor"/>
+                    <field name="invalid_work_amount" invisible="1"/>
                     <field name="subcontractor_work_ids"
                            groups="account_invoice_subcontractor.group_have_subcontractor"
                            nolabel="1">
