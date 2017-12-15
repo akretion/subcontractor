@@ -13,6 +13,7 @@
     'depends': [
         'hr',
         'account_invoice_inter_company',
+        'onchange_helper',
     ],
     'data': [
         'data/cron_data.xml',

@@ -242,7 +242,8 @@ class SubcontractorWork(models.Model):
             raise UserError(
                 _('Please define %s journal for this company: "%s" (id:%d).')
                 % (journal_type, company.name, company.id))
-        onchange_vals = inv_obj.onchange_partner_id(invoice_type, partner.id)
+        # TODO migrer le onchange
+        onchange_vals = inv_obj._onchange_partner_id(partner.id)
         invoice_vals = onchange_vals['value']
         date_invoice = date.today()
         original_date_invoice = self.sudo().invoice_id.date_invoice

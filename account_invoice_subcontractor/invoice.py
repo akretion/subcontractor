@@ -119,9 +119,12 @@ class AccountInvoice(models.Model):
                 for line in invoice.invoice_line_ids])
 
     @api.model
-    def _prepare_invoice_line_data(self, line_data, line):
+    def _prepare_invoice_line_data(
+            self, dest_invoice, dest_inv_type, dest_company, src_line,
+            src_company_partner_id):
         res = super(AccountInvoice, self)._prepare_invoice_line_data(
-            line_data, line)
-        res['subcontractor_work_invoiced_id'] =\
-            line.subcontractor_work_invoiced_id.id
+            dest_invoice, dest_inv_type, dest_company, src_line,
+            src_company_partner_id)
+        res['subcontractor_work_invoiced_id'] = \
+            src_line.subcontractor_work_invoiced_id.id
         return res
