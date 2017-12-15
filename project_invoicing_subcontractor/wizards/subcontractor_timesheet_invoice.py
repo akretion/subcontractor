@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
-# Copyright <YEAR(S)> <AUTHOR(S)>
-# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+# © 2013-2017 Akretion
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl)
 
-from openerp import api, fields, models
-from openerp.tools.translate import _
+from odoo import api, fields, models, _
 
 
 class SubcontractorTimesheetInvoice(models.TransientModel):
@@ -15,8 +14,8 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
 
     @api.onchange('error')
     def onchange_error(self):
-        line_ids = self._context['active_ids']
-        datas = self.env['hr.analytic.timesheet'].read_group(
+        line_ids = self.env.context['active_ids']
+        datas = self.env['account.analytic.line'].read_group(
             [('id', 'in', line_ids)],
             'partner_id',
             'partner_id',
@@ -34,7 +33,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         }
         """
         res = {}
-        line_obj = self.env['hr.analytic.timesheet']
+        line_obj = self.env['account.analytic.line']
         group_lines = line_obj.read_group(
             [('id', 'in', self._context['active_ids'])],
             ['task_id', 'user_id', 'unit_amount'],
@@ -53,7 +52,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         return res
 
     def _prepare_subcontractor_work(self, inv_line_id, employee_id, line_ids):
-        lines = self.env['hr.analytic.timesheet'].browse(line_ids)
+        lines = self.env['account.analytic.line'].browse(line_ids)
         vals = {
             'employee_id': employee_id,
             # TODO convert correctly to day
@@ -76,7 +75,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         product = self.env['product.product'].browse(product_id)
         tax_ids = [(6, 0, product.taxes_id.ids)]
         price_unit = product.lst_price
-        account_id = product.categ_id.property_account_income_categ.id
+        account_id = product.categ_id.property_account_income_categ_id.id
         ####
         task = self.env['project.task'].browse(task_id)
         return {
