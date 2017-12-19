@@ -304,7 +304,7 @@ class SubcontractorWork(models.Model):
             # and try to read fields on it and that makes access rules fail
             inv_line = invoice_line_obj.sudo().create(inv_line_data)
             invoice.sudo().write({'invoice_line_ids': [(4, inv_line.id)]})
-        invoices.button_reset_taxes()
+        invoices.compute_taxes()
         return invoices
 
     @api.multi
@@ -322,7 +322,7 @@ class SubcontractorWork(models.Model):
             # and try to read fields on it and that makes access rules fail
             inv_line = invoice_line_obj.sudo().create(inv_line_data)
             invoice.sudo().write({'invoice_line_ids': [(4, inv_line.id)]})
-        invoice.button_reset_taxes()
+        invoice.compute_taxes()
         return invoice
 
     @api.multi
@@ -340,10 +340,8 @@ class SubcontractorWork(models.Model):
             ('state', 'in', ['open', 'paid']),
         ])
         for subcontractor in subcontractors:
-            user = subcontractor.subcontractor_company_id.intercompany_user_id
-            if user.company_id != subcontractor.subcontractor_company_id:
-                user.company_id = subcontractor.subcontractor_company_id
-            subcontractor_works = self.sudo(user).search([
+            dest_company = subcontractor.subcontractor_company_id
+            subcontractor_works = self.sudo().with_context(force_company=dest_company.id).search([
                 ('id', 'in', all_works.ids),
                 ('employee_id', '=', subcontractor.id)
                 ], order='employee_id, invoice_id')
