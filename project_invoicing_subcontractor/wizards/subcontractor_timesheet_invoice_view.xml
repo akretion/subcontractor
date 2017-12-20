@@ -10,7 +10,8 @@
             <group>
                 <field name='partner_id'/>
                 <field name='invoice_id'
-                       domain="[('partner_id', '=', partner_id), ('state', '=', 'draft')]"/>
+                       domain="[('partner_id', '=', partner_id), ('state', '=', 'draft')]"
+                       required="1"/>
             </group>
             <footer>
                 <button name="action_invoice"
