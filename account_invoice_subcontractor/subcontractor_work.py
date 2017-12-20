@@ -279,6 +279,7 @@ class SubcontractorWork(models.Model):
             'invoice_id': invoice.id,
             'discount': self.sudo().invoice_line_id.discount,
             'subcontractor_work_invoiced_id': self.id,
+            'uom_id': self.uom_id.id,
         }
         line_vals = invoice_line_obj.play_onchanges(line_vals, ['product_id'])
         return line_vals
@@ -341,7 +342,14 @@ class SubcontractorWork(models.Model):
         ])
         for subcontractor in subcontractors:
             dest_company = subcontractor.subcontractor_company_id
-            subcontractor_works = self.sudo().with_context(force_company=dest_company.id).search([
+            user = subcontractor.user_id
+# TOFIX
+            if user.company_id != dest_company:
+                if dest_company.id in user.company_ids.ids:
+                    user.company_id = subcontractor.subcontractor_company_id
+                else:
+                    user = self.env['res.users'].search([('company_id', '=', dest_company.id)])
+            subcontractor_works = self.sudo(user).with_context(force_company=dest_company.id).search([
                 ('id', 'in', all_works.ids),
                 ('employee_id', '=', subcontractor.id)
                 ], order='employee_id, invoice_id')
