@@ -70,25 +70,25 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         return vals
 
     def _prepare_invoice_line(self, task_id, data):
+        line_obj = self.env['account.invoice.line']
         # HACK for POC TODO this should be configurable
         product_id = 5
         product = self.env['product.product'].browse(product_id)
-        tax_ids = [(6, 0, product.taxes_id.ids)]
         price_unit = product.lst_price
-        account_id = product.categ_id.property_account_income_categ_id.id
         ####
         task = self.env['project.task'].browse(task_id)
-        return {
+        vals = {
             'task_id': task_id,
             'invoice_id': self.invoice_id.id,
             'product_id': product_id,
-            'account_id': account_id,
-            'uos_id': product.uom_id.id,
-            'invoice_line_tax_id': tax_ids,
             'price_unit': price_unit,
             'name': task.name,
             'subcontracted': True,
             }
+        vals = line_obj.play_onchanges(vals, ['product_id'])
+        return vals
+
+
 
     def _add_update_invoice_line(self, task_id, data):
         line_obj = self.env['account.invoice.line']
@@ -123,3 +123,4 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             raise NotImplemented
         for task_id, data in res.items():
             self._add_update_invoice_line(task_id, data)
+        self.invoice_id.compute_taxes()
