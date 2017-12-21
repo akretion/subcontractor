@@ -35,23 +35,23 @@
         <field name="model">subcontractor.work</field>
         <field name="arch" type="xml">
             <form string="Subcontractor work">
-                <field name="end_customer_id"/>
+                <field name="end_customer_id" string="Custo -mer (end)"/>
                 <field name="invoice_id"/>
                 <field name="supplier_invoice_id"/>
                 <field name="name"/>
                 <field name="employee_id"/>
-                <field name="subcontractor_type"/>
+                <field name="subcontractor_type" string="Subcon -tractor type"/>
                 <field name="quantity"/>
                 <field name="uom_id"/>
                 <field name="sale_price_unit"/>
                 <field name="sale_price"/>
                 <field name="cost_price"/>
                 <field name="state"/>
-                <field name="subcontractor_state"/>
+                <field name="subcontractor_state" string="Subcon- tractor state"/>
                 <field name="supplier_invoice_line_id"/>
                 <field name="subcontractor_invoice_line_id"/>
                 <field name="customer_id"/>
-                <field name="subcontractor_company_id"/>
+                <field name="subcontractor_company_id" string="Subcon- tractor company"/>
                 <field name="date_invoice"/>
                 <field name="date_supplier_invoice"/>
             </form>
