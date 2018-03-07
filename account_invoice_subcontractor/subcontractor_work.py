@@ -245,15 +245,17 @@ class SubcontractorWork(models.Model):
         invoice_vals = {'partner_id': partner.id}
         invoice_vals = self.env['account.invoice'].play_onchanges(
             invoice_vals, ['partner_id'])
-        date_invoice = date.today()
         original_date_invoice = self.sudo().invoice_id.date_invoice
         last_invoices = inv_obj.search([
             ('type', '=', invoice_type),
             ('company_id', '=', company.id),
             ('date_invoice', '>', original_date_invoice),
-            ('number', '!=', False)])
+            ('number', '!=', False)],
+            order='date_invoice desc')
         if not last_invoices:
             date_invoice = original_date_invoice
+        else:
+            date_invoice = last_invoices[0].date_invoice
         invoice_vals.update({
             'date_invoice': date_invoice,
             'type': invoice_type,
