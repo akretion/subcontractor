@@ -358,5 +358,6 @@ class SubcontractorWork(models.Model):
             _logger.info("%s lines found for subcontractor %s" % (
                 subcontractor_works.ids, subcontractor.name))
             invoices = subcontractor_works.invoice_from_work()
-            invoices.signal_workflow('invoice_open')
+            for invoice in invoices:
+                invoice.action_invoice_open()
         return True
