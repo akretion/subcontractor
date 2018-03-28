@@ -242,7 +242,7 @@ class SubcontractorWork(models.Model):
             raise UserError(
                 _('Please define %s journal for this company: "%s" (id:%d).')
                 % (journal_type, company.name, company.id))
-        invoice_vals = {'partner_id': partner.id}
+        invoice_vals = {'partner_id': partner.id, 'type': invoice_type,}
         invoice_vals = self.env['account.invoice'].play_onchanges(
             invoice_vals, ['partner_id'])
         original_date_invoice = self.sudo().invoice_id.date_invoice
