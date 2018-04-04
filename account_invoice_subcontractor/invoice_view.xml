@@ -55,6 +55,7 @@
             <field name="arch" type="xml">
                 <xpath expr="//tree/field[@name='price_subtotal']" position="after">
                     <field name="invalid_work_amount" invisible="1"/>
+                    <field name="subcontratcors"/>
                 </xpath>
                 <xpath expr="//field[@name='invoice_line_ids']/tree" position="attributes">
                     <attribute name="editable"/>
