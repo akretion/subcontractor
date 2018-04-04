@@ -31,13 +31,13 @@ class AccountInvoiceLine(models.Model):
         string='Work Amount Invalid',
         store=True)
     subcontractors = fields.Char(
-        string='Sub-contr.', compute='_compute_subcontractors')
+        string='Sub C.', compute='_compute_subcontractors')
 
     @api.multi
     def _compute_subcontractors(self):
         for rec in self:
-            rec.subcontractors = list(set([
-                x.employee_id.name[0:4] for x in rec.subcontractor_work_ids]))
+            rec.subcontractors = ' / '.join(list(set([
+                x.employee_id.name[0:4] for x in rec.subcontractor_work_ids])))
 
     @api.onchange('product_id')
     def _onchange_product_id(self):
