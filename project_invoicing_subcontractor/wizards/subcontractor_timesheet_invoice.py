@@ -66,6 +66,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         vals.update({
             'sale_price_unit': record.sale_price_unit,
             'cost_price_unit': record.cost_price_unit,
+            'subcontractor_type': record.subcontractor_type,
             })
         return vals
 
