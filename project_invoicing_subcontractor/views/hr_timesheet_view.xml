@@ -1,37 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<openerp>
-    <data>
+<odoo>
 
         <record id="hr_timesheet_line_tree" model="ir.ui.view">
-            <field name="model">hr.analytic.timesheet</field>
+            <field name="model">account.analytic.line</field>
             <field name="inherit_id" ref="hr_timesheet.hr_timesheet_line_tree"/>
             <field name="priority" eval="64"/>
             <field name="arch" type="xml">
-                <field name="account_id" position="before">
+                <field name="project_id" position="before">
                     <field name="partner_id"/>
                 </field>
-                <field name="to_invoice" position="after">
-                    <field name="invoice_id"/>
-                </field>
-                <field name="to_invoice" position="attributes">
-                    <attribute name="invisible">True</attribute>
-                </field>
-            </field>
-        </record>
-
-        <record id="hr_timesheet_line_tree" model="ir.ui.view">
-            <field name="model">hr.analytic.timesheet</field>
-            <field name="inherit_id" ref="hr_timesheet.hr_timesheet_line_tree"/>
-            <field name="priority" eval="64"/>
-            <field name="arch" type="xml">
-                <field name="account_id" position="before">
-                    <field name="partner_id"/>
-                </field>
-                <field name="to_invoice" position="after">
+                <field name="unit_amount" position="after">
                     <field name="invoice_id"/>
                 </field>
             </field>
         </record>
 
-    </data>
-</openerp>
+</odoo>

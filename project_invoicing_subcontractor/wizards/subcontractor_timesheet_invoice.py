@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
-# Copyright <YEAR(S)> <AUTHOR(S)>
-# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+# © 2013-2017 Akretion
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl)
 
-from openerp import api, fields, models
-from openerp.tools.translate import _
+from odoo import api, fields, models, _
 
 
 class SubcontractorTimesheetInvoice(models.TransientModel):
@@ -15,8 +14,8 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
 
     @api.onchange('error')
     def onchange_error(self):
-        line_ids = self._context['active_ids']
-        datas = self.env['hr.analytic.timesheet'].read_group(
+        line_ids = self.env.context['active_ids']
+        datas = self.env['account.analytic.line'].read_group(
             [('id', 'in', line_ids)],
             'partner_id',
             'partner_id',
@@ -34,7 +33,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         }
         """
         res = {}
-        line_obj = self.env['hr.analytic.timesheet']
+        line_obj = self.env['account.analytic.line']
         group_lines = line_obj.read_group(
             [('id', 'in', self._context['active_ids'])],
             ['task_id', 'user_id', 'unit_amount'],
@@ -53,7 +52,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         return res
 
     def _prepare_subcontractor_work(self, inv_line_id, employee_id, line_ids):
-        lines = self.env['hr.analytic.timesheet'].browse(line_ids)
+        lines = self.env['account.analytic.line'].browse(line_ids)
         vals = {
             'employee_id': employee_id,
             # TODO convert correctly to day
@@ -67,29 +66,30 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         vals.update({
             'sale_price_unit': record.sale_price_unit,
             'cost_price_unit': record.cost_price_unit,
+            'subcontractor_type': record.subcontractor_type,
             })
         return vals
 
     def _prepare_invoice_line(self, task_id, data):
+        line_obj = self.env['account.invoice.line']
         # HACK for POC TODO this should be configurable
         product_id = 5
         product = self.env['product.product'].browse(product_id)
-        tax_ids = [(6, 0, product.taxes_id.ids)]
         price_unit = product.lst_price
-        account_id = product.categ_id.property_account_income_categ.id
         ####
         task = self.env['project.task'].browse(task_id)
-        return {
+        vals = {
             'task_id': task_id,
             'invoice_id': self.invoice_id.id,
             'product_id': product_id,
-            'account_id': account_id,
-            'uos_id': product.uom_id.id,
-            'invoice_line_tax_id': tax_ids,
             'price_unit': price_unit,
             'name': task.name,
             'subcontracted': True,
             }
+        vals = line_obj.play_onchanges(vals, ['product_id'])
+        return vals
+
+
 
     def _add_update_invoice_line(self, task_id, data):
         line_obj = self.env['account.invoice.line']
@@ -124,3 +124,4 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             raise NotImplemented
         for task_id, data in res.items():
             self._add_update_invoice_line(task_id, data)
+        self.invoice_id.compute_taxes()
