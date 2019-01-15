@@ -282,6 +282,11 @@ class SubcontractorWork(models.Model):
             'subcontractor_work_invoiced_id': self.id,
             'uom_id': self.uom_id.id,
         }
+        if hasattr(self.sudo().invoice_line_id, 'start_date') and hasattr(self.sudo().invoice_line_id, 'end_date'):
+            line_vals.update({
+                'start_date': self.sudo().invoice_line_id.start_date,
+                'end_date': self.sudo().invoice_line_id.end_date
+        })
         line_vals = invoice_line_obj.play_onchanges(line_vals, ['product_id'])
         return line_vals
 

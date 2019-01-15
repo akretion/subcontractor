@@ -12,4 +12,5 @@ class AccountAnalyticLine(models.Model):
     invoice_id = fields.Many2one(
         'account.invoice',
         related='subcontractor_work_id.invoice_line_id.invoice_id',
-        store=True)
+        store=True,
+        readonly=True)

@@ -3,3 +3,4 @@ from . import hr
 from . import invoice
 from . import wizard
 from . import product
+from . import sale
