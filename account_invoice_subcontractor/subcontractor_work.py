@@ -350,8 +350,10 @@ class SubcontractorWork(models.Model):
             dest_company = subcontractor.subcontractor_company_id
             user = subcontractor.user_id
 # TOFIX
+            old_company = False
             if user.company_id != dest_company:
                 if dest_company.id in user.company_ids.ids:
+                    old_company = user.company_id
                     user.company_id = subcontractor.subcontractor_company_id
                 else:
                     user = self.env['res.users'].search([('company_id', '=', dest_company.id)])
@@ -364,4 +366,6 @@ class SubcontractorWork(models.Model):
             invoices = subcontractor_works.invoice_from_work()
             for invoice in invoices:
                 invoice.action_invoice_open()
+            if old_company:
+                user.company_id = old_company.id
         return True
