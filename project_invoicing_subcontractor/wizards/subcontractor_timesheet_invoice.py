@@ -75,21 +75,17 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         # HACK for POC TODO this should be configurable
         product_id = 5
         product = self.env['product.product'].browse(product_id)
-        price_unit = product.lst_price
         ####
         task = self.env['project.task'].browse(task_id)
         vals = {
             'task_id': task_id,
             'invoice_id': self.invoice_id.id,
             'product_id': product_id,
-            'price_unit': price_unit,
             'name': task.name,
             'subcontracted': True,
             }
         vals = line_obj.play_onchanges(vals, ['product_id'])
         return vals
-
-
 
     def _add_update_invoice_line(self, task_id, data):
         line_obj = self.env['account.invoice.line']
@@ -101,8 +97,10 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
            line_vals = self._prepare_invoice_line(task_id, data)
            line = line_obj.create(line_vals)
         else:
-            #TODO
-            raise NotImplemented
+            lines = line.subcontractor_work_ids.mapped('timesheet_line_ids')
+            line.subcontractor_work_ids.unlink()
+            active_ids = self.env.context['active_ids'] + lines.ids
+            data = self.with_context(active_ids=active_ids)._extract_timesheet()[task_id]
         # TODO FIX unit conversion
         qty_day = 0
         for employee_id, line_ids in data.items():
