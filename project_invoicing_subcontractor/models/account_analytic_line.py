@@ -2,7 +2,8 @@
 # © 2013-2017 Akretion
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl)
 
-from odoo import fields, models
+import odoo.addons.decimal_precision as dp
+from odoo import api, fields, models
 
 
 class AccountAnalyticLine(models.Model):
@@ -18,3 +19,27 @@ class AccountAnalyticLine(models.Model):
         'project.task.type',
         related='task_id.stage_id',
         store=True)
+    invoiceable = fields.Boolean(
+        compute='_compute_invoiceable',
+        store=True)
+    discount = fields.Float(digits=dp.get_precision('Discount'))
+
+    def is_invoiceable(self):
+        self.ensure_one()
+        invoicing = self.task_id.invoicing
+        if self.discount == 100:
+            return False
+        elif invoicing == 'progressive':
+            return True
+        elif invoicing == 'none':
+            return False
+        elif invoicing == 'finished':
+            return self.task_stage_id == self.project_id.invoicing_stage_id
+
+    @api.depends(
+        'invoiceable',
+        'task_stage_id',
+        'project_id.invoicing_stage_id')
+    def _compute_invoiceable(self):
+        for record in self:
+            record.invoiceable = record.is_invoiceable()

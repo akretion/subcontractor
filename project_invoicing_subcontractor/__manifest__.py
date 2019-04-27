@@ -21,6 +21,7 @@
         'views/menu.xml',
         'views/account_invoice_view.xml',
         'views/hr_timesheet_view.xml',
+        'views/project_view.xml',
     ],
     'installable': True,
 }
