@@ -14,3 +14,7 @@ class AccountAnalyticLine(models.Model):
         related='subcontractor_work_id.invoice_line_id.invoice_id',
         store=True,
         readonly=True)
+    task_stage_id = fields.Many2one(
+        'project.task.type',
+        related='task_id.stage_id',
+        store=True)

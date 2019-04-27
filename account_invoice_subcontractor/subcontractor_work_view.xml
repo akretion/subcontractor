@@ -19,12 +19,12 @@
                 <filter string="To pay" name="to_pay"
                         domain="[('state','=', 'paid'),('subcontractor_state', '!=', 'paid')]"/>
                 <separator/>
-<!--                 <filter string="Between FiscalYear" name="between_fiscalyear"
-                        domain="[('same_fiscalyear','=', False)]"/>
+<!--             <filter string="Between FiscalYear" name="between_fiscalyear"
+                    domain="[('same_fiscalyear','=', False)]"/>
                 <field string="FiscalYear" name="min_fiscalyear"/>
  -->                <group expand="0" string="Group By...">
-                    <filter string="Invoice" context="{'group_by':'invoice_id'}"/>
-                    <filter string="Subcontractor" context="{'group_by':'employee_id'}"/>
+                    <filter name="invoice" string="Invoice" context="{'group_by':'invoice_id'}"/>
+                    <filter name="subcontractor" string="Subcontractor" context="{'group_by':'employee_id'}"/>
                 </group>
 
             </search>

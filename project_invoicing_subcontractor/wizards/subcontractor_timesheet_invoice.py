@@ -81,7 +81,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             'task_id': task_id,
             'invoice_id': self.invoice_id.id,
             'product_id': product_id,
-            'name': task.name,
+            'name': "[%s] %s" % (task.id, task.name),
             'subcontracted': True,
             }
         vals = line_obj.play_onchanges(vals, ['product_id'])

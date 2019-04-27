@@ -1,18 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
 
-        <record id="hr_timesheet_line_tree" model="ir.ui.view">
-            <field name="model">account.analytic.line</field>
-            <field name="inherit_id" ref="hr_timesheet.hr_timesheet_line_tree"/>
-            <field name="priority" eval="64"/>
-            <field name="arch" type="xml">
-                <field name="project_id" position="before">
-                    <field name="partner_id"/>
-                </field>
-                <field name="unit_amount" position="after">
-                    <field name="invoice_id"/>
-                </field>
+    <record id="hr_timesheet_view_search" model="ir.ui.view">
+        <field name="model">account.analytic.line</field>
+        <field name="inherit_id" ref="hr_timesheet.hr_timesheet_line_search"/>
+        <field name="arch" type="xml">
+            <field name="task_id" position="after">
+                <field name="invoice_id"/>
+                <field name="task_stage_id"/>
             </field>
-        </record>
+            <filter context="{'group_by':'user_id'}" position="attributes">
+                <attribute name="name">users</attribute>
+            </filter>
+            <filter context="{'group_by':'task_id'}" position="attributes">
+                <attribute name="name">tasks</attribute>
+            </filter>
+            <filter context="{'group_by':'task_id'}" position="after">
+                <filter string="Stage" name="stage" domain="[]" context="{'group_by':'task_stage_id'}"/>
+            </filter>
+        </field>
+    </record>
+
+    <record id="hr_timesheet_line_tree" model="ir.ui.view">
+        <field name="model">account.analytic.line</field>
+        <field name="inherit_id" ref="hr_timesheet.hr_timesheet_line_tree"/>
+        <field name="priority" eval="64"/>
+        <field name="arch" type="xml">
+            <field name="project_id" position="before">
+                <field name="partner_id"/>
+            </field>
+            <field name="task_id" position="after">
+                <field name="task_stage_id"/>
+            </field>
+            <field name="unit_amount" position="after">
+                <field name="invoice_id"/>
+            </field>
+        </field>
+    </record>
 
 </odoo>
