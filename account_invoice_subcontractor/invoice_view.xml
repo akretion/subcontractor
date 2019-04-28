@@ -9,28 +9,30 @@
             <field name="inherit_id" ref="account.view_invoice_line_form" />
             <field name="arch" type="xml">
                 <xpath expr="//label[@for='name']" position="before">
-                    <group name="subcontractor_information"
-                           string="Subcontractor Information"
-                           attrs="{'invisible': [('subcontracted','=', False)]}">
-                        <field name="subcontracted" invisible="1"/>
-                        <field name="subcontractor_work_invoiced_id"
-                               groups="account_invoice_subcontractor.group_is_subcontractor"/>
-                        <field name="invalid_work_amount" invisible="1"/>
-                        <field name="subcontractor_work_ids"
-                               groups="account_invoice_subcontractor.group_have_subcontractor"
-                               nolabel="1">
-                            <tree string="Subcontractor work" editable="bottom">
-                                <field name="employee_id"/>
-                                <field name="subcontractor_type" invisible="True"/>
-                                <field name="quantity" sum="Total Qty"/>
-                                <field name="uom_id"/>
-                                <field name="cost_price_unit"/>
-                                <field name="sale_price_unit"/>
-                                <field name="sale_price" sum="Total Sale Amount"/>
-                                <field name="cost_price" sum="Total Cost Amount"/>
-                           </tree>
-                        </field>
-                    </group>
+                    <notebook>
+                        <page name="subcontractor_information"
+                               string="Subcontractor Information"
+                               attrs="{'invisible': [('subcontracted','=', False)]}">
+                            <field name="subcontracted" invisible="1"/>
+                            <field name="subcontractor_work_invoiced_id"
+                                   groups="account_invoice_subcontractor.group_is_subcontractor"/>
+                            <field name="invalid_work_amount" invisible="1"/>
+                            <field name="subcontractor_work_ids"
+                                   groups="account_invoice_subcontractor.group_have_subcontractor"
+                                   nolabel="1">
+                                <tree string="Subcontractor work" editable="bottom">
+                                    <field name="employee_id"/>
+                                    <field name="subcontractor_type" invisible="True"/>
+                                    <field name="quantity" sum="Total Qty"/>
+                                    <field name="uom_id"/>
+                                    <field name="cost_price_unit"/>
+                                    <field name="sale_price_unit"/>
+                                    <field name="sale_price" sum="Total Sale Amount"/>
+                                    <field name="cost_price" sum="Total Cost Amount"/>
+                               </tree>
+                            </field>
+                        </page>
+                    </notebook>
                 </xpath>
             </field>
         </record>
@@ -84,7 +86,7 @@
             <field name="inherit_id" ref="account.view_account_invoice_filter"/>
             <field name="arch" type="xml">
                 <filter name="unpaid" position="after">
-                    <filter name="to_pay" string="To pay" domain="[('to_pay','=',True)]" 
+                    <filter name="to_pay" string="To pay" domain="[('to_pay','=',True)]"
                             help="Invoices to be pay"/>
                 </filter>
             </field>

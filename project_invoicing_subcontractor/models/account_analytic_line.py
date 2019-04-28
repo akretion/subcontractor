@@ -10,6 +10,11 @@ class AccountAnalyticLine(models.Model):
     _inherit = 'account.analytic.line'
 
     subcontractor_work_id = fields.Many2one('subcontractor.work')
+    invoice_line_id = fields.Many2one(
+        'account.invoice.line',
+        related='subcontractor_work_id.invoice_line_id',
+        store=True,
+        readonly=True)
     invoice_id = fields.Many2one(
         'account.invoice',
         related='subcontractor_work_id.invoice_line_id.invoice_id',
@@ -23,6 +28,9 @@ class AccountAnalyticLine(models.Model):
         compute='_compute_invoiceable',
         store=True)
     discount = fields.Float(digits=dp.get_precision('Discount'))
+    invoiceable_amount = fields.Float(
+        compute='_compute_invoiceable_amount',
+        store=True)
 
     def is_invoiceable(self):
         self.ensure_one()
@@ -48,11 +56,16 @@ class AccountAnalyticLine(models.Model):
     def _get_invoiceable_qty_with_project_unit(self):
         return self._get_invoiceable_qty_with_unit(self.project_id.uom_id)
 
+    @api.depends('discount', 'unit_amount')
+    def _compute_invoiceable_amount(self):
+        for record in self:
+            record.invoiceable_amount =\
+                record.unit_amount * (1- record.discount/100.)
+
     def _get_invoiceable_qty_with_unit(self, uom):
         self.ensure_one()
-        qty = self.unit_amount * (1- self.discount/100.)
         hours_uom = self.env.ref('product.product_uom_hour')
         if uom == hours_uom:
-            return qty
+            return self.invoiceable_amount
         else:
-            return hours_uom._compute_quantity(qty, uom)
+            return hours_uom._compute_quantity(self.invoiceable_amount, uom)

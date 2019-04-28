@@ -4,6 +4,7 @@
 
 
 from odoo import api, fields, models
+import odoo.addons.decimal_precision as dp
 
 
 class AccountInvoiceLine(models.Model):
@@ -14,6 +15,30 @@ class AccountInvoiceLine(models.Model):
         'project.task.type',
         related='task_id.stage_id',
         store=True)
+    timesheet_line_ids = fields.One2many(
+        'account.analytic.line',
+        'invoice_line_id',
+        'Timesheet Line')
+    timesheet_error = fields.Char(
+        compute='_compute_timesheet_qty',
+        store=True)
+    timesheet_qty = fields.Float(
+        digits=dp.get_precision('Product Unit of Measure'),
+        compute='_compute_timesheet_qty',
+        store=True)
+
+    @api.depends(
+        'timesheet_line_ids.discount',
+        'timesheet_line_ids.unit_amount',
+        'quantity')
+    def _compute_timesheet_qty(self):
+        for record in self:
+            total = 0
+            for line in record.timesheet_line_ids:
+                total += line._get_invoiceable_qty_with_unit(record.uom_id)
+            record.timesheet_qty = total
+            if total != record.quantity:
+                record.timesheet_error = u'⏰ %s' % total
 
     def open_task(self):
         self.ensure_one()
