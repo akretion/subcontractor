@@ -14,6 +14,7 @@
         'hr',
         'account_invoice_inter_company',
         'onchange_helper',
+        'sale',
     ],
     'data': [
         'data/cron_data.xml',

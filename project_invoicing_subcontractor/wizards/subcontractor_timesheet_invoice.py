@@ -55,8 +55,8 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         lines = self.env['account.analytic.line'].browse(line_ids)
         vals = {
             'employee_id': employee_id,
-            # TODO convert correctly to day
-            'quantity': sum(lines.mapped('unit_amount'))/8.0,
+            'quantity': sum([line._get_invoiceable_qty_with_project_unit()
+                             for line in lines]),
             'invoice_line_id': inv_line_id,
             'timesheet_line_ids': [(6, 0, line_ids)],
         }
@@ -72,17 +72,15 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
 
     def _prepare_invoice_line(self, task_id, data):
         line_obj = self.env['account.invoice.line']
-        # HACK for POC TODO this should be configurable
-        product_id = 5
-        product = self.env['product.product'].browse(product_id)
-        ####
         task = self.env['project.task'].browse(task_id)
+        product = task.project_id.product_id
         vals = {
             'task_id': task_id,
             'invoice_id': self.invoice_id.id,
-            'product_id': product_id,
+            'product_id': product.id,
             'name': "[%s] %s" % (task.id, task.name),
             'subcontracted': True,
+            'uom_id': task.project_id.uom_id.id,
             }
         vals = line_obj.play_onchanges(vals, ['product_id'])
         return vals
@@ -120,6 +118,11 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         if not self.invoice_id:
             # self.invoice_id = ...
             raise NotImplemented
+        # In case that you no account define on the product
+        # Odoo will use default value from journal
+        # we need to set this value to avoid empty account
+        # on invoice line
+        self = self.with_context(journal_id=self.invoice_id.journal_id.id)
         for task_id, data in res.items():
             self._add_update_invoice_line(task_id, data)
         self.invoice_id.compute_taxes()

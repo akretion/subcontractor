@@ -23,5 +23,8 @@
         'views/hr_timesheet_view.xml',
         'views/project_view.xml',
     ],
+    'demo': [
+        'demo/project_demo.xml',
+        ],
     'installable': True,
 }

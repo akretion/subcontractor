@@ -34,6 +34,7 @@
                 <field name="task_stage_id"/>
             </field>
             <field name="unit_amount" position="after">
+                <field name="discount"/>
                 <field name="invoiceable"/>
                 <field name="invoice_id"/>
             </field>

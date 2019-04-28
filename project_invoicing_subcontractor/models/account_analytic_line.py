@@ -37,9 +37,22 @@ class AccountAnalyticLine(models.Model):
             return self.task_stage_id == self.project_id.invoicing_stage_id
 
     @api.depends(
-        'invoiceable',
-        'task_stage_id',
+        'discount',
+        'task_id.stage_id',
+        'task_id.invoicing',
         'project_id.invoicing_stage_id')
     def _compute_invoiceable(self):
         for record in self:
             record.invoiceable = record.is_invoiceable()
+
+    def _get_invoiceable_qty_with_project_unit(self):
+        return self._get_invoiceable_qty_with_unit(self.project_id.uom_id)
+
+    def _get_invoiceable_qty_with_unit(self, uom):
+        self.ensure_one()
+        qty = self.unit_amount * (1- self.discount/100.)
+        hours_uom = self.env.ref('product.product_uom_hour')
+        if uom == hours_uom:
+            return qty
+        else:
+            return hours_uom._compute_quantity(qty, uom)
