@@ -5,6 +5,7 @@
 
 
 from odoo.tests.common import TransactionCase
+from odoo.exceptions import UserError
 
 
 class TestInvoicing(TransactionCase):
@@ -101,3 +102,14 @@ class TestInvoicing(TransactionCase):
         self.assertEqual(self.line_1.task_id.invoiceable_hours, 2)
         self.line_1.discount = 50
         self.assertEqual(self.line_1.task_id.invoiceable_hours, 1)
+
+    def test_change_task_project(self):
+        project = self.env.ref('project.project_project_1')
+        self.line_1.task_id.project_id = project
+        self.assertEqual(self.line_1.project_id, project)
+        self.assertEqual(
+            self.line_1.account_id, project.analytic_account_id)
+
+    def test_remove_task_project(self):
+        with self.assertRaises(UserError):
+            self.line_1.task_id.project_id = False

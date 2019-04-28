@@ -4,6 +4,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 from odoo import api, fields, models
+from odoo.exceptions import UserError
 
 
 class ProjectProject(models.Model):
@@ -40,3 +41,23 @@ class ProjectTask(models.Model):
             for line in record.timesheet_ids:
                 total += line.unit_amount * (1 - line.discount / 100.)
             record.invoiceable_hours = total
+
+    # TODO we should move this in a generic module
+    # changing the project on the task should be propagated
+    # on the analytic line to avoid issue during invoicing
+    def write(self, vals):
+        super(ProjectTask, self).write(vals)
+        if 'project_id' in vals:
+            if not vals['project_id']:
+                raise UserError(
+                    "The project can not be remove, "
+                    "please remove the timesheet first")
+            else:
+                project = self.env['project.project'].browse(
+                    vals['project_id'])
+                vals = {
+                    'project_id': project.id,
+                    'account_id': project.analytic_account_id.id
+                    }
+            self.mapped('timesheet_ids').write(vals)
+        return True
