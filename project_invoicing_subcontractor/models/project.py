@@ -37,6 +37,17 @@ class ProjectTask(models.Model):
         'account.invoice.line',
         'task_id',
         'Invoice Line')
+    to_invoice = fields.Boolean(
+        compute='_compute_to_invoice',
+        store=True)
+
+    @api.depends('invoiceable_hours', 'invoice_line_ids', 'invoicing')
+    def _compute_to_invoice(self):
+        for record in self:
+            record.to_invoice = (
+                record.invoiceable_hours
+                and not record.invoice_line_ids
+                and record.invoicing != 'none')
 
     @api.depends('timesheet_ids.discount', 'timesheet_ids.unit_amount')
     def _compute_invoiceable_hours(self):
@@ -65,3 +76,10 @@ class ProjectTask(models.Model):
                     }
             self.mapped('timesheet_ids').write(vals)
         return True
+
+
+class ProjectTaskType(models.Model):
+    _inherit = 'project.task.type'
+
+
+
