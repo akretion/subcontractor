@@ -31,6 +31,20 @@ class AccountAnalyticLine(models.Model):
     invoiceable_amount = fields.Float(
         compute='_compute_invoiceable_amount',
         store=True)
+    date_invoiceable = fields.Date(
+        compute='_compute_date_invoiceable',
+        store=True)
+
+    @api.depends('invoiceable', 'task_id.timesheet_ids', 'task_id.invoicing')
+    def _compute_date_invoiceable(self):
+        for record in self:
+            if record.task_id.invoicing == 'progressive':
+                record.date_invoiceable = record.date
+            elif record.invoiceable:
+                record.date_invoiceable = max(
+                    record.task_id.mapped('timesheet_ids.date'))
+            else:
+                record.date_invoiceable = None
 
     def is_invoiceable(self):
         self.ensure_one()
