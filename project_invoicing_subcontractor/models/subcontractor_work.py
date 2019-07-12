@@ -6,9 +6,10 @@ from odoo import fields, models
 
 
 class SubcontractorWork(models.Model):
-    _inherit = 'subcontractor.work'
+    _inherit = "subcontractor.work"
 
     timesheet_line_ids = fields.One2many(
-        'account.analytic.line',
-        'subcontractor_work_id',
-        string="Timesheet Line")
+        "account.analytic.line",
+        "subcontractor_work_id",
+        string="Timesheet Line",
+    )
