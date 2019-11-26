@@ -318,7 +318,7 @@ class SubcontractorWork(models.Model):
                     "end_date": self.sudo().invoice_line_id.end_date,
                 }
             )
-        line_vals = invoice_line_obj.play_onchanges(line_vals, ["product_id"])
+        line_vals.update(invoice_line_obj.play_onchanges(line_vals, ["product_id"]))
         return line_vals
 
     @api.multi
