@@ -380,7 +380,8 @@ class SubcontractorWork(models.Model):
                 ("subcontractor_invoice_line_id", "=", False),
                 ("subcontractor_type", "=", "internal"),
                 ("state", "in", ["open", "paid"]),
-            ]
+            ],
+            order='date_invoice'
         )
         for subcontractor in subcontractors:
             dest_company = subcontractor.subcontractor_company_id
@@ -403,7 +404,7 @@ class SubcontractorWork(models.Model):
                         ("id", "in", all_works.ids),
                         ("employee_id", "=", subcontractor.id),
                     ],
-                    order="employee_id, invoice_id",
+                    order="employee_id, date_invoice, invoice_id",
                 )
             )
             _logger.info(
