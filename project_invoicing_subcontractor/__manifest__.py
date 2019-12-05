@@ -19,6 +19,7 @@
         "views/account_invoice_view.xml",
         "views/hr_timesheet_view.xml",
         "views/project_view.xml",
+        "views/hr_timesheet_sheet_sheet.xml",
     ],
     "demo": ["demo/project_demo.xml"],
     "installable": True,
