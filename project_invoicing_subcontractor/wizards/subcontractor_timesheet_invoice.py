@@ -85,7 +85,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             "task_id": task_id,
             "invoice_id": self.invoice_id.id,
             "product_id": product.id,
-            "name": "[{}] {}".format(task.id, task.name),
+            "name": u"[{}] {}".format(task.id, task.name),
             "subcontracted": True,
             "uom_id": task.project_id.uom_id.id,
         }
