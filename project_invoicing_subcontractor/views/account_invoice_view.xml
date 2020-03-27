@@ -20,12 +20,6 @@
            </div>
         </xpath>
         <xpath expr="//tree/field[@name='name']" position="after">
-            <field name="task_id" invisible="1"/>
-            <button
-                name="open_task"
-                attrs="{'invisible': [('task_id', '=', False)]}"
-                type="object"
-                icon="fa-arrow-right"/>
             <field name="task_stage_id"/>
         </xpath>
         <xpath expr="//tree/field[@name='quantity']" position="after">
