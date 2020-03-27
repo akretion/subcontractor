@@ -9,9 +9,10 @@
                 <p>You can select an existing invoice to add new line on it</p>
             <group>
                 <field name='partner_id'/>
+                <field name='create_invoice' attrs="{'invisible': [('invoice_id', '!=', False)]}"/>
                 <field name='invoice_id'
                        domain="[('partner_id', '=', partner_id), ('state', '=', 'draft')]"
-                       required="1"/>
+                       attrs="{'invisible': [('create_invoice', '=', True)], 'required': [('create_invoice', '!=', True)]}"/>
             </group>
             <footer>
                 <button name="action_invoice"
