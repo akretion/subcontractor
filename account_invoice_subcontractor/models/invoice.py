@@ -26,24 +26,15 @@ class AccountInvoiceLine(models.Model):
         _prefetch=False,
     )
     invalid_work_amount = fields.Boolean(
-        compute="_is_work_amount_invalid",
-        string="Work Amount Invalid",
-        store=True,
+        compute="_is_work_amount_invalid", string="Work Amount Invalid", store=True
     )
-    subcontractors = fields.Char(
-        string="Sub C.", compute="_compute_subcontractors"
-    )
+    subcontractors = fields.Char(string="Sub C.", compute="_compute_subcontractors")
 
     @api.multi
     def _compute_subcontractors(self):
         for rec in self:
             rec.subcontractors = " / ".join(
-                list(
-                    {
-                        x.employee_id.name[0:4]
-                        for x in rec.subcontractor_work_ids
-                    }
-                )
+                list({x.employee_id.name[0:4] for x in rec.subcontractor_work_ids})
             )
 
     @api.onchange("product_id")
@@ -87,20 +78,13 @@ class AccountInvoiceLine(models.Model):
             if line.invoice_id.type in ["out_invoice", "in_invoice"]:
                 if line.subcontracted:
                     if line.invoice_id.type == "in_invoice":
-                        line.invalid_work_amount = (
-                            line._check_in_invoice_amount()
-                        )
+                        line.invalid_work_amount = line._check_in_invoice_amount()
                     else:
-                        line.invalid_work_amount = (
-                            line._check_out_invoice_amount()
-                        )
+                        line.invalid_work_amount = line._check_out_invoice_amount()
 
     def _check_in_invoice_amount(self):
         return (
-            abs(
-                self.subcontractor_work_invoiced_id.cost_price
-                - self.price_subtotal
-            )
+            abs(self.subcontractor_work_invoiced_id.cost_price - self.price_subtotal)
             > 0.1
         )
 
@@ -111,10 +95,8 @@ class AccountInvoiceLine(models.Model):
             if self.invoice_id.partner_id.id == 1:
                 return (
                     abs(
-                        (
-                            self.subcontractor_work_invoiced_id.cost_price
-                            - self.price_subtotal
-                        )
+                        self.subcontractor_work_invoiced_id.cost_price
+                        - self.price_subtotal
                     )
                     > 0.1
                 )
@@ -126,12 +108,8 @@ class AccountInvoiceLine(models.Model):
 class AccountInvoice(models.Model):
     _inherit = "account.invoice"
 
-    to_pay = fields.Boolean(
-        compute="_get_to_pay", store=True, compute_sudo=True
-    )
-    invalid_work_amount = fields.Boolean(
-        compute="_is_work_amount_valid", store=True
-    )
+    to_pay = fields.Boolean(compute="_get_to_pay", store=True, compute_sudo=True)
+    invalid_work_amount = fields.Boolean(compute="_is_work_amount_valid", store=True)
 
     @api.depends(
         "invoice_line_ids",
@@ -170,11 +148,7 @@ class AccountInvoice(models.Model):
         src_company_partner_id,
     ):
         res = super()._prepare_invoice_line_data(
-            dest_invoice,
-            dest_inv_type,
-            dest_company,
-            src_line,
-            src_company_partner_id,
+            dest_invoice, dest_inv_type, dest_company, src_line, src_company_partner_id
         )
         res[
             "subcontractor_work_invoiced_id"

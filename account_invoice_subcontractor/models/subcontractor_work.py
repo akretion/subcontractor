@@ -4,9 +4,10 @@
 import logging
 from datetime import date, timedelta
 
-import odoo.addons.decimal_precision as dp
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+
+import odoo.addons.decimal_precision as dp
 
 _logger = logging.getLogger(__name__)
 
@@ -28,9 +29,7 @@ class SubcontractorWork(models.Model):
         return self.env["hr.employee"]._get_subcontractor_type()
 
     name = fields.Text(related="invoice_line_id.name", readonly=True)
-    employee_id = fields.Many2one(
-        "hr.employee", string="Employee", required=True
-    )
+    employee_id = fields.Many2one("hr.employee", string="Employee", required=True)
     invoice_line_id = fields.Many2one(
         "account.invoice.line",
         string="Invoice Line",
@@ -70,14 +69,10 @@ class SubcontractorWork(models.Model):
     sale_price_unit = fields.Float(digits=dp.get_precision("Account"))
     cost_price_unit = fields.Float(digits=dp.get_precision("Account"))
     cost_price = fields.Float(
-        compute="_compute_total_price",
-        digits=dp.get_precision("Account"),
-        store=True,
+        compute="_compute_total_price", digits=dp.get_precision("Account"), store=True
     )
     sale_price = fields.Float(
-        compute="_compute_total_price",
-        digits=dp.get_precision("Account"),
-        store=True,
+        compute="_compute_total_price", digits=dp.get_precision("Account"), store=True
     )
     company_id = fields.Many2one(
         "res.company",
@@ -101,9 +96,7 @@ class SubcontractorWork(models.Model):
         string="Customer(end)",
     )
     subcontractor_invoice_line_id = fields.Many2one(
-        "account.invoice.line",
-        string="Subcontractor Invoice Line",
-        _prefetch=False,
+        "account.invoice.line", string="Subcontractor Invoice Line", _prefetch=False
     )
     subcontractor_company_id = fields.Many2one(
         "res.company",
@@ -113,10 +106,7 @@ class SubcontractorWork(models.Model):
         string="Subcontractor Company",
     )
     subcontractor_state = fields.Selection(
-        compute="_get_state",
-        selection=INVOICE_STATE,
-        store=True,
-        compute_sudo=True,
+        compute="_get_state", selection=INVOICE_STATE, store=True, compute_sudo=True
     )
     subcontractor_type = fields.Selection(
         string="Subcontractor Type", selection="_get_subcontractor_type"
@@ -184,9 +174,7 @@ class SubcontractorWork(models.Model):
             line = self.invoice_line_id
             # TODO find a good way to get the right qty
             self.quantity = line.quantity
-            self.sale_price_unit = line.price_unit * (
-                1 - line.discount / 100.0
-            )
+            self.sale_price_unit = line.price_unit * (1 - line.discount / 100.0)
 
     @api.multi
     @api.depends("sale_price_unit", "quantity", "cost_price_unit")
@@ -216,24 +204,16 @@ class SubcontractorWork(models.Model):
         partner_id = self[0].customer_id.id
         for work in self:
             if partner_id != work.customer_id.id:
-                raise UserError(
-                    _("All the work should belong to the same supplier")
-                )
+                raise UserError(_("All the work should belong to the same supplier"))
             elif work.supplier_invoice_line_id:
                 raise UserError(_("This work has been already invoiced!"))
             elif work.state not in ("open", "paid"):
                 raise UserError(
-                    _(
-                        "Only works with the state 'open' "
-                        " or 'paid' can be invoiced"
-                    )
+                    _("Only works with the state 'open' " " or 'paid' can be invoiced")
                 )
             elif work.subcontractor_type != work_type:
                 raise UserError(
-                    _(
-                        "You can invoice on only the %s subcontractors"
-                        % work_type
-                    )
+                    _("You can invoice on only the %s subcontractors" % work_type)
                 )
 
     @api.model
@@ -254,8 +234,7 @@ class SubcontractorWork(models.Model):
             partner = self.employee_id.user_id.partner_id
             user = self.employee_id.user_id
         journal = journal_obj.search(
-            [("company_id", "=", company.id), ("type", "=", journal_type)],
-            limit=1,
+            [("company_id", "=", company.id), ("type", "=", journal_type)], limit=1
         )
         if not journal:
             raise UserError(
@@ -299,8 +278,7 @@ class SubcontractorWork(models.Model):
         line_vals = {
             "product_id": self.sudo().invoice_line_id.product_id.id,
             "quantity": self.quantity,
-            "name": "Client final %s :%s"
-            % (self.end_customer_id.name, self.name),
+            "name": "Client final {} :{}".format(self.end_customer_id.name, self.name),
             "price_unit": self.cost_price_unit,
             "invoice_id": invoice.id,
             "discount": self.sudo().invoice_line_id.discount,
@@ -379,7 +357,7 @@ class SubcontractorWork(models.Model):
                 ("subcontractor_type", "=", "internal"),
                 ("state", "in", ["open", "paid"]),
             ],
-            order='date_invoice'
+            order="date_invoice",
         )
         for subcontractor in subcontractors:
             dest_company = subcontractor.subcontractor_company_id
