@@ -6,15 +6,17 @@
         <field name="subcontracted">1</field>
     </record>
 
-    <record id="hr.employee_root" model="hr.employee">
+    <record id="hr.employee_admin" model="hr.employee">
         <field name="subcontractor_type">internal</field>
         <field name="subcontractor_company_id" ref="base.main_company"/>
     </record>
 
     <record model="res.users" id="base.user_root">
         <field name="groups_id" eval="[(4, ref('account_invoice_subcontractor.group_have_subcontractor')), (4, ref('account_invoice_subcontractor.group_is_subcontractor'))]"/>
-        <field name="company_ids" eval="[(4, ref('base.main_company')), (4, ref('account_invoice_inter_company.company_a'))]"/>
-        <field name="company_id" ref="account_invoice_inter_company.company_a"/>
+    </record>
+
+    <record model="res.users" id="base.user_admin">
+        <field name="groups_id" eval="[(4, ref('account_invoice_subcontractor.group_have_subcontractor')), (4, ref('account_invoice_subcontractor.group_is_subcontractor'))]"/>
     </record>
 
 </odoo>

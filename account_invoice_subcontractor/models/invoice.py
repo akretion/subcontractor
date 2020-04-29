@@ -1,6 +1,5 @@
-# coding: utf-8
 # © 2015 Akretion
-#   @author Sébastien BEAU <sebastien.beau@akretion.com>
+# @author Sébastien BEAU <sebastien.beau@akretion.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 from odoo import api, fields, models
@@ -170,7 +169,7 @@ class AccountInvoice(models.Model):
         src_line,
         src_company_partner_id,
     ):
-        res = super(AccountInvoice, self)._prepare_invoice_line_data(
+        res = super()._prepare_invoice_line_data(
             dest_invoice,
             dest_inv_type,
             dest_company,

@@ -1,9 +1,8 @@
-# coding: utf-8
 # © 2015 Akretion
-#   @author Sébastien BEAU <sebastien.beau@akretion.com>
+# @author Sébastien BEAU <sebastien.beau@akretion.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from odoo import api, models
+from odoo import models
 from odoo.tools.translate import _
 
 
@@ -11,7 +10,6 @@ class SubcontractorInvoiceWork(models.TransientModel):
     _name = "subcontractor.invoice.work"
     _description = "subcontractor invoice work"
 
-    @api.multi
     def generate_invoice(self):
         work_obj = self.env["subcontractor.work"]
         work_ids = self._context.get("active_ids")

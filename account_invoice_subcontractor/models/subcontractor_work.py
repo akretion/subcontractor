@@ -1,5 +1,4 @@
-# coding: utf-8
-#   @author Sébastien BEAU <sebastien.beau@akretion.com>
+# @author Sébastien BEAU <sebastien.beau@akretion.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -130,11 +129,10 @@ class SubcontractorWork(models.Model):
         compute_sudo=True,
     )
     uom_id = fields.Many2one(
-        "product.uom",
+        "uom.uom",
         related="invoice_line_id.uom_id",
         readonly=True,
         store=True,
-        oldname="uos_id",  # ????
         string="Unit Of Measure",
     )
     same_fiscalyear = fields.Boolean()
@@ -394,7 +392,7 @@ class SubcontractorWork(models.Model):
                     user.company_id = subcontractor.subcontractor_company_id
                 else:
                     user = self.env["res.users"].search(
-                        [("company_id", "=", dest_company.id)]
+                        [("company_id", "=", dest_company.id)], limit=1
                     )
             subcontractor_works = (
                 self.sudo(user)
