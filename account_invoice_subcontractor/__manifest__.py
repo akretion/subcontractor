@@ -9,12 +9,7 @@
     "license": "AGPL-3",
     "author": "Akretion",
     "website": "http://www.akretion.com/",
-    "depends": [
-        "hr",
-        "account_invoice_inter_company",
-        "onchange_helper",
-        "sale",
-    ],
+    "depends": ["hr", "account_invoice_inter_company", "onchange_helper", "sale"],
     "data": [
         "data/cron_data.xml",
         "security/security.xml",
