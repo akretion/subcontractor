@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2019 Akretion (http://www.akretion.com).
 # @author Sébastien BEAU <sebastien.beau@akretion.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
@@ -10,9 +9,7 @@ from odoo.exceptions import UserError
 class ProjectProject(models.Model):
     _inherit = "project.project"
 
-    invoicing_stage_id = fields.Many2one(
-        "project.task.type", "Invoicing Stage"
-    )
+    invoicing_stage_id = fields.Many2one("project.task.type", "Invoicing Stage")
     product_id = fields.Many2one("product.product", "Product")
     uom_id = fields.Many2one("product.uom", "Unit")
 
@@ -21,16 +18,10 @@ class ProjectTask(models.Model):
     _inherit = "project.task"
 
     invoicing = fields.Selection(
-        [
-            ("progressive", "Progressive"),
-            ("none", "None"),
-            ("finished", "Finished"),
-        ],
+        [("progressive", "Progressive"), ("none", "None"), ("finished", "Finished")],
         default="finished",
     )
-    invoiceable_hours = fields.Float(
-        compute="_compute_invoiceable_hours", store=True
-    )
+    invoiceable_hours = fields.Float(compute="_compute_invoiceable_hours", store=True)
     invoice_line_ids = fields.One2many(
         "account.invoice.line", "task_id", "Invoice Line"
     )
@@ -65,9 +56,7 @@ class ProjectTask(models.Model):
                     "please remove the timesheet first"
                 )
             else:
-                project = self.env["project.project"].browse(
-                    vals["project_id"]
-                )
+                project = self.env["project.project"].browse(vals["project_id"])
                 vals = {
                     "project_id": project.id,
                     "account_id": project.analytic_account_id.id,

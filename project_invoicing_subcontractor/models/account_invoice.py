@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
 # © 2013-2017 Akretion
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl)
 
 
-import odoo.addons.decimal_precision as dp
 from odoo import api, fields, models
+
+import odoo.addons.decimal_precision as dp
 
 
 class AccountInvoiceLine(models.Model):
@@ -25,9 +25,7 @@ class AccountInvoiceLine(models.Model):
     )
 
     @api.depends(
-        "timesheet_line_ids.discount",
-        "timesheet_line_ids.unit_amount",
-        "quantity",
+        "timesheet_line_ids.discount", "timesheet_line_ids.unit_amount", "quantity"
     )
     def _compute_timesheet_qty(self):
         for record in self:
