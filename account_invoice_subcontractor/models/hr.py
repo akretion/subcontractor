@@ -20,7 +20,10 @@ class HrEmployee(models.Model):
         "res.company", string="Subcontractor Company"
     )
     subcontractor_type = fields.Selection(
-        string="Subcontractor Type", selection="_get_subcontractor_type", required=True
+        string="Subcontractor Type",
+        selection="_get_subcontractor_type",
+        required=True,
+        default="internal",
     )
     commission_rate = fields.Float(
         help="Rate in % for the commission on subcontractor work", default=10.00
