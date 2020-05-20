@@ -253,7 +253,12 @@ class SubcontractorWork(models.Model):
         elif invoice_type == "in_invoice":
             company = self.invoice_id.company_id
             journal_type = "purchase"
-            partner = self.employee_id.user_id.partner_id
+            partner = self.employee_id.user_id.partner_id or self.employee_id.address_id or False
+            if not partner:
+                raise UserError(
+                    _('Please define a partner for the employee %s')
+                    % self.employee_id.name
+                )
             user = self.employee_id.user_id
         journal = journal_obj.search(
             [("company_id", "=", company.id), ("type", "=", journal_type)],
