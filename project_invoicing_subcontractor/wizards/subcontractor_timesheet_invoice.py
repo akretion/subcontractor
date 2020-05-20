@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2013-2017 Akretion
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl)
 
@@ -11,7 +10,8 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
     partner_id = fields.Many2one("res.partner", readonly=True)
     create_invoice = fields.Boolean(
         help="Check this box if you do not want to use an existing invoice but create "
-             "a new one instead.")
+        "a new one instead."
+    )
     invoice_id = fields.Many2one("account.invoice")
     error = fields.Text(readonly=True)
 
@@ -35,7 +35,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         elif len(partner_ids) == 1:
             self.partner_id = partner_ids[0]
         else:
-            partners = self.env['res.partner'].browse(partner_ids)
+            partners = self.env["res.partner"].browse(partner_ids)
             self.error = _(
                 "You can only invoice timesheet with the same partner."
                 "Partner found %s"
@@ -72,10 +72,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         vals = {
             "employee_id": employee_id,
             "quantity": sum(
-                [
-                    line._get_invoiceable_qty_with_project_unit()
-                    for line in lines
-                ]
+                [line._get_invoiceable_qty_with_project_unit() for line in lines]
             ),
             "invoice_line_id": inv_line_id,
             "timesheet_line_ids": [(6, 0, line_ids)],
@@ -111,10 +108,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         line_obj = self.env["account.invoice.line"]
         work_obj = self.env["subcontractor.work"]
         line = line_obj.search(
-            [
-                ("invoice_id", "=", self.invoice_id.id),
-                ("task_id", "=", task_id),
-            ]
+            [("invoice_id", "=", self.invoice_id.id), ("task_id", "=", task_id)]
         )
         if not line:
             line_vals = self._prepare_invoice_line(task_id, data)
@@ -123,15 +117,13 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             lines = line.subcontractor_work_ids.mapped("timesheet_line_ids")
             line.subcontractor_work_ids.unlink()
             active_ids = self.env.context["active_ids"] + lines.ids
-            data = self.with_context(
-                active_ids=active_ids
-            )._extract_timesheet()[task_id]
+            data = self.with_context(active_ids=active_ids)._extract_timesheet()[
+                task_id
+            ]
         # TODO FIX unit conversion
         qty_day = 0
         for employee_id, line_ids in data.items():
-            val = self._prepare_subcontractor_work(
-                line.id, employee_id, line_ids
-            )
+            val = self._prepare_subcontractor_work(line.id, employee_id, line_ids)
             qty_day += val["quantity"]
             work_obj.create(val)
         line.quantity = qty_day
@@ -142,11 +134,8 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         # inside, because in this case, the button is hidden and so this action should
         # not be done at all.
         partner_id = self._get_partner_ids()[0]
-        vals = {
-            'partner_id': partner_id,
-            'type': 'out_invoice',
-        }
-        vals = self.env['account.invoice'].play_onchanges(vals, ['partner_id'])
+        vals = {"partner_id": partner_id, "type": "out_invoice"}
+        vals = self.env["account.invoice"].play_onchanges(vals, ["partner_id"])
         return vals
 
     @api.multi
@@ -158,7 +147,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         res = self._extract_timesheet()
         if self.create_invoice:
             invoice_vals = self._get_invoice_vals()
-            invoice = self.env['account.invoice'].create(invoice_vals)
+            invoice = self.env["account.invoice"].create(invoice_vals)
             self.invoice_id = invoice.id
         # In case that you no account define on the product
         # Odoo will use default value from journal
@@ -170,7 +159,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         self.invoice_id.compute_taxes()
 
         # return the invoice view
-        action = self.env.ref('account.action_invoice_tree1').read()[0]
-        action['views'] = [(self.env.ref('account.invoice_form').id, 'form')]
-        action['res_id'] = self.invoice_id.id
+        action = self.env.ref("account.action_invoice_tree1").read()[0]
+        action["views"] = [(self.env.ref("account.invoice_form").id, "form")]
+        action["res_id"] = self.invoice_id.id
         return action

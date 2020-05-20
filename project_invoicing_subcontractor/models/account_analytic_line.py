@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 # © 2013-2017 Akretion
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl)
 
-import odoo.addons.decimal_precision as dp
 from odoo import api, fields, models
+
+import odoo.addons.decimal_precision as dp
 
 
 class AccountAnalyticLine(models.Model):
@@ -27,12 +27,8 @@ class AccountAnalyticLine(models.Model):
     )
     invoiceable = fields.Boolean(compute="_compute_invoiceable", store=True)
     discount = fields.Float(digits=dp.get_precision("Discount"))
-    invoiceable_amount = fields.Float(
-        compute="_compute_invoiceable_amount", store=True
-    )
-    date_invoiceable = fields.Date(
-        compute="_compute_date_invoiceable", store=True
-    )
+    invoiceable_amount = fields.Float(compute="_compute_invoiceable_amount", store=True)
+    date_invoiceable = fields.Date(compute="_compute_date_invoiceable", store=True)
 
     @api.depends("invoiceable", "task_id.timesheet_ids", "task_id.invoicing")
     def _compute_date_invoiceable(self):
