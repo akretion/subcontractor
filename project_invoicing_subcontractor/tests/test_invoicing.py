@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2019 Akretion (http://www.akretion.com).
 # @author Sébastien BEAU <sebastien.beau@akretion.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
@@ -24,8 +23,8 @@ class TestInvoicing(TransactionCase):
             {"partner_id": self.partner.id}
         )
         self.product = self.mref("product_product_1")
-        self.day_uom = self.env.ref("product.product_uom_day")
-        self.hour_uom = self.env.ref("product.product_uom_hour")
+        self.day_uom = self.env.ref("uom.product_uom_day")
+        self.hour_uom = self.env.ref("uom.product_uom_hour")
         self.project = self.mref("project_project_1")
 
     def _create_invoice(self):
@@ -33,9 +32,7 @@ class TestInvoicing(TransactionCase):
         wizard = (
             self.env["subcontractor.timesheet.invoice"]
             .with_context(active_ids=line_ids)
-            .create(
-                {"partner_id": self.partner.id, "invoice_id": self.invoice.id}
-            )
+            .create({"partner_id": self.partner.id, "invoice_id": self.invoice.id})
         )
         wizard.action_invoice()
         return wizard.invoice_id
