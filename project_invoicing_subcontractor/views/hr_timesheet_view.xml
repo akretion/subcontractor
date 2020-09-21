@@ -12,16 +12,10 @@
                 <filter name="to_invoice" string="To invoice" domain="[('invoiceable', '=', True), ('invoice_id', '=', False)]"/>
             </field>
 
-            <filter context="{'group_by':'user_id'}" position="attributes">
-                <attribute name="name">users</attribute>
-            </filter>
-            <filter context="{'group_by':'task_id'}" position="attributes">
-                <attribute name="name">tasks</attribute>
-            </filter>
-            <filter context="{'group_by':'task_id'}" position="after">
+            <filter name="groupby_task" position="after">
                 <filter string="Stage" name="stage" domain="[]" context="{'group_by':'task_stage_id'}"/>
             </filter>
-            <filter context="{'group_by':'task_id'}" position="after">
+            <filter name="groupby_task" position="after">
                 <filter string="Invoiceable Date" name="daet_invoiceable" domain="[]" context="{'group_by':'date_invoiceable'}"/>
             </filter>
         </field>

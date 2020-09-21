@@ -23,8 +23,8 @@ class TestInvoicing(TransactionCase):
             {"partner_id": self.partner.id}
         )
         self.product = self.mref("product_product_1")
-        self.day_uom = self.env.ref("product.product_uom_day")
-        self.hour_uom = self.env.ref("product.product_uom_hour")
+        self.day_uom = self.env.ref("uom.product_uom_day")
+        self.hour_uom = self.env.ref("uom.product_uom_hour")
         self.project = self.mref("project_project_1")
 
     def _create_invoice(self):

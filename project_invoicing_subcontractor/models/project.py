@@ -11,7 +11,7 @@ class ProjectProject(models.Model):
 
     invoicing_stage_id = fields.Many2one("project.task.type", "Invoicing Stage")
     product_id = fields.Many2one("product.product", "Product")
-    uom_id = fields.Many2one("product.uom", "Unit")
+    uom_id = fields.Many2one("uom.uom", "Unit")
 
 
 class ProjectTask(models.Model):

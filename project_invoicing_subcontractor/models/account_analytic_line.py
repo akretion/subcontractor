@@ -76,7 +76,7 @@ class AccountAnalyticLine(models.Model):
 
     def _get_invoiceable_qty_with_unit(self, uom):
         self.ensure_one()
-        hours_uom = self.env.ref("product.product_uom_hour")
+        hours_uom = self.env.ref("uom.product_uom_hour")
         if uom == hours_uom:
             return self.invoiceable_amount
         else:
