@@ -6,6 +6,7 @@ from odoo import _, api, fields, models
 
 class SubcontractorTimesheetInvoice(models.TransientModel):
     _name = "subcontractor.timesheet.invoice"
+    _description = "Wizard to invoice timesheet with subcontractor"
 
     partner_id = fields.Many2one("res.partner", readonly=True)
     create_invoice = fields.Boolean(
