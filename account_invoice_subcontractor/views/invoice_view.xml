@@ -49,7 +49,7 @@
                 </xpath>
                 <xpath expr="//field[@name='invoice_line_ids']/tree" position="attributes">
                     <attribute name="editable"/>
-                    <attribute name="colors">red:invalid_work_amount == True</attribute>
+                    <attribute name="decoration-danger">invalid_work_amount == True</attribute>
                 </xpath>
             </field>
         </record>
@@ -63,7 +63,7 @@
                 </xpath>
                 <xpath expr="//field[@name='invoice_line_ids']/tree" position="attributes">
                     <attribute name="editable"/>
-                    <attribute name="colors">red:invalid_work_amount == True</attribute>
+                    <attribute name="decoration-danger">invalid_work_amount == True</attribute>
                 </xpath>
             </field>
         </record>
