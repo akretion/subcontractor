@@ -104,6 +104,12 @@ class AccountInvoiceLine(models.Model):
             subtotal = sum(self.subcontractor_work_ids.mapped("sale_price"))
             return abs(subtotal - self.price_subtotal) > 0.01
 
+    @api.model
+    def _prepare_invoice_line_data(self, dest_invoice, dest_company):
+        res = super()._prepare_invoice_line_data(dest_invoice, dest_company)
+        res["subcontractor_work_invoiced_id"] = self.subcontractor_work_invoiced_id.id
+        return res
+
 
 class AccountInvoice(models.Model):
     _inherit = "account.invoice"
@@ -137,23 +143,6 @@ class AccountInvoice(models.Model):
             invoice.invalid_work_amount = any(
                 [line.invalid_work_amount for line in invoice.invoice_line_ids]
             )
-
-    @api.model
-    def _prepare_invoice_line_data(
-        self,
-        dest_invoice,
-        dest_inv_type,
-        dest_company,
-        src_line,
-        src_company_partner_id,
-    ):
-        res = super()._prepare_invoice_line_data(
-            dest_invoice, dest_inv_type, dest_company, src_line, src_company_partner_id
-        )
-        res[
-            "subcontractor_work_invoiced_id"
-        ] = src_line.subcontractor_work_invoiced_id.id
-        return res
 
     # account_invoice_inter_company use Odoo Form. It uses some hacks to be able to use
     # it, it has to set related fieldi such as account.invoice.line company_id.

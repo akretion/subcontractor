@@ -95,6 +95,12 @@ class TestSubcontractorInvoice(SavepointCase):
             "account_invoice_subcontractor.group_is_subcontractor"
         )
         cls.user_company_b.write({"groups_id": [(4, is_subcontractor.id, 0)]})
+        categ = cls.env.ref("product.product_category_3")
+        categ.with_context(
+            force_company=cls.company_a.id
+        ).property_account_expense_categ_id = cls.env.ref(
+            "account_invoice_inter_company.a_expense_company_a"
+        ).id
 
     def test_customer_subcontractor(self):
         """ Company A sell stuff to customer B but subcontract it to company B """
@@ -154,3 +160,22 @@ class TestSubcontractorInvoice(SavepointCase):
         )
         self.assertEqual(len(invoice_b), 1)
         self.assertEqual(invoice_b.amount_untaxed, 360)
+        self.assertEqual(
+            invoice_b.invoice_line_ids.subcontractor_work_invoiced_id, subwork
+        )
+        invoice_b.with_context(test_account_invoice_inter_company=True).sudo(
+            self.user_company_b.id
+        ).action_invoice_open()
+
+        invoice_c = self.env["account.invoice"].search(
+            [
+                ("company_id", "=", self.company_a.id),
+                ("type", "=", "in_invoice"),
+                ("auto_invoice_id", "=", invoice_b.id),
+            ]
+        )
+        self.assertEqual(len(invoice_c), 1)
+        self.assertEqual(invoice_c.amount_untaxed, 360)
+        self.assertEqual(
+            invoice_c.invoice_line_ids.subcontractor_work_invoiced_id, subwork
+        )

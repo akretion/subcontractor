@@ -26,7 +26,7 @@ class AccountAnalyticLine(models.Model):
         "project.task.type", related="task_id.stage_id", store=True
     )
     invoiceable = fields.Boolean(compute="_compute_invoiceable", store=True)
-    discount = fields.Float(digits=dp.get_precision("Discount"))
+    discount = fields.Float(digits=dp.get_precision("Discount"), default=0)
     invoiceable_amount = fields.Float(compute="_compute_invoiceable_amount", store=True)
     date_invoiceable = fields.Date(compute="_compute_date_invoiceable", store=True)
 
