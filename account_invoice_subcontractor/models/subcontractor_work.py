@@ -217,18 +217,19 @@ class SubcontractorWork(models.Model):
                 )
 
     @api.model
-    def _prepare_invoice(self, invoice_type="out_invoice"):
+    def _prepare_invoice(self):
         self.ensure_one()
         journal_obj = self.env["account.journal"]
         inv_obj = self.env["account.invoice"]
-        if invoice_type == "out_invoice":
+        invoice_type = self.sudo().invoice_id.type
+        if invoice_type in ["out_invoice", "out_refund"]:
             company = self.subcontractor_company_id
             journal_type = "sale"
             partner = self.customer_id
             user = self.env["res.users"].search(
                 [("company_id", "=", company.id)], limit=1
             )
-        elif invoice_type == "in_invoice":
+        elif invoice_type in ["in_invoice", "in_refund"]:
             company = self.invoice_id.company_id
             journal_type = "purchase"
             partner = self.employee_id.user_id.partner_id
@@ -329,7 +330,7 @@ class SubcontractorWork(models.Model):
         invoice = None
         for work in self:
             if not invoice:
-                invoice_vals = work._prepare_invoice(invoice_type="in_invoice")
+                invoice_vals = work._prepare_invoice()
                 invoice = invoice_obj.create(invoice_vals)
             inv_line_data = work._prepare_invoice_line(invoice)
             # Need sudo because odoo prefetch de work.invoice_id

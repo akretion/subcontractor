@@ -75,12 +75,11 @@ class AccountInvoiceLine(models.Model):
     @api.multi
     def _is_work_amount_invalid(self):
         for line in self:
-            if line.invoice_id.type in ["out_invoice", "in_invoice"]:
-                if line.subcontracted:
-                    if line.invoice_id.type == "in_invoice":
-                        line.invalid_work_amount = line._check_in_invoice_amount()
-                    else:
-                        line.invalid_work_amount = line._check_out_invoice_amount()
+            if line.subcontracted:
+                if line.invoice_id.type in ["in_invoice", "in_refund"]:
+                    line.invalid_work_amount = line._check_in_invoice_amount()
+                else:
+                    line.invalid_work_amount = line._check_out_invoice_amount()
 
     def _check_in_invoice_amount(self):
         return (
@@ -163,3 +162,22 @@ class AccountInvoice(models.Model):
         view.active = True
         view2.active = True
         return res
+
+    @api.model
+    def _refund_cleanup_lines(self, lines):
+        result = super()._refund_cleanup_lines(lines)
+        for i, line in enumerate(lines):
+            if hasattr(line, "subcontractor_work_ids"):
+                works = []
+                for work in line.subcontractor_work_ids:
+                    new_work = work.copy_data(
+                        {
+                            "supplier_invoice_id": False,
+                            "invoice_line_id": False,
+                            "supplier_invoice_line_id": False,
+                            "subcontractor_invoice_line_id": False,
+                        }
+                    )[0]
+                    works.append((0, 0, new_work))
+                result[i][2]["subcontractor_work_ids"] = works
+        return result
