@@ -21,7 +21,7 @@ class SubcontractorInvoiceWork(models.TransientModel):
             # 'view_type': 'form',
             "view_mode": "tree,form",
             "res_model": "account.invoice",
-            "context": "{'type':'out_invoice'}",
+#            "context": "{'type':'out_invoice'}",
             "type": "ir.actions.act_window",
             "nodestroy": True,
             "target": "current",
