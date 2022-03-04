@@ -13,7 +13,8 @@ class SubcontractorInvoiceWork(models.TransientModel):
     def generate_invoice(self):
         work_obj = self.env["subcontractor.work"]
         work_ids = self._context.get("active_ids")
-        works = work_obj.browse(work_ids)
+        # Search instead of browse to make order it easily
+        works = work_obj.search([("id", "in", work_ids)], order="employee_id, invoice_id")
         works.check()
         invoices = works.invoice_from_work()
         return {
@@ -21,7 +22,7 @@ class SubcontractorInvoiceWork(models.TransientModel):
             # 'view_type': 'form',
             "view_mode": "tree,form",
             "res_model": "account.invoice",
-            "context": "{'type':'out_invoice'}",
+#            "context": "{'type':'out_invoice'}",
             "type": "ir.actions.act_window",
             "nodestroy": True,
             "target": "current",

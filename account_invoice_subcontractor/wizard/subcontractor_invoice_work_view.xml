@@ -11,6 +11,8 @@
             <field name="arch" type="xml">
                 <form string="Generate Invoice">
                     <separator string="Generate Invoice"/>
+                    <p>For internal Subcontractors one customer invoice will be created in the subcontracted company, for each couple employee/end customer invoice</p>
+                    <p>For external Subcontractors, one supplier invoice will be created for each employee. (even if the work concerns multiple end customer invoice.)</p>
                     <footer>
                         <button name="generate_invoice" string="Generate Invoice"
                                 type="object" class="oe_highlight"/>
