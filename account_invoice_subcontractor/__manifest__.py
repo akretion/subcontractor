@@ -18,7 +18,6 @@
         "views/subcontractor_work_view.xml",
         "views/invoice_view.xml",
         "wizard/subcontractor_invoice_work_view.xml",
-        "wizard/supplier_invoice_work_view.xml",
         "views/product_view.xml",
     ],
     "demo": ["demo/demo.xml"],

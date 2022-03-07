@@ -200,8 +200,9 @@ class SubcontractorWork(models.Model):
                 )
 
     @api.multi
-    def check(self, work_type="internal"):
+    def check(self, work_type=False):
         partner_id = self[0].customer_id.id
+        worktype = self[0].subcontractor_type
         for work in self:
             if partner_id != work.customer_id.id:
                 raise UserError(_("All the work should belong to the same supplier"))
@@ -211,7 +212,9 @@ class SubcontractorWork(models.Model):
                 raise UserError(
                     _("Only works with the state 'open' " " or 'paid' can be invoiced")
                 )
-            elif work.subcontractor_type != work_type:
+            elif worktype != work.subcontractor_type:
+                raise UserError(_("All the work should have the same subcontractor type"))
+            elif work_type and work.subcontractor_type != work_type:
                 raise UserError(
                     _("You can invoice on only the %s subcontractors" % work_type)
                 )
@@ -221,7 +224,18 @@ class SubcontractorWork(models.Model):
         self.ensure_one()
         journal_obj = self.env["account.journal"]
         inv_obj = self.env["account.invoice"]
-        invoice_type = self.sudo().invoice_id.type
+        # the source invoice is always from customer, out_invoice or out_refund
+        # but, depending on the subcontractor type, we want to create : 
+        # 1. For internal : the same type of invoice on the subcontractor company side
+        # Then the supplier invoice/refund will be created with intercompant invoice
+        # module.
+        # 2. For external : directly create a supplier invoice/refund
+        if self.sudo().invoice_id.type not in ("out_invoice", "out_refund"):
+            raise UserError("You can only invoice the subcontractors on a customer invoice/refund")
+        if self.subcontractor_type == "internal":
+            invoice_type = self.sudo().invoice_id.type
+        elif self.subcontractor_type == "external":
+            invoice_type = self.sudo().invoice_id.type == "out_invoice" and "in_invoice" or "in_refund"
         if invoice_type in ["out_invoice", "out_refund"]:
             company = self.subcontractor_company_id
             journal_type = "sale"
@@ -300,15 +314,22 @@ class SubcontractorWork(models.Model):
 
     @api.multi
     def invoice_from_work(self):
+        # works arrive here already sorted by employee and invoice (sort is done
+        # by the cron or the wizard)? That's why the following code works and make
+        # a good repartition of the work per invoice.
+        # TODO MIGRATION It would be nice to refactore this to make this method work
+        # properly independantly of the order of the works.
         invoice_line_obj = self.env["account.invoice.line"]
         invoice_obj = self.env["account.invoice"]
         invoices = self.env["account.invoice"]
         current_employee_id = None
         current_invoice_id = None
         for work in self:
+            # for internal works we want 1 invoice per employee/source invoice
+            # for external we want one invoice per employee
             if (
                 current_employee_id != work.employee_id
-                or current_invoice_id != work.invoice_id
+                or (work.subcontractor_type == "internal" and current_invoice_id != work.invoice_id)
             ):
                 invoice_vals = work._prepare_invoice()
                 invoice = invoice_obj.create(invoice_vals)
@@ -322,23 +343,6 @@ class SubcontractorWork(models.Model):
             invoice.sudo().write({"invoice_line_ids": [(4, inv_line.id)]})
         invoices.compute_taxes()
         return invoices
-
-    @api.multi
-    def supplier_invoice_from_work(self):
-        invoice_line_obj = self.env["account.invoice.line"]
-        invoice_obj = self.env["account.invoice"]
-        invoice = None
-        for work in self:
-            if not invoice:
-                invoice_vals = work._prepare_invoice()
-                invoice = invoice_obj.create(invoice_vals)
-            inv_line_data = work._prepare_invoice_line(invoice)
-            # Need sudo because odoo prefetch de work.invoice_id
-            # and try to read fields on it and that makes access rules fail
-            inv_line = invoice_line_obj.sudo().create(inv_line_data)
-            invoice.sudo().write({"invoice_line_ids": [(4, inv_line.id)]})
-        invoice.compute_taxes()
-        return invoice
 
     @api.multi
     def _scheduler_action_subcontractor_invoice_create(self):
