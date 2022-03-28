@@ -2,7 +2,6 @@
 
 <odoo>
 
-    <!-- VIEW FOR THE OBJECT : subcontractor_work -->
     <record id="view_subcontractor_work_view_search" model="ir.ui.view">
         <field name="model">subcontractor.work</field>
         <field name="arch" type="xml">
@@ -19,10 +18,7 @@
                 <filter string="To pay" name="to_pay"
                         domain="[('state','=', 'paid'),('subcontractor_state', '!=', 'paid')]"/>
                 <separator/>
-<!--             <filter string="Between FiscalYear" name="between_fiscalyear"
-                    domain="[('same_fiscalyear','=', False)]"/>
-                <field string="FiscalYear" name="min_fiscalyear"/>
- -->                <group expand="0" string="Group By...">
+                <group expand="0" string="Group By...">
                     <filter name="invoice" string="Invoice" context="{'group_by':'invoice_id'}"/>
                     <filter name="subcontractor" string="Subcontractor" context="{'group_by':'employee_id'}"/>
                 </group>
@@ -34,15 +30,15 @@
     <record id="view_subcontractor_work_view_form" model="ir.ui.view">
         <field name="model">subcontractor.work</field>
         <field name="arch" type="xml">
-            <form string="Subcontractor work">
+            <form>
                 <field name="end_customer_id"/>
                 <field name="invoice_id"/>
                 <field name="supplier_invoice_id"/>
-                <field name="name"/>
+                 <field name="name"/>
                 <field name="employee_id"/>
                 <field name="subcontractor_type"/>
                 <field name="quantity"/>
-                <field name="uom_id"/>
+<!--                 <field name="uom_id"/> -->
                 <field name="sale_price_unit"/>
                 <field name="sale_price"/>
                 <field name="cost_price"/>
@@ -53,7 +49,7 @@
                 <field name="customer_id"/>
                 <field name="subcontractor_company_id"/>
                 <field name="date_invoice"/>
-                <field name="date_supplier_invoice"/>
+                <field name="date_supplier_invoice"/> -->
             </form>
         </field>
     </record>
@@ -70,7 +66,7 @@
                 <field name="employee_id"/>
                 <field name="subcontractor_type" string="Subcon -tractor type"/>
                 <field name="quantity" sum="Total Qty"/>
-                <field name="uom_id"/>
+                <!-- <field name="uom_id"/> -->
                 <field name="cost_price_unit"/>
                 <field name="sale_price_unit"/>
                 <field name="sale_price" sum="Total Sale Amount"/>
@@ -87,13 +83,12 @@
         </field>
     </record>
 
+    <!-- TODO Insufficient fields for Calendar View!  -->
+    <!-- <field name="view_mode">tree,form,calendar,graph</field> -->
     <record id="action_subcontractor_work" model="ir.actions.act_window">
         <field name="name">Subcontractor Work</field>
         <field name="res_model">subcontractor.work</field>
-        <field name="view_type">form</field>
         <field name="view_mode">tree,form,graph</field>
-        <!-- TODO Insufficient fields for Calendar View!  -->
-        <!-- <field name="view_mode">tree,form,calendar,graph</field> -->
         <field name="context">{"search_default_to_invoice":1}</field>
     </record>
 

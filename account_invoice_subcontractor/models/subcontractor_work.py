@@ -7,8 +7,6 @@ from datetime import date, timedelta
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
-import odoo.addons.decimal_precision as dp
-
 _logger = logging.getLogger(__name__)
 
 INVOICE_STATE = [
@@ -28,78 +26,76 @@ class SubcontractorWork(models.Model):
     def _get_subcontractor_type(self):
         return self.env["hr.employee"]._get_subcontractor_type()
 
-    name = fields.Text(related="invoice_line_id.name", readonly=True)
+    name = fields.Char(related="invoice_line_id.name", readonly=True)
     employee_id = fields.Many2one("hr.employee", string="Employee", required=True)
     invoice_line_id = fields.Many2one(
-        "account.invoice.line",
+        comodel_name="account.move.line",
         string="Invoice Line",
         required=True,
         ondelete="cascade",
-        _prefetch=False,
     )
     invoice_id = fields.Many2one(
-        "account.invoice",
-        related="invoice_line_id.invoice_id",
+        comodel_name="account.move",
+        related="invoice_line_id.move_id",
         string="Invoice",
         store=True,
-        _prefetch=False,
     )
     date_invoice = fields.Date(
-        related="invoice_line_id.invoice_id.date_invoice",
+        related="invoice_line_id.move_id.invoice_date",
         string="Invoice Date",
         store=True,
     )
     supplier_invoice_line_id = fields.Many2one(
-        "account.invoice.line", string="Supplier Invoice Line", _prefetch=False
+        comodel_name="account.move.line", string="Supplier Invoice Line"
     )
     supplier_invoice_id = fields.Many2one(
-        "account.invoice",
-        related="supplier_invoice_line_id.invoice_id",
+        comodel_name="account.move",
+        related="supplier_invoice_line_id.move_id",
         string="Supplier Invoice",
         readonly=True,
         store=True,
-        _prefetch=False,
     )
     date_supplier_invoice = fields.Date(
-        related="supplier_invoice_line_id.invoice_id.date_invoice",
+        related="supplier_invoice_line_id.move_id.invoice_date",
         string="Supplier Invoice Date",
         store=True,
     )
-    quantity = fields.Float(digits=dp.get_precision("Product Unit of Measure"))
-    sale_price_unit = fields.Float(digits=dp.get_precision("Account"))
-    cost_price_unit = fields.Float(digits=dp.get_precision("Account"))
+    quantity = fields.Float(digits="Product Unit of Measure")
+    sale_price_unit = fields.Float(digits="Account")
+    cost_price_unit = fields.Float(digits="Account")
     cost_price = fields.Float(
-        compute="_compute_total_price", digits=dp.get_precision("Account"), store=True
+        compute="_compute_total_price", digits="Account", store=True
     )
     sale_price = fields.Float(
-        compute="_compute_total_price", digits=dp.get_precision("Account"), store=True
+        compute="_compute_total_price", digits="Account", store=True
     )
     company_id = fields.Many2one(
-        "res.company",
+        comodel_name="res.company",
         related="invoice_line_id.company_id",
         string="Company",
         readonly=True,
         store=True,
     )
     customer_id = fields.Many2one(
-        "res.partner",
+        comodel_name="res.partner",
         related="company_id.partner_id",
         readonly=True,
         string="Customer",
         store=True,
     )
     end_customer_id = fields.Many2one(
-        "res.partner",
+        comodel_name="res.partner",
         related="invoice_id.partner_id",
         readonly=True,
         store=True,
         string="Customer(end)",
     )
     subcontractor_invoice_line_id = fields.Many2one(
-        "account.invoice.line", string="Subcontractor Invoice Line", _prefetch=False
+        comodel_name="account.move.line",
+        string="Subcontractor Invoice Line",
     )
     subcontractor_company_id = fields.Many2one(
-        "res.company",
+        comodel_name="res.company",
         related="employee_id.subcontractor_company_id",
         readonly=True,
         store=True,
@@ -118,45 +114,45 @@ class SubcontractorWork(models.Model):
         default="draft",
         compute_sudo=True,
     )
-    uom_id = fields.Many2one(
-        "uom.uom",
-        related="invoice_line_id.uom_id",
-        readonly=True,
-        store=True,
-        string="Unit Of Measure",
-    )
-    same_fiscalyear = fields.Boolean()
-    # We keep the data here
-    # compute='_check_same_fiscalyear',
-    # store=True,
-    # compute_sudo=True)
-    min_fiscalyear = fields.Char()
-    # compute='_check_same_fiscalyear',
-    # store=True,
-    # compute_sudo=True)
+    # uom_id = fields.Many2one(
+    #     comodel_name="uom.uom",
+    #     related="invoice_line_id.uom_id",
+    #     readonly=True,
+    #     store=True,
+    #     string="Unit",
+    # )
+    # same_fiscalyear = fields.Boolean()
+    # # We keep the data here
+    # # compute='_check_same_fiscalyear',
+    # # store=True,
+    # # compute_sudo=True)
+    # min_fiscalyear = fields.Char()
+    # # compute='_check_same_fiscalyear',
+    # # store=True,
+    # # compute_sudo=True)
 
-    # @api.multi
-    # @api.depends(
-    #     'invoice_line_id.invoice_id.date_invoice',
-    #     'supplier_invoice_line_id.invoice_id.date_invoice')
-    # def _check_same_fiscalyear(self):
-    #     fyo = lf.env['account.fiscalyear']
-    #     for sub in self:
-    #         invoice_year_id = fyo.find(
-    #             sub.invoice_line_id.invoice_id.date_invoice)
-    #         supplier_invoice_year_id = fyo.find(
-    #             sub.supplier_invoice_line_id.invoice_id.date_invoice)
-    #         sub.same_fiscalyear = invoice_year_id == supplier_invoice_year_id
-    #         invoice_year = fyo.browse(invoice_year_id)
-    #         supplier_invoice_year = fyo.browse(supplier_invoice_year_id)
-    #         if invoice_year and supplier_invoice_year:
-    #             sub.min_fiscalyear = min(
-    #                 invoice_year.name,
-    #                 supplier_invoice_year.name)
-    #         else:
-    #             sub.min_fiscalyear = max(
-    #                 invoice_year.name,
-    #                 supplier_invoice_year.name)
+    # #
+    # # @api.depends(
+    # #     'invoice_line_id.invoice_id.date_invoice',
+    # #     'supplier_invoice_line_id.invoice_id.date_invoice')
+    # # def _check_same_fiscalyear(self):
+    # #     fyo = lf.env['account.fiscalyear']
+    # #     for sub in self:
+    # #         invoice_year_id = fyo.find(
+    # #             sub.invoice_line_id.invoice_id.date_invoice)
+    # #         supplier_invoice_year_id = fyo.find(
+    # #             sub.supplier_invoice_line_id.invoice_id.date_invoice)
+    # #         sub.same_fiscalyear = invoice_year_id == supplier_invoice_year_id
+    # #         invoice_year = fyo.browse(invoice_year_id)
+    # #         supplier_invoice_year = fyo.browse(supplier_invoice_year_id)
+    # #         if invoice_year and supplier_invoice_year:
+    # #             sub.min_fiscalyear = min(
+    # #                 invoice_year.name,
+    # #                 supplier_invoice_year.name)
+    # #         else:
+    # #             sub.min_fiscalyear = max(
+    # #                 invoice_year.name,
+    # #                 supplier_invoice_year.name)
 
     @api.onchange("sale_price_unit", "employee_id")
     def _compute_price(self):
@@ -176,19 +172,17 @@ class SubcontractorWork(models.Model):
             self.quantity = line.quantity
             self.sale_price_unit = line.price_unit * (1 - line.discount / 100.0)
 
-    @api.multi
     @api.depends("sale_price_unit", "quantity", "cost_price_unit")
     def _compute_total_price(self):
         for work in self:
             work.cost_price = work.quantity * work.cost_price_unit
             work.sale_price = work.quantity * work.sale_price_unit
 
-    @api.multi
     @api.depends(
         "invoice_line_id",
-        "invoice_line_id.invoice_id.state",
+        "invoice_line_id.move_id.state",
         "supplier_invoice_line_id",
-        "supplier_invoice_line_id.invoice_id.state",
+        "supplier_invoice_line_id.move_id.state",
     )
     def _get_state(self):
         for work in self:
@@ -199,7 +193,6 @@ class SubcontractorWork(models.Model):
                     work.supplier_invoice_line_id.invoice_id.state
                 )
 
-    @api.multi
     def check(self, work_type=False):
         partner_id = self[0].customer_id.id
         worktype = self[0].subcontractor_type
@@ -213,7 +206,9 @@ class SubcontractorWork(models.Model):
                     _("Only works with the state 'open' " " or 'paid' can be invoiced")
                 )
             elif worktype != work.subcontractor_type:
-                raise UserError(_("All the work should have the same subcontractor type"))
+                raise UserError(
+                    _("All the work should have the same subcontractor type")
+                )
             elif work_type and work.subcontractor_type != work_type:
                 raise UserError(
                     _("You can invoice on only the %s subcontractors" % work_type)
@@ -223,19 +218,25 @@ class SubcontractorWork(models.Model):
     def _prepare_invoice(self):
         self.ensure_one()
         journal_obj = self.env["account.journal"]
-        inv_obj = self.env["account.invoice"]
+        inv_obj = self.env["account.move"]
         # the source invoice is always from customer, out_invoice or out_refund
-        # but, depending on the subcontractor type, we want to create : 
+        # but, depending on the subcontractor type, we want to create :
         # 1. For internal : the same type of invoice on the subcontractor company side
         # Then the supplier invoice/refund will be created with intercompant invoice
         # module.
         # 2. For external : directly create a supplier invoice/refund
         if self.sudo().invoice_id.type not in ("out_invoice", "out_refund"):
-            raise UserError("You can only invoice the subcontractors on a customer invoice/refund")
+            raise UserError(
+                "You can only invoice the subcontractors on a customer invoice/refund"
+            )
         if self.subcontractor_type == "internal":
             invoice_type = self.sudo().invoice_id.type
         elif self.subcontractor_type == "external":
-            invoice_type = self.sudo().invoice_id.type == "out_invoice" and "in_invoice" or "in_refund"
+            invoice_type = (
+                self.sudo().invoice_id.type == "out_invoice"
+                and "in_invoice"
+                or "in_refund"
+            )
         if invoice_type in ["out_invoice", "out_refund"]:
             company = self.subcontractor_company_id
             journal_type = "sale"
@@ -257,7 +258,7 @@ class SubcontractorWork(models.Model):
                 % (journal_type, company.name, company.id)
             )
         invoice_vals = {"partner_id": partner.id, "type": invoice_type}
-        invoice_vals = self.env["account.invoice"].play_onchanges(
+        invoice_vals = self.env["account.move"].play_onchanges(
             invoice_vals, ["partner_id"]
         )
         original_date_invoice = self.sudo().invoice_id.date_invoice
@@ -289,7 +290,7 @@ class SubcontractorWork(models.Model):
     @api.model
     def _prepare_invoice_line(self, invoice):
         self.ensure_one()
-        invoice_line_obj = self.env["account.invoice.line"]
+        invoice_line_obj = self.env["account.move.line"]
         line_vals = {
             "product_id": self.sudo().invoice_line_id.product_id.id,
             "quantity": self.quantity,
@@ -312,24 +313,23 @@ class SubcontractorWork(models.Model):
         line_vals.update(invoice_line_obj.play_onchanges(line_vals, ["product_id"]))
         return line_vals
 
-    @api.multi
     def invoice_from_work(self):
         # works arrive here already sorted by employee and invoice (sort is done
         # by the cron or the wizard)? That's why the following code works and make
         # a good repartition of the work per invoice.
         # TODO MIGRATION It would be nice to refactore this to make this method work
         # properly independantly of the order of the works.
-        invoice_line_obj = self.env["account.invoice.line"]
-        invoice_obj = self.env["account.invoice"]
-        invoices = self.env["account.invoice"]
+        invoice_line_obj = self.env["account.move.line"]
+        invoice_obj = self.env["account.move"]
+        invoices = self.env["account.move"]
         current_employee_id = None
         current_invoice_id = None
         for work in self:
             # for internal works we want 1 invoice per employee/source invoice
             # for external we want one invoice per employee
-            if (
-                current_employee_id != work.employee_id
-                or (work.subcontractor_type == "internal" and current_invoice_id != work.invoice_id)
+            if current_employee_id != work.employee_id or (
+                work.subcontractor_type == "internal"
+                and current_invoice_id != work.invoice_id
             ):
                 invoice_vals = work._prepare_invoice()
                 invoice = invoice_obj.create(invoice_vals)
@@ -344,7 +344,6 @@ class SubcontractorWork(models.Model):
         invoices.compute_taxes()
         return invoices
 
-    @api.multi
     def _scheduler_action_subcontractor_invoice_create(self):
         date_filter = date.today() - timedelta(days=7)
         subcontractors = self.env["hr.employee"].search(

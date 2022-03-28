@@ -4,36 +4,26 @@ from datetime import date, timedelta
 
 from odoo.modules.module import get_resource_path
 from odoo.tests.common import SavepointCase
+from odoo.addons.account_invoice_inter_company.tests.test_inter_company_invoice import (
+    TestAccountInvoiceInterCompanyBase,
+)
 from odoo.tools import convert_file
 
 
-class TestSubcontractorInvoice(SavepointCase):
+class TestSubcontractorInvoice(TestAccountInvoiceInterCompanyBase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        # use account_invoice_inter_company data to avoid recreating a new company
-        # and all stuff that goes with it.
-        module = "account_invoice_inter_company"
-        convert_file(
-            cls.cr,
-            module,
-            get_resource_path(module, "tests", "inter_company_invoice.xml"),
-            None,
-            "init",
-            False,
-            "test",
-            cls.registry._assertion_report,
-        )
         cls.account_obj = cls.env["account.account"]
-        cls.invoice_obj = cls.env["account.invoice"]
+        cls.invoice_obj = cls.env["account.move"]
         cls.invoice_company_a = cls.env.ref(
             "account_invoice_inter_company.customer_invoice_company_a"
         )
         cls.user_company_a = cls.env.ref("account_invoice_inter_company.user_company_a")
         cls.user_company_b = cls.env.ref("account_invoice_inter_company.user_company_b")
 
-        cls.company_a = cls.env.ref("account_invoice_inter_company.company_a")
-        cls.company_b = cls.env.ref("account_invoice_inter_company.company_b")
+        # cls.company_a = cls.env.ref("account_invoice_inter_company.company_a")
+        # cls.company_b = cls.env.ref("account_invoice_inter_company.company_b")
 
         # configure subcontracted product
         cls.subcontracted_product = cls.env.ref(
@@ -63,7 +53,7 @@ class TestSubcontractorInvoice(SavepointCase):
             }
         )
 
-        # Create purchase journal for  company A as it was not done in
+        # Create purchase journal for company A as it was not done in
         # account_invoice_inter_company module
         cls.env["account.journal"].create(
             {
@@ -96,6 +86,7 @@ class TestSubcontractorInvoice(SavepointCase):
         )
         cls.user_company_b.write({"groups_id": [(4, is_subcontractor.id, 0)]})
         categ = cls.env.ref("product.product_category_3")
+        import pdb; pdb.set_trace()
         categ.with_context(
             force_company=cls.company_a.id
         ).property_account_expense_categ_id = cls.env.ref(
@@ -103,13 +94,13 @@ class TestSubcontractorInvoice(SavepointCase):
         ).id
 
     def test_customer_subcontractor(self):
-        """ Company A sell stuff to customer B but subcontract it to company B """
+        """Company A sell stuff to customer B but subcontract it to company B"""
         # ensure our user is in company A
         self.env.user.company_id = self.company_a.id
         # ensure cron will take it
         date_invoice = date.today() - timedelta(days=20)
 
-        invoice = self.env["account.invoice"].create(
+        invoice = self.env["account.move"].create(
             {
                 "type": "out_invoice",
                 "date_invoice": date_invoice,
@@ -120,7 +111,7 @@ class TestSubcontractorInvoice(SavepointCase):
                 "company_id": self.company_a.id,
             }
         )
-        invoice_line = self.env["account.invoice.line"].create(
+        invoice_line = self.env["account.move.line"].create(
             {
                 "product_id": self.subcontracted_product.id,
                 "name": self.subcontracted_product.name,
@@ -155,7 +146,7 @@ class TestSubcontractorInvoice(SavepointCase):
         self.env[
             "subcontractor.work"
         ].sudo()._scheduler_action_subcontractor_invoice_create()
-        invoice_b = self.env["account.invoice"].search(
+        invoice_b = self.env["account.move"].search(
             [("company_id", "=", self.company_b.id), ("type", "=", "out_invoice")]
         )
         self.assertEqual(len(invoice_b), 1)
@@ -167,7 +158,7 @@ class TestSubcontractorInvoice(SavepointCase):
             self.user_company_b.id
         ).action_invoice_open()
 
-        invoice_c = self.env["account.invoice"].search(
+        invoice_c = self.env["account.move"].search(
             [
                 ("company_id", "=", self.company_a.id),
                 ("type", "=", "in_invoice"),

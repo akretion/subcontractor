@@ -2,9 +2,10 @@
 
 <odoo>
 
-        <!-- VIEW FOR THE OBJECT : account_invoice_line -->
-        <record id="view_account_invoice_line_form" model="ir.ui.view">
-            <field name="model">account.invoice.line</field>
+        <!-- VIEW FOR THE OBJECT : account.move.line -->
+<!--
+        <record id="view_account.move.line_form" model="ir.ui.view">
+            <field name="model">account.move.line</field>
             <field name="type">form</field>
             <field name="inherit_id" ref="account.view_invoice_line_form" />
             <field name="arch" type="xml">
@@ -36,10 +37,10 @@
                 </xpath>
             </field>
         </record>
-
-        <record id="view_invoice_form" model="ir.ui.view">
-            <field name="model">account.invoice</field>
-            <field name="inherit_id" ref="account.invoice_form" />
+ -->
+        <record id="view_move_form" model="ir.ui.view">
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form" />
             <field name="arch" type="xml">
                 <xpath expr="//tree/field[@name='name']" position="after">
                     <field name="subcontractors"/>
@@ -51,12 +52,30 @@
                     <attribute name="editable"/>
                     <attribute name="decoration-danger">invalid_work_amount == True</attribute>
                 </xpath>
+                <xpath expr="//field[@name='invoice_line_ids']/form/sheet/group[last()]" position="before">
+                    <group string="Subcontracting work" name="subcontracting_work">
+                        <field name="subcontractor_work_ids" groups="account_invoice_subcontractor.group_have_subcontractor"
+                               nolabel="1">
+                            <tree string="Subcontractor work" editable="bottom">
+                                <field name="employee_id"/>
+                                <field name="subcontractor_type" invisible="True"/>
+                                <field name="quantity" sum="Total Qty"/>
+                                <!-- <field name="uom_id"/> -->
+                                <field name="cost_price_unit"/>
+                                <field name="sale_price_unit"/>
+                                <field name="sale_price" sum="Total Sale Amount"/>
+                                <field name="cost_price" sum="Total Cost Amount"/>
+                            </tree>
+                        </field>
+                    </group>
+                </xpath>
             </field>
         </record>
 
-        <record id="invoice_supplier_form" model="ir.ui.view">
-            <field name="model">account.invoice</field>
-            <field name="inherit_id" ref="account.invoice_supplier_form" />
+
+<!--         <record id="invoice_supplier_form" model="ir.ui.view">
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.move_supplier_form" />
             <field name="arch" type="xml">
                 <xpath expr="//tree/field[@name='price_subtotal']" position="after">
                     <field name="invalid_work_amount" invisible="1"/>
@@ -67,12 +86,12 @@
                 </xpath>
             </field>
         </record>
-
-        <!-- VIEW FOR THE OBJECT : account_invoice -->
-        <record id="view_account_invoice_tree" model="ir.ui.view">
-            <field name="model">account.invoice</field>
+ -->
+        <!-- VIEW FOR THE OBJECT : account.move -->
+<!--         <record id="view_account.move_tree" model="ir.ui.view">
+            <field name="model">account.move</field>
             <field name="type">tree</field>
-            <field name="inherit_id" ref="account.invoice_tree"/>
+            <field name="inherit_id" ref="account.move_tree"/>
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='currency_id']" position="before">
                     <field name="to_pay"/>
@@ -80,10 +99,10 @@
                 </xpath>
             </field>
         </record>
-
-        <record id="view_account_invoice_filter" model="ir.ui.view">
-            <field name="model">account.invoice</field>
-            <field name="inherit_id" ref="account.view_account_invoice_filter"/>
+ -->
+<!--         <record id="view_account.move_filter" model="ir.ui.view">
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_account.move_filter"/>
             <field name="arch" type="xml">
                 <filter name="unpaid" position="after">
                     <filter name="to_pay" string="To pay" domain="[('to_pay','=',True)]"
@@ -91,5 +110,5 @@
                 </filter>
             </field>
         </record>
-
+ -->
 </odoo>

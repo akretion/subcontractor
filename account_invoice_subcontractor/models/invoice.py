@@ -1,12 +1,12 @@
-# © 2015 Akretion
+# © 2015 Akretion
 # @author Sébastien BEAU <sebastien.beau@akretion.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 from odoo import api, fields, models
 
 
-class AccountInvoiceLine(models.Model):
-    _inherit = "account.invoice.line"
+class AccountMoveLine(models.Model):
+    _inherit = "account.move.line"
 
     _map_type = {
         "in_invoice": "supplier_invoice_line_id",
@@ -23,14 +23,12 @@ class AccountInvoiceLine(models.Model):
         inverse="_set_work_invoiced",
         string="Invoiced Work",
         store=True,
-        _prefetch=False,
     )
     invalid_work_amount = fields.Boolean(
         compute="_is_work_amount_invalid", string="Work Amount Invalid", store=True
     )
     subcontractors = fields.Char(string="Sub C.", compute="_compute_subcontractors")
 
-    @api.multi
     def _compute_subcontractors(self):
         for rec in self:
             rec.subcontractors = " / ".join(
@@ -39,44 +37,41 @@ class AccountInvoiceLine(models.Model):
 
     @api.onchange("product_id")
     def _onchange_product_id(self):
-        super(AccountInvoiceLine, self)._onchange_product_id()
+        super()._onchange_product_id()
         for rec in self:
             rec.subcontracted = rec.product_id.subcontracted
 
-    @api.depends("invoice_id", "invoice_id.type")
-    @api.multi
+    @api.depends("move_id", "move_id.move_type")
     def _get_work_invoiced(self):
         for line in self:
-            field = self._map_type.get(line.invoice_id.type, False)
+            field = self._map_type.get(line.move_id.move_type, False)
             if field:
                 work_obj = self.env["subcontractor.work"]
                 work = work_obj.search([[field, "=", line.id]])
                 line.subcontractor_work_invoiced_id = work.id
 
-    @api.multi
     def _set_work_invoiced(self):
         for line in self:
             work = line.subcontractor_work_invoiced_id
             if work:
-                field = self._map_type.get(line.invoice_id.type, False)
+                field = self._map_type.get(line.move_id.move_type, False)
                 if field:
                     work.sudo().write({field: line.id})
 
     @api.depends(
-        "invoice_id",
-        "invoice_id.type",
-        "invoice_id.company_id",
-        "invoice_id.partner_id",
+        "move_id",
+        "move_id.move_type",
+        "move_id.company_id",
+        "move_id.partner_id",
         "subcontractor_work_invoiced_id",
         "subcontractor_work_invoiced_id.cost_price",
         "price_subtotal",
         "subcontracted",
     )
-    @api.multi
     def _is_work_amount_invalid(self):
         for line in self:
             if line.subcontracted:
-                if line.invoice_id.type in ["in_invoice", "in_refund"]:
+                if line.move_id.move_type in ["in_invoice", "in_refund"]:
                     line.invalid_work_amount = line._check_in_invoice_amount()
                 else:
                     line.invalid_work_amount = line._check_out_invoice_amount()
@@ -89,9 +84,9 @@ class AccountInvoiceLine(models.Model):
 
     def _check_out_invoice_amount(self):
         # TODO FIXME
-        if self.invoice_id.company_id.id != 1:
+        if self.move_id.company_id.id != 1:
             # this mean Akretion
-            if self.invoice_id.partner_id.id == 1:
+            if self.move_id.partner_id.id == 1:
                 return (
                     abs(
                         self.subcontractor_work_invoiced_id.cost_price
@@ -111,8 +106,8 @@ class AccountInvoiceLine(models.Model):
         return res
 
 
-class AccountInvoice(models.Model):
-    _inherit = "account.invoice"
+class AccountMove(models.Model):
+    _inherit = "account.move"
 
     to_pay = fields.Boolean(compute="_get_to_pay", store=True, compute_sudo=True)
     invalid_work_amount = fields.Boolean(compute="_is_work_amount_valid", store=True)
@@ -122,10 +117,9 @@ class AccountInvoice(models.Model):
         "invoice_line_ids.subcontractor_work_invoiced_id",
         "invoice_line_ids.subcontractor_work_invoiced_id.state",
     )
-    @api.multi
     def _get_to_pay(self):
         for invoice in self:
-            if invoice.type == "in_invoice":
+            if invoice.move_type == "in_invoice":
                 if invoice.state == "paid":
                     invoice.to_pay = False
                 else:
@@ -137,7 +131,6 @@ class AccountInvoice(models.Model):
                     )
 
     @api.depends("invoice_line_ids", "invoice_line_ids.invalid_work_amount")
-    @api.multi
     def _is_work_amount_valid(self):
         for invoice in self:
             invoice.invalid_work_amount = any(
