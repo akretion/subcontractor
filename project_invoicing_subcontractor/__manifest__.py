@@ -11,7 +11,11 @@
     "summary": """Generate the subcontractor work automatically
                   when creating an invoice from the project invoicing menu
                """,
-    "depends": ["hr_timesheet_sheet", "account_invoice_subcontractor"],
+    "depends": [
+        "hr_timesheet_sheet",
+        "account_invoice_subcontractor",
+        "project_time_in_day",
+    ],
     "data": [
         "wizards/subcontractor_timesheet_invoice_view.xml",
         "views/menu.xml",

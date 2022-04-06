@@ -77,7 +77,11 @@ class AccountAnalyticLine(models.Model):
     def _get_invoiceable_qty_with_unit(self, uom):
         self.ensure_one()
         hours_uom = self.env.ref("uom.product_uom_hour")
+        days_uom = self.env.ref("uom.product_uom_day")
         if uom == hours_uom:
             return self.invoiceable_amount
+        elif uom == days_uom:
+            return self.project_id.convert_hours_to_days(self.invoiceable_amount)
         else:
-            return hours_uom._compute_quantity(self.invoiceable_amount, uom)
+            # TODO see if we have the case
+            raise NotImplementedError
