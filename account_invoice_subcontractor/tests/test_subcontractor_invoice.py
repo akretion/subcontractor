@@ -3,7 +3,7 @@
 from datetime import date, timedelta
 
 from odoo.modules.module import get_resource_path
-from odoo.tests.common import SavepointCase
+from odoo.tests.common import Form, SavepointCase
 from odoo.addons.account_invoice_inter_company.tests.test_inter_company_invoice import (
     TestAccountInvoiceInterCompanyBase,
 )
@@ -16,26 +16,11 @@ class TestSubcontractorInvoice(TestAccountInvoiceInterCompanyBase):
         super().setUpClass()
         cls.account_obj = cls.env["account.account"]
         cls.invoice_obj = cls.env["account.move"]
-        cls.invoice_company_a = cls.env.ref(
-            "account_invoice_inter_company.customer_invoice_company_a"
-        )
-        cls.user_company_a = cls.env.ref("account_invoice_inter_company.user_company_a")
-        cls.user_company_b = cls.env.ref("account_invoice_inter_company.user_company_b")
-
-        # cls.company_a = cls.env.ref("account_invoice_inter_company.company_a")
-        # cls.company_b = cls.env.ref("account_invoice_inter_company.company_b")
 
         # configure subcontracted product
-        cls.subcontracted_product = cls.env.ref(
-            "account_invoice_inter_company.product_consultant_multi_company"
-        )
-        cls.subcontracted_product.write({"subcontracted": True})
-        cls.subcontracted_product.sudo(cls.user_company_b.id).write(
-            {
-                "property_account_income_id": cls.env.ref(
-                    "account_invoice_inter_company.a_sale_company_b"
-                ).id
-            }
+        cls.product_consultant_multi_company.write({"subcontracted": True})
+        cls.product_consultant_multi_company.sudo(cls.user_company_b.id).write(
+            {"property_account_income_id": cls.a_sale_company_b.id}
         )
 
         # Create sale journal for company B as it was not done in
@@ -45,10 +30,8 @@ class TestSubcontractorInvoice(TestAccountInvoiceInterCompanyBase):
                 "name": "Sale journal - Company B",
                 "code": "SAJ-B",
                 "type": "sale",
-                "sequence_id": cls.env.ref(
-                    "account_invoice_inter_company.sequence_sale_journal_company_b"
-                ).id,
-                "update_posted": True,
+                # "sequence_id": cls.sequence_sale_journal_company_b.id,
+                # "update_posted": True,
                 "company_id": cls.company_b.id,
             }
         )
@@ -60,10 +43,8 @@ class TestSubcontractorInvoice(TestAccountInvoiceInterCompanyBase):
                 "name": "Purchases Journal - (Company A)",
                 "code": "EXJ-A",
                 "type": "purchase",
-                "sequence_id": cls.env.ref(
-                    "account_invoice_inter_company.sequence_purchase_journal_company_a"
-                ).id,
-                "update_posted": True,
+                # "sequence_id": cls.sequence_purchase_journal_company_a.id,
+                # "update_posted": True,
                 "company_id": cls.company_a.id,
             }
         )
@@ -86,45 +67,35 @@ class TestSubcontractorInvoice(TestAccountInvoiceInterCompanyBase):
         )
         cls.user_company_b.write({"groups_id": [(4, is_subcontractor.id, 0)]})
         categ = cls.env.ref("product.product_category_3")
-        import pdb; pdb.set_trace()
         categ.with_context(
             force_company=cls.company_a.id
-        ).property_account_expense_categ_id = cls.env.ref(
-            "account_invoice_inter_company.a_expense_company_a"
-        ).id
+        ).property_account_expense_categ_id = cls.a_expense_company_a.id
 
     def test_customer_subcontractor(self):
         """Company A sell stuff to customer B but subcontract it to company B"""
         # ensure our user is in company A
         self.env.user.company_id = self.company_a.id
-        # ensure cron will take it
-        date_invoice = date.today() - timedelta(days=20)
-
-        invoice = self.env["account.move"].create(
-            {
-                "type": "out_invoice",
-                "date_invoice": date_invoice,
-                "partner_id": self.customer_a.id,
-                "account_id": self.env.ref(
-                    "account_invoice_inter_company.a_recv_company_a"
-                ).id,
-                "company_id": self.company_a.id,
-            }
+        invoice = Form(
+            self.account_move_obj.with_company(self.company_a.id).with_context(
+                default_move_type="out_invoice",
+            )
         )
-        invoice_line = self.env["account.move.line"].create(
-            {
-                "product_id": self.subcontracted_product.id,
-                "name": self.subcontracted_product.name,
-                "account_id": self.env.ref(
-                    "account_invoice_inter_company.a_sale_company_a"
-                ).id,
-                "price_unit": 200,
-                "quantity": 2,
-                "company_id": self.company_a.id,
-                "invoice_id": invoice.id,
-            }
-        )
-
+        invoice.partner_id = self.partner_company_b
+        invoice.invoice_date = date.today() - timedelta(days=20)
+        invoice.journal_id = self.sales_journal_company_a
+        invoice.currency_id = self.env.ref("base.EUR")
+        with invoice.invoice_line_ids.new() as line_form:
+            line_form.product_id = self.product_consultant_multi_company
+            line_form.quantity = 2
+            # line_form.product_uom_id = cls.env.ref("uom.product_uom_hour")
+            line_form.account_id = self.a_sale_company_a
+            line_form.name = self.product_consultant_multi_company.name
+            line_form.price_unit = 200.0
+        invoice.save()
+        invoice_line = self.invoice_company_a.invoice_line_ids[0]
+        # cls.company_a.invoice_auto_validation = True
+        import pdb; pdb.set_trace()
+        assert invoice_line.quantity == 2
         sub_work_vals = {
             "employee_id": self.employee_b.id,
             "invoice_line_id": invoice_line.id,

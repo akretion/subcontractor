@@ -40,6 +40,7 @@ class SubcontractorWork(models.Model):
         string="Invoice",
         store=True,
     )
+    # TODO rename invoice_date like in account.move
     date_invoice = fields.Date(
         related="invoice_line_id.move_id.invoice_date",
         string="Invoice Date",
@@ -114,13 +115,13 @@ class SubcontractorWork(models.Model):
         default="draft",
         compute_sudo=True,
     )
-    # uom_id = fields.Many2one(
-    #     comodel_name="uom.uom",
-    #     related="invoice_line_id.uom_id",
-    #     readonly=True,
-    #     store=True,
-    #     string="Unit",
-    # )
+    uom_id = fields.Many2one(
+        comodel_name="uom.uom",
+        related="invoice_line_id.product_uom_id",
+        readonly=True,
+        store=True,
+        string="Unit",
+    )
     # same_fiscalyear = fields.Boolean()
     # # We keep the data here
     # # compute='_check_same_fiscalyear',
@@ -164,6 +165,7 @@ class SubcontractorWork(models.Model):
 
     @api.onchange("employee_id")
     def employee_id_onchange(self):
+        import pdb; pdb.set_trace()
         self.ensure_one()
         if self.employee_id:
             self.subcontractor_type = self.employee_id.subcontractor_type
@@ -203,7 +205,7 @@ class SubcontractorWork(models.Model):
                 raise UserError(_("This work has been already invoiced!"))
             elif work.state not in ("open", "paid"):
                 raise UserError(
-                    _("Only works with the state 'open' " " or 'paid' can be invoiced")
+                    _("Only works with the state 'open' or 'paid' can be invoiced")
                 )
             elif worktype != work.subcontractor_type:
                 raise UserError(
@@ -318,7 +320,7 @@ class SubcontractorWork(models.Model):
         # by the cron or the wizard)? That's why the following code works and make
         # a good repartition of the work per invoice.
         # TODO MIGRATION It would be nice to refactore this to make this method work
-        # properly independantly of the order of the works.
+        # properly independently of the order of the works.
         invoice_line_obj = self.env["account.move.line"]
         invoice_obj = self.env["account.move"]
         invoices = self.env["account.move"]

@@ -38,7 +38,7 @@
                 <field name="employee_id"/>
                 <field name="subcontractor_type"/>
                 <field name="quantity"/>
-<!--                 <field name="uom_id"/> -->
+                <field name="uom_id"/>
                 <field name="sale_price_unit"/>
                 <field name="sale_price"/>
                 <field name="cost_price"/>
@@ -66,7 +66,7 @@
                 <field name="employee_id"/>
                 <field name="subcontractor_type" string="Subcon -tractor type"/>
                 <field name="quantity" sum="Total Qty"/>
-                <!-- <field name="uom_id"/> -->
+                <field name="uom_id"/>
                 <field name="cost_price_unit"/>
                 <field name="sale_price_unit"/>
                 <field name="sale_price" sum="Total Sale Amount"/>

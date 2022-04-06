@@ -52,6 +52,12 @@
                     <attribute name="editable"/>
                     <attribute name="decoration-danger">invalid_work_amount == True</attribute>
                 </xpath>
+                <xpath expr="/form/sheet/notebook/page[1][@id='invoice_tab']/field[1]/form/sheet/group[2]/field[2]" position="attributes">
+                    <attribute name="attrs">{'readonly': 0}</attribute>
+                </xpath>
+<!--                 <xpath expr="//field[@name='invoice_line_ids']/form//field[@name='account_id']" position="attributes">
+                    <attribute name="attrs">{'readonly': 0}</attribute>
+                </xpath> -->
                 <xpath expr="//field[@name='invoice_line_ids']/form/sheet/group[last()]" position="before">
                     <group string="Subcontracting work" name="subcontracting_work">
                         <field name="subcontractor_work_ids" groups="account_invoice_subcontractor.group_have_subcontractor"
