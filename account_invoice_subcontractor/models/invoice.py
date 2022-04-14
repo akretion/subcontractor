@@ -137,26 +137,6 @@ class AccountMove(models.Model):
                 [line.invalid_work_amount for line in invoice.invoice_line_ids]
             )
 
-    # account_invoice_inter_company use Odoo Form. It uses some hacks to be able to use
-    # it, it has to set related fieldi such as account.invoice.line company_id.
-    # As Odoo Form does not allow to set readonly fields, there is also a hack in the
-    # view to set these fields as readonly=False (it is already invisible)
-    # BUT, this module change the invoice line tree view to remove the editable attr
-    # Then Odoo Form consider once again the fields as readonly and fail.
-    # FIXME So, this is an ugly getaround, to disable the problematic view override
-    # just for the invoice generation...
-    # TODO we should find another solution. The best would be to re-introduce
-    # onchange_helper and get rid of this Odoo Form test tool.
-    def _inter_company_create_invoice(self, dest_company):
-        view = self.env.ref("account_invoice_subcontractor.invoice_supplier_form")
-        view2 = self.env.ref("account_invoice_subcontractor.view_invoice_form")
-        view.active = False
-        view2.active = False
-        res = super()._inter_company_create_invoice(dest_company)
-        view.active = True
-        view2.active = True
-        return res
-
     @api.model
     def _refund_cleanup_lines(self, lines):
         result = super()._refund_cleanup_lines(lines)

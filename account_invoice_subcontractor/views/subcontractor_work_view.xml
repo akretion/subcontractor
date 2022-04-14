@@ -48,7 +48,7 @@
                 <field name="subcontractor_invoice_line_id"/>
                 <field name="customer_id"/>
                 <field name="subcontractor_company_id"/>
-                <field name="date_invoice"/>
+                <field name="invoice_date"/>
                 <field name="date_supplier_invoice"/> -->
             </form>
         </field>
@@ -72,7 +72,7 @@
                 <field name="sale_price" sum="Total Sale Amount"/>
                 <field name="cost_price" sum="Total Cost Amount"/>
                 <field name="state"/>
-                <field name="date_invoice"/>
+                <field name="invoice_date"/>
                 <field name="subcontractor_state" string="Subcon- tractor state"/>
                 <field name="supplier_invoice_line_id"/>
                 <field name="subcontractor_invoice_line_id"/>

@@ -11,7 +11,7 @@ _logger = logging.getLogger(__name__)
 
 INVOICE_STATE = [
     ("draft", "Draft"),
-    ("open", "Open"),
+    ("posted", "Posted"),
     ("paid", "Paid"),
     ("cancel", "Cancelled"),
 ]
@@ -41,7 +41,7 @@ class SubcontractorWork(models.Model):
         store=True,
     )
     # TODO rename invoice_date like in account.move
-    date_invoice = fields.Date(
+    invoice_date = fields.Date(
         related="invoice_line_id.move_id.invoice_date",
         string="Invoice Date",
         store=True,
@@ -165,7 +165,6 @@ class SubcontractorWork(models.Model):
 
     @api.onchange("employee_id")
     def employee_id_onchange(self):
-        import pdb; pdb.set_trace()
         self.ensure_one()
         if self.employee_id:
             self.subcontractor_type = self.employee_id.subcontractor_type
@@ -187,13 +186,18 @@ class SubcontractorWork(models.Model):
         "supplier_invoice_line_id.move_id.state",
     )
     def _get_state(self):
+        def get_state(move):
+            if move.payment_state == "paid":
+                print(move.name)
+                return "paid"
+            else:
+                move.state
+
         for work in self:
             if work.invoice_line_id:
-                work.state = work.invoice_line_id.invoice_id.state
+                work.state = get_state(work.invoice_id)
             if work.supplier_invoice_line_id:
-                work.subcontractor_state = (
-                    work.supplier_invoice_line_id.invoice_id.state
-                )
+                work.subcontractor_state = get_state(work.supplier_invoice_id)
 
     def check(self, work_type=False):
         partner_id = self[0].customer_id.id
@@ -203,9 +207,9 @@ class SubcontractorWork(models.Model):
                 raise UserError(_("All the work should belong to the same supplier"))
             elif work.supplier_invoice_line_id:
                 raise UserError(_("This work has been already invoiced!"))
-            elif work.state not in ("open", "paid"):
+            elif work.state not in ("posted", "paid"):
                 raise UserError(
-                    _("Only works with the state 'open' or 'paid' can be invoiced")
+                    _("Only works with the state 'posted' or 'paid' can be invoiced")
                 )
             elif worktype != work.subcontractor_type:
                 raise UserError(
@@ -227,15 +231,15 @@ class SubcontractorWork(models.Model):
         # Then the supplier invoice/refund will be created with intercompant invoice
         # module.
         # 2. For external : directly create a supplier invoice/refund
-        if self.sudo().invoice_id.type not in ("out_invoice", "out_refund"):
+        if self.sudo().move_id.type not in ("out_invoice", "out_refund"):
             raise UserError(
                 "You can only invoice the subcontractors on a customer invoice/refund"
             )
         if self.subcontractor_type == "internal":
-            invoice_type = self.sudo().invoice_id.type
+            invoice_type = self.sudo().move_id.type
         elif self.subcontractor_type == "external":
             invoice_type = (
-                self.sudo().invoice_id.type == "out_invoice"
+                self.sudo().move_id.type == "out_invoice"
                 and "in_invoice"
                 or "in_refund"
             )
@@ -247,7 +251,7 @@ class SubcontractorWork(models.Model):
                 [("company_id", "=", company.id)], limit=1
             )
         elif invoice_type in ["in_invoice", "in_refund"]:
-            company = self.invoice_id.company_id
+            company = self.move_id.company_id
             journal_type = "purchase"
             partner = self.employee_id.user_id.partner_id
             user = self.employee_id.user_id
@@ -263,23 +267,23 @@ class SubcontractorWork(models.Model):
         invoice_vals = self.env["account.move"].play_onchanges(
             invoice_vals, ["partner_id"]
         )
-        original_date_invoice = self.sudo().invoice_id.date_invoice
+        original_invoice_date = self.sudo().move_id.invoice_date
         last_invoices = inv_obj.search(
             [
                 ("type", "=", invoice_type),
                 ("company_id", "=", company.id),
-                ("date_invoice", ">", original_date_invoice),
+                ("invoice_date", ">", original_invoice_date),
                 ("number", "!=", False),
             ],
-            order="date_invoice desc",
+            order="invoice_date desc",
         )
         if not last_invoices:
-            date_invoice = original_date_invoice
+            invoice_date = original_invoice_date
         else:
-            date_invoice = last_invoices[0].date_invoice
+            invoice_date = last_invoices[0].invoice_date
         invoice_vals.update(
             {
-                "date_invoice": date_invoice,
+                "invoice_date": invoice_date,
                 "partner_id": partner.id,
                 "journal_id": journal.id,
                 "invoice_line_ids": [(6, 0, [])],
@@ -298,7 +302,7 @@ class SubcontractorWork(models.Model):
             "quantity": self.quantity,
             "name": "Client final {} :{}".format(self.end_customer_id.name, self.name),
             "price_unit": self.cost_price_unit,
-            "invoice_id": invoice.id,
+            "move_id": invoice.id,
             "discount": self.sudo().invoice_line_id.discount,
             "subcontractor_work_invoiced_id": self.id,
             "uom_id": self.uom_id.id,
@@ -358,12 +362,12 @@ class SubcontractorWork(models.Model):
         # because of the filter on date invoice
         all_works = self.search(
             [
-                ("invoice_id.date_invoice", "<=", date_filter),
+                ("invoice_id.invoice_date", "<=", date_filter),
                 ("subcontractor_invoice_line_id", "=", False),
                 ("subcontractor_type", "=", "internal"),
-                ("state", "in", ["open", "paid"]),
+                ("state", "in", ["posted", "paid"]),
             ],
-            order="date_invoice",
+            order="invoice_date",
         )
         for subcontractor in subcontractors:
             dest_company = subcontractor.subcontractor_company_id
@@ -386,7 +390,7 @@ class SubcontractorWork(models.Model):
                         ("id", "in", all_works.ids),
                         ("employee_id", "=", subcontractor.id),
                     ],
-                    order="employee_id, date_invoice, invoice_id",
+                    order="employee_id, invoice_date, invoice_id",
                 )
             )
             _logger.info(

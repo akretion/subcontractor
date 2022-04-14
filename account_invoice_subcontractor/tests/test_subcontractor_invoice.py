@@ -75,6 +75,7 @@ class TestSubcontractorInvoice(TestAccountInvoiceInterCompanyBase):
         """Company A sell stuff to customer B but subcontract it to company B"""
         # ensure our user is in company A
         self.env.user.company_id = self.company_a.id
+
         invoice = Form(
             self.account_move_obj.with_company(self.company_a.id).with_context(
                 default_move_type="out_invoice",
@@ -84,22 +85,26 @@ class TestSubcontractorInvoice(TestAccountInvoiceInterCompanyBase):
         invoice.invoice_date = date.today() - timedelta(days=20)
         invoice.journal_id = self.sales_journal_company_a
         invoice.currency_id = self.env.ref("base.EUR")
+
         with invoice.invoice_line_ids.new() as line_form:
             line_form.product_id = self.product_consultant_multi_company
             line_form.quantity = 2
-            # line_form.product_uom_id = cls.env.ref("uom.product_uom_hour")
+            line_form.product_uom_id = self.env.ref("uom.product_uom_hour")
             line_form.account_id = self.a_sale_company_a
             line_form.name = self.product_consultant_multi_company.name
-            line_form.price_unit = 200.0
-        invoice.save()
-        invoice_line = self.invoice_company_a.invoice_line_ids[0]
-        # cls.company_a.invoice_auto_validation = True
-        import pdb; pdb.set_trace()
+            line_form.price_unit = 200.0  # doesn't work
+        invoice = invoice.save()
+        invoice_line = invoice.invoice_line_ids[0]
         assert invoice_line.quantity == 2
+        invoice_line.price_unit = 200.0  # Shouldn't be required
+        invoice_line.amount_currency = -400.0  # Shouldn't be required
+        invoice_line.exclude_from_invoice_tab = False
+        assert invoice_line.price_unit == 200.0
         sub_work_vals = {
             "employee_id": self.employee_b.id,
             "invoice_line_id": invoice_line.id,
         }
+        print(invoice.name)
         sub_work_vals = self.env["subcontractor.work"].play_onchanges(
             sub_work_vals, ["employee_id"]
         )
@@ -109,9 +114,11 @@ class TestSubcontractorInvoice(TestAccountInvoiceInterCompanyBase):
         self.assertEqual(subwork.cost_price_unit, 180)
         self.assertEqual(subwork.cost_price, 360)
         self.assertEqual(subwork.sale_price, 400)
-
-        invoice.action_invoice_open()
-        self.assertEqual(subwork.state, "open")
+        assert invoice.payment_state != "paid"
+        invoice.action_post()
+        assert invoice.amount_residual > 0
+        assert invoice.payment_state == "paid"
+        self.assertEqual(subwork.state, "posted")
         # cron is lauched by odoobot (user=1, super admin)
         # self.env = self.env(user=self.env['res.users'])
         self.env[
