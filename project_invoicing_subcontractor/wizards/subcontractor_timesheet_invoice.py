@@ -72,9 +72,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         lines = self.env["account.analytic.line"].browse(line_ids)
         vals = {
             "employee_id": employee_id,
-            "quantity": sum(
-                [line._get_invoiceable_qty_with_project_unit() for line in lines]
-            ),
+            "quantity": lines._get_invoiceable_qty_with_project_unit(),
             "invoice_line_id": inv_line_id,
             "timesheet_line_ids": [(6, 0, line_ids)],
         }
@@ -121,13 +119,13 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             data = self.with_context(active_ids=active_ids)._extract_timesheet()[
                 task_id
             ]
-        # TODO FIX unit conversion
-        qty_day = 0
         for employee_id, line_ids in data.items():
             val = self._prepare_subcontractor_work(line.id, employee_id, line_ids)
-            qty_day += val["quantity"]
             work_obj.create(val)
-        line.quantity = qty_day
+        # The total qty is not the sum of all subcontractor work to avoid
+        # rounding issue for the customer, we will rounding difference
+        # between akretion and members but it's not an issue
+        line.quantity = line.timesheet_line_ids._get_invoiceable_qty_with_project_unit()
 
     def _get_invoice_vals(self):
         self.ensure_one()

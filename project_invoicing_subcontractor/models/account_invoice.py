@@ -29,12 +29,11 @@ class AccountInvoiceLine(models.Model):
     )
     def _compute_timesheet_qty(self):
         for record in self:
-            total = 0
-            for line in record.timesheet_line_ids:
-                total += line._get_invoiceable_qty_with_unit(record.uom_id)
-            record.timesheet_qty = total
-            if total != record.quantity:
-                record.timesheet_error = u"⏰ %s" % total
+            record.timesheet_qty = record.timesheet_line_ids._get_invoiceable_qty_with_unit(
+                record.uom_id
+            )
+            if abs(record.timesheet_qty - record.quantity) > 0.001:
+                record.timesheet_error = u"⏰ %s" % record.timesheet_qty
 
     def open_task(self):
         self.ensure_one()
@@ -65,9 +64,5 @@ class AccountInvoice(models.Model):
     def action_view_analytic_line(self):
         self.ensure_one()
         action = self.env.ref("hr_timesheet.act_hr_timesheet_line").read()[0]
-        action["context"] = {
-            "search_default_invoice_id": self.id,
-            "search_default_users": 1,
-            "search_default_tasks": 1,
-        }
+        action["domain"] = [("invoice_id", "=", self.id)]
         return action
