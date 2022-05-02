@@ -23,6 +23,12 @@ class AccountInvoiceLine(models.Model):
         compute="_compute_timesheet_qty",
         store=True,
     )
+    task_invoiceable_days = fields.Float(
+        related="task_id.invoiceable_days",
+        digits=dp.get_precision("Product Unit of Measure"),
+        string="Task Days",
+        help="Total days of the task, helper to check if you miss some timesheet",
+    )
 
     @api.depends(
         "timesheet_line_ids.discount", "timesheet_line_ids.unit_amount", "quantity"
