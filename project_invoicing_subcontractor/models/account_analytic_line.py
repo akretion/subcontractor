@@ -12,16 +12,17 @@ class AccountAnalyticLine(models.Model):
     subcontractor_work_id = fields.Many2one("subcontractor.work")
     invoice_line_id = fields.Many2one(
         "account.invoice.line",
-        related="subcontractor_work_id.invoice_line_id",
+        compute="_compute_invoice_line",
         store=True,
         readonly=True,
     )
     invoice_id = fields.Many2one(
         "account.invoice",
-        related="subcontractor_work_id.invoice_line_id.invoice_id",
+        related="invoice_line_id.invoice_id",
         store=True,
         readonly=True,
     )
+    supplier_invoice_line_id = fields.Many2one("account.invoice.line")
     task_stage_id = fields.Many2one(
         "project.task.type", related="task_id.stage_id", store=True
     )
@@ -29,6 +30,14 @@ class AccountAnalyticLine(models.Model):
     discount = fields.Float(digits=dp.get_precision("Discount"), default=0)
     invoiceable_amount = fields.Float(compute="_compute_invoiceable_amount", store=True)
     date_invoiceable = fields.Date(compute="_compute_date_invoiceable", store=True)
+
+    @api.depends("subcontractor_work_id", "supplier_invoice_line_id")
+    def _compute_invoice_line(self):
+        for record in self:
+            record.invoice_line_id = (
+                record.subcontractor_work_id.invoice_line_id
+                or record.supplier_invoice_line_id
+            )
 
     @api.depends("invoiceable", "task_id.timesheet_ids", "task_id.invoicing")
     def _compute_date_invoiceable(self):

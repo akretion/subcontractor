@@ -12,6 +12,18 @@ class ProjectProject(models.Model):
     invoicing_stage_id = fields.Many2one("project.task.type", "Invoicing Stage")
     product_id = fields.Many2one("product.product", "Product")
     uom_id = fields.Many2one("uom.uom", "Unit")
+    invoicing_mode = fields.Selection(
+        [
+            ("none", "Not invoiceable"),
+            ("customer", "Customer"),
+            ("supplier", "Supplier"),
+        ],
+        string="Invoicing Mode",
+        default="customer",
+        required=True,
+    )
+    supplier_invoice_account_expense_id = fields.Many2one("account.account")
+    supplier_invoice_price_unit = fields.Float("Unit Price")
 
 
 class ProjectTask(models.Model):

@@ -18,6 +18,7 @@
     ],
     "data": [
         "wizards/subcontractor_timesheet_invoice_view.xml",
+        "wizards/supplier_timesheet_invoice_view.xml",
         "views/menu.xml",
         "views/account_invoice_view.xml",
         "views/hr_timesheet_view.xml",

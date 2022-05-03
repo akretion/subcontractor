@@ -31,6 +31,33 @@
     </field>
 </record>
 
+<record id="invoice_supplier_form" model="ir.ui.view">
+    <field name="model">account.invoice</field>
+    <field name="inherit_id" ref="account.invoice_supplier_form"/>
+    <field name="arch" type="xml">
+        <xpath expr="//tree/field[@name='quantity']" position="after">
+            <field name="task_invoiceable_days" optional="hidden"/>
+        </xpath>
+        <xpath expr="//sheet/div" position="before">
+            <div class="oe_button_box" name="button_box">
+                <div class="oe_button_box" name="button_box">
+                   <button name="action_view_analytic_line"
+                       type="object"
+                       string="Timesheet"
+                       class="oe_stat_button"
+                       icon="fa-calendar"/>
+                </div>
+            </div>
+        </xpath>
+        <xpath expr="//tree/field[@name='name']" position="after">
+            <field name="task_stage_id"/>
+        </xpath>
+        <xpath expr="//tree/field[@name='quantity']" position="after">
+            <field name="timesheet_error" string=""/>
+        </xpath>
+    </field>
+</record>
+
 <!-- VIEW FOR THE OBJECT : account_invoice_line -->
 <record id="view_account_invoice_line_form" model="ir.ui.view">
     <field name="model">account.invoice.line</field>
@@ -49,7 +76,7 @@
         <notebook position="inside">
             <page name="timesheet_information"
                    string="Timesheet"
-                   attrs="{'invisible': [('subcontracted','=', False)]}">
+                   attrs="{'invisible': [('timesheet_line_ids','=', False)]}">
                 <field name="timesheet_line_ids">
                     <tree>
                         <field name="date"/>
