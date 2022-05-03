@@ -21,7 +21,8 @@ class ProjectTask(models.Model):
         [("progressive", "Progressive"), ("none", "None"), ("finished", "Finished")],
         default="finished",
     )
-    invoiceable_hours = fields.Float(compute="_compute_invoiceable_hours", store=True)
+    invoiceable_hours = fields.Float(compute="_compute_invoiceable", store=True)
+    invoiceable_days = fields.Float(compute="_compute_invoiceable", store=True)
     invoice_line_ids = fields.One2many(
         "account.invoice.line", "task_id", "Invoice Line"
     )
@@ -37,12 +38,13 @@ class ProjectTask(models.Model):
             )
 
     @api.depends("timesheet_ids.discount", "timesheet_ids.unit_amount")
-    def _compute_invoiceable_hours(self):
+    def _compute_invoiceable(self):
         for record in self:
             total = 0
             for line in record.timesheet_ids:
                 total += line.unit_amount * (1 - line.discount / 100.0)
             record.invoiceable_hours = total
+            record.invoiceable_days = record.project_id.convert_hours_to_days(total)
 
     # TODO we should move this in a generic module
     # changing the project on the task should be propagated

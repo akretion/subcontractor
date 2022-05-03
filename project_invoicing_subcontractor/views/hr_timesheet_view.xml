@@ -34,6 +34,7 @@
             </field>
             <field name="unit_amount" position="after">
                 <field name="discount"/>
+                <field name="invoiceable_amount" widget="timesheet_uom" sum="Total invoiceable"/>
                 <field name="invoiceable"/>
                 <field name="date_invoiceable"/>
                 <field name="invoice_id"/>

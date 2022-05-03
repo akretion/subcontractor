@@ -16,3 +16,4 @@
 multi-company
 server-tools
 hr-timesheet
+ak-odoo-incubator https://github.com/akretion/ak-odoo-incubator 12.0-project-estimation-step

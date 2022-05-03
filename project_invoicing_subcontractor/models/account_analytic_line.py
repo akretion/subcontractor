@@ -65,7 +65,9 @@ class AccountAnalyticLine(models.Model):
             record.invoiceable = record.is_invoiceable()
 
     def _get_invoiceable_qty_with_project_unit(self):
-        return self._get_invoiceable_qty_with_unit(self.project_id.uom_id)
+        project = self.mapped("project_id")
+        project.ensure_one()
+        return self._get_invoiceable_qty_with_unit(project.uom_id)
 
     @api.depends("discount", "unit_amount")
     def _compute_invoiceable_amount(self):
@@ -75,9 +77,16 @@ class AccountAnalyticLine(models.Model):
             )
 
     def _get_invoiceable_qty_with_unit(self, uom):
-        self.ensure_one()
+        if not self:
+            return 0
         hours_uom = self.env.ref("uom.product_uom_hour")
+        days_uom = self.env.ref("uom.product_uom_day")
         if uom == hours_uom:
-            return self.invoiceable_amount
+            return sum(self.mapped("invoiceable_amount"))
+        elif uom == days_uom:
+            project = self.mapped("project_id")
+            project.ensure_one()
+            return project.convert_hours_to_days(sum(self.mapped("invoiceable_amount")))
         else:
-            return hours_uom._compute_quantity(self.invoiceable_amount, uom)
+            # TODO see if we have the case
+            raise NotImplementedError

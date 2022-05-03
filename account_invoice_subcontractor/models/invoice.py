@@ -101,7 +101,8 @@ class AccountInvoiceLine(models.Model):
                 )
         else:
             subtotal = sum(self.subcontractor_work_ids.mapped("sale_price"))
-            return abs(subtotal - self.price_subtotal) > 0.01
+            # we use a bigger diff to avoid issue with rounding
+            return abs(subtotal - self.price_subtotal) > 5
 
     @api.model
     def _prepare_invoice_line_data(self, dest_invoice, dest_company):
