@@ -3,7 +3,8 @@
 
 from collections import defaultdict
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 
 class SupplierTimesheetInvoice(models.TransientModel):
@@ -21,6 +22,9 @@ class SupplierTimesheetInvoice(models.TransientModel):
     )
     invoice_id = fields.Many2one("account.invoice")
     error = fields.Text(compute="_compute_employee")
+    force_project_id = fields.Many2one(
+        "project.project", domain=[("invoicing_mode", "=", "supplier")]
+    )
 
     def _get_tlines(self):
         return self.env["account.analytic.line"].browse(self._context.get("active_ids"))
@@ -48,20 +52,24 @@ class SupplierTimesheetInvoice(models.TransientModel):
 
     def _prepare_invoice_line(self, task, tlines):
         line_obj = self.env["account.invoice.line"]
-        product = task.project_id.product_id
+        project = self.force_project_id or task.project_id
+        if project.invoicing_mode != "supplier":
+            raise UserError(
+                _("You can not generate supplier timesheet on project %s")
+                % project.name
+            )
         vals = {
             "task_id": task.id,
             "invoice_id": self.invoice_id.id,
-            "product_id": product.id,
+            "product_id": project.product_id.id,
             "name": u"[{}] {}".format(task.id, task.name),
             "subcontracted": False,
-            "uom_id": task.project_id.uom_id.id,
-            "price_unit": task.project_id.supplier_invoice_price_unit,
-            "account_id": task.project_id.supplier_invoice_account_expense_id.id,
-            "account_analytic_id": task.project_id.analytic_account_id.id,
+            "uom_id": project.uom_id.id,
+            "price_unit": project.supplier_invoice_price_unit,
+            "account_id": project.supplier_invoice_account_expense_id.id,
+            "account_analytic_id": project.analytic_account_id.id,
         }
-        vals = line_obj.play_onchanges(vals, ["product_id"])
-        return vals
+        return line_obj.play_onchanges(vals, ["product_id"])
 
     def _add_update_invoice_line(self, task, tlines):
         inv_line = task.invoice_line_ids.filtered(

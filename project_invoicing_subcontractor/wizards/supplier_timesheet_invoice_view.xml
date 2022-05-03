@@ -13,6 +13,8 @@
                 <field name='invoice_id'
                        domain="[('partner_id', '=', partner_id), ('state', '=', 'draft'), ('type', '=', 'in_invoice')]"
                        attrs="{'invisible': [('create_invoice', '=', True)], 'required': [('create_invoice', '!=', True)]}"/>
+
+                <field name='force_project_id' domain="[('invoicing_mode', '=', 'supplier')]"/>
             </group>
             <footer>
                 <button name="action_invoice"
