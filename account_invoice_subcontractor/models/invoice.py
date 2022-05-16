@@ -48,7 +48,8 @@ class AccountMoveLine(models.Model):
             if field:
                 work_obj = self.env["subcontractor.work"]
                 work = work_obj.search([[field, "=", line.id]])
-                line.subcontractor_work_invoiced_id = work.id
+                if work:
+                    line.subcontractor_work_invoiced_id = work.id
 
     def _set_work_invoiced(self):
         for line in self:
@@ -65,6 +66,8 @@ class AccountMoveLine(models.Model):
         "move_id.partner_id",
         "subcontractor_work_invoiced_id",
         "subcontractor_work_invoiced_id.cost_price",
+        "subcontractor_work_ids",
+        "subcontractor_work_ids.sale_price",
         "price_subtotal",
         "subcontracted",
     )
@@ -100,10 +103,23 @@ class AccountMoveLine(models.Model):
             return abs(subtotal - self.price_subtotal) > 5
 
     @api.model
-    def _prepare_invoice_line_data(self, dest_invoice, dest_company):
-        res = super()._prepare_invoice_line_data(dest_invoice, dest_company)
+    def _prepare_account_move_line(self, dest_invoice, dest_company):
+        res = super()._prepare_account_move_line(dest_invoice, dest_company)
         res["subcontractor_work_invoiced_id"] = self.subcontractor_work_invoiced_id.id
         return res
+
+    def edit_subcontractor(self):
+        view = {
+            "name": ("Details"),
+            "view_type": "form",
+            "view_mode": "form",
+            "res_model": "account.move.line",
+            "view_id": False,
+            "type": "ir.actions.act_window",
+            "target": "new",
+            "res_id": self.id,
+        }
+        return view
 
 
 class AccountMove(models.Model):

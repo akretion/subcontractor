@@ -62,14 +62,14 @@ class SubcontractorWork(models.Model):
         store=True,
     )
     quantity = fields.Float(digits="Product Unit of Measure")
-    sale_price_unit = fields.Float(digits="Account")
-    cost_price_unit = fields.Float(digits="Account")
-    cost_price = fields.Float(
-        compute="_compute_total_price", digits="Account", store=True
+    sale_price_unit = fields.Float(
+        compute="_compute_price", digits="Account", store=True
     )
-    sale_price = fields.Float(
-        compute="_compute_total_price", digits="Account", store=True
+    cost_price_unit = fields.Float(
+        compute="_compute_price", digits="Account", store=True
     )
+    cost_price = fields.Float(compute="_compute_price", digits="Account", store=True)
+    sale_price = fields.Float(compute="_compute_price", digits="Account", store=True)
     company_id = fields.Many2one(
         comodel_name="res.company",
         related="invoice_line_id.company_id",
@@ -155,13 +155,27 @@ class SubcontractorWork(models.Model):
     # #                 invoice_year.name,
     # #                 supplier_invoice_year.name)
 
-    @api.onchange("sale_price_unit", "employee_id")
+    @api.depends(
+        "employee_id",
+        "invoice_line_id",
+        "invoice_line_id.product_id",
+        "invoice_line_id.price_unit",
+        "invoice_line_id.discount",
+        "invoice_line_id.quantity",
+        "quantity",
+    )
     def _compute_price(self):
         for work in self:
+            line = work.invoice_line_id
+            sale_price_unit = line.price_unit * (1 - line.discount / 100.0)
             rate = 1
             if not work.invoice_line_id.product_id.no_commission:
                 rate -= work.employee_id.commission_rate / 100.0
-            work.cost_price_unit = work.sale_price_unit * rate
+            cost_price_unit = sale_price_unit * rate
+            work.sale_price_unit = sale_price_unit
+            work.cost_price_unit = cost_price_unit
+            work.cost_price = work.quantity * cost_price_unit
+            work.sale_price = work.quantity * sale_price_unit
 
     @api.onchange("employee_id")
     def employee_id_onchange(self):
@@ -171,13 +185,6 @@ class SubcontractorWork(models.Model):
             line = self.invoice_line_id
             # TODO find a good way to get the right qty
             self.quantity = line.quantity
-            self.sale_price_unit = line.price_unit * (1 - line.discount / 100.0)
-
-    @api.depends("sale_price_unit", "quantity", "cost_price_unit")
-    def _compute_total_price(self):
-        for work in self:
-            work.cost_price = work.quantity * work.cost_price_unit
-            work.sale_price = work.quantity * work.sale_price_unit
 
     @api.depends(
         "invoice_line_id",
@@ -186,18 +193,11 @@ class SubcontractorWork(models.Model):
         "supplier_invoice_line_id.move_id.state",
     )
     def _get_state(self):
-        def get_state(move):
-            if move.payment_state == "paid":
-                print(move.name)
-                return "paid"
-            else:
-                move.state
-
         for work in self:
             if work.invoice_line_id:
-                work.state = get_state(work.invoice_id)
+                work.state = work.invoice_id.state
             if work.supplier_invoice_line_id:
-                work.subcontractor_state = get_state(work.supplier_invoice_id)
+                work.subcontractor_state = work.supplier_invoice_id.state
 
     def check(self, work_type=False):
         partner_id = self[0].customer_id.id
@@ -231,15 +231,15 @@ class SubcontractorWork(models.Model):
         # Then the supplier invoice/refund will be created with intercompant invoice
         # module.
         # 2. For external : directly create a supplier invoice/refund
-        if self.sudo().move_id.type not in ("out_invoice", "out_refund"):
+        if self.sudo().invoice_id.move_type not in ("out_invoice", "out_refund"):
             raise UserError(
                 "You can only invoice the subcontractors on a customer invoice/refund"
             )
         if self.subcontractor_type == "internal":
-            invoice_type = self.sudo().move_id.type
+            invoice_type = self.sudo().invoice_id.move_type
         elif self.subcontractor_type == "external":
             invoice_type = (
-                self.sudo().move_id.type == "out_invoice"
+                self.sudo().invoice_id.move_type == "out_invoice"
                 and "in_invoice"
                 or "in_refund"
             )
@@ -251,7 +251,7 @@ class SubcontractorWork(models.Model):
                 [("company_id", "=", company.id)], limit=1
             )
         elif invoice_type in ["in_invoice", "in_refund"]:
-            company = self.move_id.company_id
+            company = self.invoice_id.company_id
             journal_type = "purchase"
             partner = self.employee_id.user_id.partner_id
             user = self.employee_id.user_id
@@ -263,17 +263,17 @@ class SubcontractorWork(models.Model):
                 _('Please define %s journal for this company: "%s" (id:%d).')
                 % (journal_type, company.name, company.id)
             )
-        invoice_vals = {"partner_id": partner.id, "type": invoice_type}
+        invoice_vals = {"partner_id": partner.id, "move_type": invoice_type}
         invoice_vals = self.env["account.move"].play_onchanges(
             invoice_vals, ["partner_id"]
         )
-        original_invoice_date = self.sudo().move_id.invoice_date
+        original_invoice_date = self.sudo().invoice_id.invoice_date
         last_invoices = inv_obj.search(
             [
-                ("type", "=", invoice_type),
+                ("move_type", "=", invoice_type),
                 ("company_id", "=", company.id),
                 ("invoice_date", ">", original_invoice_date),
-                ("number", "!=", False),
+                ("name", "!=", False),
             ],
             order="invoice_date desc",
         )
@@ -305,7 +305,7 @@ class SubcontractorWork(models.Model):
             "move_id": invoice.id,
             "discount": self.sudo().invoice_line_id.discount,
             "subcontractor_work_invoiced_id": self.id,
-            "uom_id": self.uom_id.id,
+            "product_uom_id": self.uom_id.id,
         }
         if hasattr(self.sudo().invoice_line_id, "start_date") and hasattr(
             self.sudo().invoice_line_id, "end_date"
@@ -325,7 +325,6 @@ class SubcontractorWork(models.Model):
         # a good repartition of the work per invoice.
         # TODO MIGRATION It would be nice to refactore this to make this method work
         # properly independently of the order of the works.
-        invoice_line_obj = self.env["account.move.line"]
         invoice_obj = self.env["account.move"]
         invoices = self.env["account.move"]
         current_employee_id = None
@@ -345,9 +344,7 @@ class SubcontractorWork(models.Model):
             inv_line_data = work._prepare_invoice_line(invoice)
             # Need sudo because odoo prefetch de work.invoice_id
             # and try to read fields on it and that makes access rules fail
-            inv_line = invoice_line_obj.sudo().create(inv_line_data)
-            invoice.sudo().write({"invoice_line_ids": [(4, inv_line.id)]})
-        invoices.compute_taxes()
+            invoice.sudo().write({"invoice_line_ids": [(0, 0, inv_line_data)]})
         return invoices
 
     def _scheduler_action_subcontractor_invoice_create(self):
@@ -399,7 +396,7 @@ class SubcontractorWork(models.Model):
             )
             invoices = subcontractor_works.invoice_from_work()
             for invoice in invoices:
-                invoice.action_invoice_open()
+                invoice.action_post()
             if old_company:
                 user.company_id = old_company.id
         return True

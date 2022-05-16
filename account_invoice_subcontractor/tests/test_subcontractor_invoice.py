@@ -2,12 +2,11 @@
 
 from datetime import date, timedelta
 
-from odoo.modules.module import get_resource_path
-from odoo.tests.common import Form, SavepointCase
+from odoo.tests.common import Form
+
 from odoo.addons.account_invoice_inter_company.tests.test_inter_company_invoice import (
     TestAccountInvoiceInterCompanyBase,
 )
-from odoo.tools import convert_file
 
 
 class TestSubcontractorInvoice(TestAccountInvoiceInterCompanyBase):
@@ -92,19 +91,15 @@ class TestSubcontractorInvoice(TestAccountInvoiceInterCompanyBase):
             line_form.product_uom_id = self.env.ref("uom.product_uom_hour")
             line_form.account_id = self.a_sale_company_a
             line_form.name = self.product_consultant_multi_company.name
-            line_form.price_unit = 200.0  # doesn't work
+            line_form.price_unit = 200.0
         invoice = invoice.save()
         invoice_line = invoice.invoice_line_ids[0]
         assert invoice_line.quantity == 2
-        invoice_line.price_unit = 200.0  # Shouldn't be required
-        invoice_line.amount_currency = -400.0  # Shouldn't be required
-        invoice_line.exclude_from_invoice_tab = False
         assert invoice_line.price_unit == 200.0
         sub_work_vals = {
             "employee_id": self.employee_b.id,
             "invoice_line_id": invoice_line.id,
         }
-        print(invoice.name)
         sub_work_vals = self.env["subcontractor.work"].play_onchanges(
             sub_work_vals, ["employee_id"]
         )
@@ -117,7 +112,6 @@ class TestSubcontractorInvoice(TestAccountInvoiceInterCompanyBase):
         assert invoice.payment_state != "paid"
         invoice.action_post()
         assert invoice.amount_residual > 0
-        assert invoice.payment_state == "paid"
         self.assertEqual(subwork.state, "posted")
         # cron is lauched by odoobot (user=1, super admin)
         # self.env = self.env(user=self.env['res.users'])
@@ -125,21 +119,18 @@ class TestSubcontractorInvoice(TestAccountInvoiceInterCompanyBase):
             "subcontractor.work"
         ].sudo()._scheduler_action_subcontractor_invoice_create()
         invoice_b = self.env["account.move"].search(
-            [("company_id", "=", self.company_b.id), ("type", "=", "out_invoice")]
+            [("company_id", "=", self.company_b.id), ("move_type", "=", "out_invoice")]
         )
         self.assertEqual(len(invoice_b), 1)
         self.assertEqual(invoice_b.amount_untaxed, 360)
         self.assertEqual(
             invoice_b.invoice_line_ids.subcontractor_work_invoiced_id, subwork
         )
-        invoice_b.with_context(test_account_invoice_inter_company=True).sudo(
-            self.user_company_b.id
-        ).action_invoice_open()
 
         invoice_c = self.env["account.move"].search(
             [
                 ("company_id", "=", self.company_a.id),
-                ("type", "=", "in_invoice"),
+                ("move_type", "=", "in_invoice"),
                 ("auto_invoice_id", "=", invoice_b.id),
             ]
         )
