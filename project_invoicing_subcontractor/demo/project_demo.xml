@@ -16,7 +16,6 @@
         <field name="name">Customer Project</field>
         <field name="color">5</field>
         <field name="user_id" ref="base.user_demo"/>
-        <field name="alias_model">project.task</field>
         <field name="invoicing_stage_id" eval="ref('project.project_stage_3')"/>
         <field name="product_id" eval="ref('product_product_1')"/>
         <field name="uom_id" eval="ref('uom.product_uom_day')"/>

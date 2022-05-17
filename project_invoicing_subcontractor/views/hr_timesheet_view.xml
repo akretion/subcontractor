@@ -14,9 +14,7 @@
 
             <filter name="groupby_task" position="after">
                 <filter string="Stage" name="stage" domain="[]" context="{'group_by':'task_stage_id'}"/>
-            </filter>
-            <filter name="groupby_task" position="after">
-                <filter string="Invoiceable Date" name="daet_invoiceable" domain="[]" context="{'group_by':'date_invoiceable'}"/>
+                <filter string="Invoiceable Date" name="date_invoiceable" domain="[]" context="{'group_by':'date_invoiceable'}"/>
             </filter>
         </field>
     </record>
@@ -27,17 +25,17 @@
         <field name="priority" eval="64"/>
         <field name="arch" type="xml">
             <field name="project_id" position="before">
-                <field name="partner_id"/>
+                <field name="partner_id" optional="show"/>
             </field>
             <field name="task_id" position="after">
-                <field name="task_stage_id"/>
+                <field name="task_stage_id" optional="show"/>
             </field>
             <field name="unit_amount" position="after">
                 <field name="discount"/>
-                <field name="invoiceable_amount" widget="timesheet_uom" sum="Total invoiceable"/>
-                <field name="invoiceable"/>
-                <field name="date_invoiceable"/>
-                <field name="invoice_id"/>
+                <field name="invoiceable_amount" widget="timesheet_uom" sum="Total invoiceable" optional="show"/>
+                <field name="invoiceable" optional="hide"/>
+                <field name="date_invoiceable" optional="hide"/>
+                <field name="invoice_id" optional="show"/>
             </field>
         </field>
     </record>

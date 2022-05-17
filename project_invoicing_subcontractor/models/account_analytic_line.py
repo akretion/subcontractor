@@ -1,9 +1,6 @@
-# © 2013-2017 Akretion
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl)
 
 from odoo import api, fields, models
-
-import odoo.addons.decimal_precision as dp
 
 
 class AccountAnalyticLine(models.Model):
@@ -11,22 +8,20 @@ class AccountAnalyticLine(models.Model):
 
     subcontractor_work_id = fields.Many2one("subcontractor.work")
     invoice_line_id = fields.Many2one(
-        "account.invoice.line",
+        "account.move.line",
         related="subcontractor_work_id.invoice_line_id",
         store=True,
-        readonly=True,
     )
     invoice_id = fields.Many2one(
-        "account.invoice",
-        related="subcontractor_work_id.invoice_line_id.invoice_id",
+        "account.move",
+        related="subcontractor_work_id.invoice_line_id.move_id",
         store=True,
-        readonly=True,
     )
     task_stage_id = fields.Many2one(
         "project.task.type", related="task_id.stage_id", store=True
     )
     invoiceable = fields.Boolean(compute="_compute_invoiceable", store=True)
-    discount = fields.Float(digits=dp.get_precision("Discount"), default=0)
+    discount = fields.Float(digits="Discount", default=0)
     invoiceable_amount = fields.Float(compute="_compute_invoiceable_amount", store=True)
     date_invoiceable = fields.Date(compute="_compute_date_invoiceable", store=True)
 

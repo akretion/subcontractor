@@ -13,7 +13,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         help="Check this box if you do not want to use an existing invoice but create "
         "a new one instead."
     )
-    invoice_id = fields.Many2one("account.invoice")
+    invoice_id = fields.Many2one("account.move")
     error = fields.Text(readonly=True)
 
     def _get_partner_ids(self):
@@ -137,7 +137,6 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         vals = self.env["account.invoice"].play_onchanges(vals, ["partner_id"])
         return vals
 
-    @api.multi
     def action_invoice(self):
         self.ensure_one()
         # TODO
