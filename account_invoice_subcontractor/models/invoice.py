@@ -11,6 +11,8 @@ class AccountMoveLine(models.Model):
     _map_type = {
         "in_invoice": "supplier_invoice_line_id",
         "out_invoice": "subcontractor_invoice_line_id",
+        "in_refund": "supplier_invoice_line_id",
+        "out_refund": "subcontractor_invoice_line_id",
     }
 
     subcontracted = fields.Boolean()
@@ -143,8 +145,8 @@ class AccountMove(models.Model):
     )
     def _get_to_pay(self):
         for invoice in self:
-            if invoice.move_type == "in_invoice":
-                if invoice.state == "paid":
+            if invoice.move_type in ["in_invoice", "in_refund"]:
+                if invoice.payment_state == "paid":
                     invoice.to_pay = False
                 else:
                     invoice.to_pay = all(

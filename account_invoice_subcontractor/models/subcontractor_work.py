@@ -191,15 +191,23 @@ class SubcontractorWork(models.Model):
     @api.depends(
         "invoice_line_id",
         "invoice_line_id.move_id.state",
+        "invoice_line_id.move_id.payment_state",
         "supplier_invoice_line_id",
         "supplier_invoice_line_id.move_id.state",
+        "supplier_invoice_line_id.move_id.payment_state",
     )
     def _get_state(self):
+        def get_state(move):
+            if move.payment_state == "paid":
+                return "paid"
+            else:
+                return move.state
+
         for work in self:
             if work.invoice_line_id:
-                work.state = work.invoice_id.state
+                work.state = get_state(work.invoice_id)
             if work.supplier_invoice_line_id:
-                work.subcontractor_state = work.supplier_invoice_id.state
+                work.subcontractor_state = get_state(work.supplier_invoice_id)
 
     def check(self, work_type=False):
         partner_id = self[0].customer_id.id

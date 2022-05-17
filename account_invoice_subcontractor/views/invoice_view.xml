@@ -189,10 +189,10 @@
         </record>
  -->
         <!-- VIEW FOR THE OBJECT : account.move -->
-<!--         <record id="view_account.move_tree" model="ir.ui.view">
+        <record id="view_invoice_tree" model="ir.ui.view">
             <field name="model">account.move</field>
             <field name="type">tree</field>
-            <field name="inherit_id" ref="account.move_tree"/>
+            <field name="inherit_id" ref="account.view_invoice_tree"/>
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='currency_id']" position="before">
                     <field name="to_pay"/>
@@ -200,10 +200,10 @@
                 </xpath>
             </field>
         </record>
- -->
-<!--         <record id="view_account.move_filter" model="ir.ui.view">
+
+        <record id="view_account_invoice_filter" model="ir.ui.view">
             <field name="model">account.move</field>
-            <field name="inherit_id" ref="account.view_account.move_filter"/>
+            <field name="inherit_id" ref="account.view_account_invoice_filter"/>
             <field name="arch" type="xml">
                 <filter name="unpaid" position="after">
                     <filter name="to_pay" string="To pay" domain="[('to_pay','=',True)]"
@@ -211,5 +211,5 @@
                 </filter>
             </field>
         </record>
- -->
+
 </odoo>
