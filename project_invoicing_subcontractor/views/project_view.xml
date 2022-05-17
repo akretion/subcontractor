@@ -7,9 +7,34 @@
         <field name="arch" type="xml">
             <group name="misc" position="inside">
                 <group string="Invoicing" name="invoicing">
-                    <field name="invoicing_stage_id"/>
-                    <field name="product_id"/>
-                    <field name="uom_id"/>
+                    <field name="invoicing_mode"/>
+                    <field
+                        name="invoicing_stage_id"
+                        attrs="{
+                            'invisible': [('invoicing_mode', '=', 'none')],
+                            'required': [('invoicing_mode', '!=', 'none')]
+                        }"/>
+                    <field name="product_id"
+                        attrs="{
+                            'invisible': [('invoicing_mode', '=', 'none')],
+                            'required': [('invoicing_mode', '!=', 'none')]
+                        }"/>
+                    <field name="uom_id"
+                        attrs="{
+                            'invisible': [('invoicing_mode', '=', 'none')],
+                        }"/>
+                    <field
+                        name="supplier_invoice_account_expense_id"
+                        attrs="{
+                            'invisible': [('invoicing_mode', '!=', 'supplier')],
+                            'required': [('invoicing_mode', '=', 'supplier')]
+                        }"/>
+                    <field
+                        name="supplier_invoice_price_unit"
+                        attrs="{
+                            'invisible': [('invoicing_mode', '!=', 'supplier')],
+                            'required': [('invoicing_mode', '=', 'supplier')]
+                        }"/>
                 </group>
             </group>
         </field>

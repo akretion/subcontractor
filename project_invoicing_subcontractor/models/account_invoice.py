@@ -15,7 +15,7 @@ class AccountInvoiceLine(models.Model):
         "project.task.type", related="task_id.stage_id", store=True
     )
     timesheet_line_ids = fields.One2many(
-        "account.analytic.line", "invoice_line_id", "Timesheet Line"
+        "account.analytic.line", "invoice_line_id", "Timesheet Line", readonly=True
     )
     timesheet_error = fields.Char(compute="_compute_timesheet_qty", store=True)
     timesheet_qty = fields.Float(
