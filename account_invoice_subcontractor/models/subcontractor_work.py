@@ -33,6 +33,7 @@ class SubcontractorWork(models.Model):
         string="Invoice Line",
         required=True,
         ondelete="cascade",
+        copy=False,
     )
     invoice_id = fields.Many2one(
         comodel_name="account.move",
@@ -47,7 +48,7 @@ class SubcontractorWork(models.Model):
         store=True,
     )
     supplier_invoice_line_id = fields.Many2one(
-        comodel_name="account.move.line", string="Supplier Invoice Line"
+        comodel_name="account.move.line", string="Supplier Invoice Line", copy=False
     )
     supplier_invoice_id = fields.Many2one(
         comodel_name="account.move",
@@ -94,6 +95,7 @@ class SubcontractorWork(models.Model):
     subcontractor_invoice_line_id = fields.Many2one(
         comodel_name="account.move.line",
         string="Subcontractor Invoice Line",
+        copy=False,
     )
     subcontractor_company_id = fields.Many2one(
         comodel_name="res.company",
@@ -316,7 +318,8 @@ class SubcontractorWork(models.Model):
                     "end_date": self.sudo().invoice_line_id.end_date,
                 }
             )
-        line_vals.update(invoice_line_obj.play_onchanges(line_vals, ["product_id"]))
+        onchange_vals = invoice_line_obj.play_onchanges(line_vals, ["product_id"])
+        line_vals.update(onchange_vals)
         return line_vals
 
     def invoice_from_work(self):

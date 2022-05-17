@@ -15,7 +15,7 @@ class AccountMoveLine(models.Model):
 
     subcontracted = fields.Boolean()
     subcontractor_work_ids = fields.One2many(
-        "subcontractor.work", "invoice_line_id", string="Subcontractor Work"
+        "subcontractor.work", "invoice_line_id", string="Subcontractor Work", copy=True
     )
     subcontractor_work_invoiced_id = fields.Many2one(
         "subcontractor.work",
@@ -160,22 +160,3 @@ class AccountMove(models.Model):
             invoice.invalid_work_amount = any(
                 [line.invalid_work_amount for line in invoice.invoice_line_ids]
             )
-
-    @api.model
-    def _refund_cleanup_lines(self, lines):
-        result = super()._refund_cleanup_lines(lines)
-        for i, line in enumerate(lines):
-            if hasattr(line, "subcontractor_work_ids"):
-                works = []
-                for work in line.subcontractor_work_ids:
-                    new_work = work.copy_data(
-                        {
-                            "supplier_invoice_id": False,
-                            "invoice_line_id": False,
-                            "supplier_invoice_line_id": False,
-                            "subcontractor_invoice_line_id": False,
-                        }
-                    )[0]
-                    works.append((0, 0, new_work))
-                result[i][2]["subcontractor_work_ids"] = works
-        return result
