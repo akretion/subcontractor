@@ -1,5 +1,3 @@
-# Copyright 2019 Akretion (http://www.akretion.com).
-# @author Sébastien BEAU <sebastien.beau@akretion.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 from odoo import api, fields, models
@@ -35,9 +33,7 @@ class ProjectTask(models.Model):
     )
     invoiceable_hours = fields.Float(compute="_compute_invoiceable", store=True)
     invoiceable_days = fields.Float(compute="_compute_invoiceable", store=True)
-    invoice_line_ids = fields.One2many(
-        "account.invoice.line", "task_id", "Invoice Line"
-    )
+    invoice_line_ids = fields.One2many("account.move.line", "task_id", "Invoice Line")
     to_invoice = fields.Boolean(compute="_compute_to_invoice", store=True)
 
     @api.depends("invoiceable_hours", "invoice_line_ids", "invoicing")
@@ -62,7 +58,7 @@ class ProjectTask(models.Model):
     # changing the project on the task should be propagated
     # on the analytic line to avoid issue during invoicing
     def write(self, vals):
-        super(ProjectTask, self).write(vals)
+        res = super().write(vals)
         if "project_id" in vals:
             if not vals["project_id"]:
                 raise UserError(
@@ -76,8 +72,4 @@ class ProjectTask(models.Model):
                     "account_id": project.analytic_account_id.id,
                 }
             self.mapped("timesheet_ids").write(vals)
-        return True
-
-
-class ProjectTaskType(models.Model):
-    _inherit = "project.task.type"
+        return res
