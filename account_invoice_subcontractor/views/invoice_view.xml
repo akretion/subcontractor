@@ -55,29 +55,38 @@
                 <xpath expr="/form/sheet/notebook/page[1][@id='invoice_tab']/field[1]/form/sheet/group[2]/field[2]" position="attributes">
                     <attribute name="attrs">{'readonly': 0}</attribute>
                 </xpath>
-                <xpath expr="//field[@name='invoice_line_ids']/form/sheet/group[last()]" position="before">
-                    <group string="Subcontracting work" name="subcontracting_work">
-                        <field name="subcontractor_work_ids" groups="account_invoice_subcontractor.group_have_subcontractor"
-                               nolabel="1">
-                            <tree string="Subcontractor work" editable="bottom">
-                                <field name="employee_id"/>
-                                <field name="subcontractor_type" invisible="True"/>
-                                <field name="quantity" sum="Total Qty"/>
-                                <!-- <field name="uom_id"/> -->
-                                <field name="cost_price_unit"/>
-                                <field name="sale_price_unit"/>
-                                <field name="sale_price" sum="Total Sale Amount"/>
-                                <field name="cost_price" sum="Total Cost Amount"/>
-                            </tree>
-                        </field>
-                    </group>
+                <xpath expr="//field[@name='invoice_line_ids']/form//field[@name='price_subtotal']" position="before">
+                    <field name="subcontracted" invisible="1"/>
+                    <field name="subcontractor_work_invoiced_id" attrs="{'invisible': [('subcontracted', '=', False), ('subcontractor_work_invoiced_id', '=', False)]}"/>
                 </xpath>
                 <xpath expr="//field[@name='invoice_line_ids']/tree/field[last()]" position="after">
                     <button name="edit_subcontractor" type="object" string="Edit Sub."/>
                     <field name="subcontracted" optional="hide"/>
+                    <field name="subcontractor_work_ids" invisible="1">
+                        <tree string="Subcontractor work" editable="bottom">
+                            <field name="employee_id"/>
+                            <field name="subcontractor_type" invisible="True"/>
+                            <field name="quantity" sum="Total Qty"/>
+                            <field name="cost_price_unit"/>
+                            <field name="sale_price_unit"/>
+                            <field name="sale_price" sum="Total Sale Amount"/>
+                            <field name="cost_price" sum="Total Cost Amount"/>
+                        </tree>
+                    </field>
                 </xpath>
                 <xpath expr="//field[@name='line_ids']/tree/field[last()]" position="after">
                     <field name="subcontracted" optional="hide"/>
+                    <field name="subcontractor_work_ids" invisible="1">
+                        <tree string="Subcontractor work" editable="bottom">
+                            <field name="employee_id"/>
+                            <field name="subcontractor_type" invisible="True"/>
+                            <field name="quantity" sum="Total Qty"/>
+                            <field name="cost_price_unit"/>
+                            <field name="sale_price_unit"/>
+                            <field name="sale_price" sum="Total Sale Amount"/>
+                            <field name="cost_price" sum="Total Cost Amount"/>
+                        </tree>
+                    </field>
                 </xpath>
             </field>
         </record>
@@ -103,6 +112,66 @@
                 </xpath>
             </field>
         </record>
+
+        <record id="view_move_line_subcontractor_form" model="ir.ui.view">
+            <field name="name">account.move.line.subcontractor.form</field>
+            <field name="model">account.move.line</field>
+            <field name="arch" type="xml">
+                <form create="false">
+                    <sheet>
+                        <field name="product_uom_category_id" invisible="1"/>
+                        <field name="display_type" invisible="1"/>
+                        <field name="parent_state" invisible="1"/>
+                        <group>
+                            <field name="partner_id" invisible="1"/>
+                            <field name="company_id" invisible="1"/>
+                            <field name="debit" invisible="1"/>
+                            <field name="credit" invisible="1"/>
+                            <field name="product_id" widget="many2one_barcode" readonly="1"/>
+                            <field name="quantity" readonly="1"/>
+                            <field name="product_uom_id" groups="uom.group_uom" readonly="1"/>
+                            <field name="price_unit" readonly="1"/>
+                            <field name="discount" string="Disc.%" readonly="1"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="subcontracted" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="analytic_tag_ids" groups="analytic.group_analytic_tags" widget="many2many_tags" readonly="1"/>
+                            <field name="account_id" options="{'no_create': True}" domain="[('company_id', '=', company_id)]" readonly="1"/>
+                            <field name="tax_ids" widget="many2many_tags" readonly="1"/>
+                            <field name="analytic_account_id" groups="analytic.group_analytic_accounting" readonly="1"/>
+                        </group>
+                        <label for="name" string="Description" attrs="{'invisible': [('display_type', '!=', False)]}"/>
+                        <label for="name" string="Section" attrs="{'invisible': [('display_type', '!=', 'line_section')]}"/>
+                        <label for="name" string="Note" attrs="{'invisible': [('display_type', '!=', 'line_note')]}"/>
+                        <field name="name" widget="text" readonly="1"/>
+                        <notebook>
+                            <page string="Subcontracting work" name="subcontracting_work">
+                                    <field name="subcontractor_work_ids"
+                                           groups="account_invoice_subcontractor.group_have_subcontractor"
+                                           nolabel="1">
+                                        <tree string="Subcontractor work" editable="bottom">
+                                            <field name="employee_id"/>
+                                            <field name="subcontractor_type" invisible="True"/>
+                                            <field name="quantity" sum="Total Qty"/>
+                                            <!-- <field name="uom_id"/> -->
+                                            <field name="cost_price_unit"/>
+                                            <field name="sale_price_unit"/>
+                                            <field name="sale_price" sum="Total Sale Amount"/>
+                                            <field name="cost_price" sum="Total Cost Amount"/>
+                                        </tree>
+                                    </field>
+                            </page>
+                        </notebook>
+                        <group>
+                            <field name="price_subtotal" string="Subtotal" groups="account.group_show_line_subtotals_tax_excluded"/>
+                            <field name="price_total" string="Total" groups="account.group_show_line_subtotals_tax_included"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
 
 
 <!--         <record id="invoice_supplier_form" model="ir.ui.view">

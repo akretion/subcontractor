@@ -114,12 +114,20 @@ class AccountMoveLine(models.Model):
             "view_type": "form",
             "view_mode": "form",
             "res_model": "account.move.line",
-            "view_id": False,
+            "view_id": self.env.ref(
+                "account_invoice_subcontractor.view_move_line_subcontractor_form"
+            ).id,
             "type": "ir.actions.act_window",
             "target": "new",
             "res_id": self.id,
         }
         return view
+
+    @api.onchange("quantity")
+    def _onchange_quantity(self):
+        for line in self:
+            if len(line.subcontractor_work_ids) == 1:
+                line.subcontractor_work_ids.quantity = line.quantity
 
 
 class AccountMove(models.Model):

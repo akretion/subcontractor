@@ -16,7 +16,7 @@
         "sale",
     ],
     "data": [
-        # "data/cron_data.xml",
+        "data/cron_data.xml",
         "security/security.xml",
         "security/ir.model.access.csv",
         "views/hr_view.xml",

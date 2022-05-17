@@ -380,8 +380,8 @@ class SubcontractorWork(models.Model):
                         [("company_id", "=", dest_company.id)], limit=1
                     )
             subcontractor_works = (
-                self.sudo(user)
-                .with_context(force_company=dest_company.id)
+                self.with_user(user)
+                .with_company(dest_company)
                 .search(
                     [
                         ("id", "in", all_works.ids),

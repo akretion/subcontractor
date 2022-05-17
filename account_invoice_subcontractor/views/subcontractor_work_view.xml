@@ -31,25 +31,37 @@
         <field name="model">subcontractor.work</field>
         <field name="arch" type="xml">
             <form>
-                <field name="end_customer_id"/>
-                <field name="invoice_id"/>
-                <field name="supplier_invoice_id"/>
-                 <field name="name"/>
-                <field name="employee_id"/>
-                <field name="subcontractor_type"/>
-                <field name="quantity"/>
-                <field name="uom_id"/>
-                <field name="sale_price_unit"/>
-                <field name="sale_price"/>
-                <field name="cost_price"/>
-                <field name="state"/>
-                <field name="subcontractor_state"/>
-                <field name="supplier_invoice_line_id"/>
-                <field name="subcontractor_invoice_line_id"/>
-                <field name="customer_id"/>
-                <field name="subcontractor_company_id"/>
-                <field name="invoice_date"/>
-                <field name="date_supplier_invoice"/> -->
+                <sheet>
+                    <group>
+                        <field name="id"/>
+                        <field name="name"/>
+                    </group>
+                    <group>
+                        <field name="end_customer_id"/>
+                        <field name="invoice_id"/>
+                        <field name="supplier_invoice_id"/>
+                        <field name="employee_id"/>
+                        <field name="subcontractor_type"/>
+                    </group>
+                    <group>
+                        <field name="quantity"/>
+                        <field name="uom_id"/>
+                        <field name="cost_price_unit"/>
+                        <field name="sale_price_unit"/>
+                        <field name="sale_price"/>
+                        <field name="cost_price"/>
+                    </group>
+                    <group>
+                        <field name="state"/>
+                        <field name="invoice_date"/>
+                        <field name="subcontractor_state"/>
+                        <field name="supplier_invoice_line_id"/>
+                        <field name="subcontractor_invoice_line_id"/>
+                        <field name="customer_id"/>
+                        <field name="subcontractor_company_id"/>
+                        <field name="date_supplier_invoice"/>
+                    </group>
+                </sheet>
             </form>
         </field>
     </record>
