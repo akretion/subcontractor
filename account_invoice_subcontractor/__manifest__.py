@@ -22,7 +22,7 @@
         "views/hr_view.xml",
         "views/subcontractor_work_view.xml",
         "views/invoice_view.xml",
-        # "wizard/subcontractor_invoice_work_view.xml",
+        "wizard/subcontractor_invoice_work_view.xml",
         "views/product_view.xml",
     ],
     "demo": [
