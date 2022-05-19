@@ -72,3 +72,18 @@ class AccountMove(models.Model):
         action = self.env.ref("hr_timesheet.act_hr_timesheet_line").sudo().read()[0]
         action["domain"] = [("invoice_id", "=", self.id)]
         return action
+
+    def _move_autocomplete_invoice_lines_values(self):
+        # Following code is in this method :
+        #   if line.product_id and not line._cache.get('name'):
+        #        line.name = line._get_computed_name()
+        # it reset invoice_line name to defaut in case it is not in cache.
+        # The reason to do this would be
+        # "Furthermore, the product's label was missing on all invoice lines."
+        # https://github.com/OCA/OCB/commit/7965c890c4e6f6562d265e1605fef3384b00316e
+        # So to avoid issues I read the name before the supper to ensure it is in cache
+        # That is really depressing...
+        # TODO a PR to fix this should be done I guess, but I have not the motivation
+        # right now...
+        self.invoice_line_ids.mapped("name")
+        return super()._move_autocomplete_invoice_lines_values()

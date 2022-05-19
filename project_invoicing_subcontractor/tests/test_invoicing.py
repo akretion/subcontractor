@@ -103,6 +103,10 @@ class TestInvoicing(TransactionCase):
         self.assertEqual(line2.subcontractor_work_ids.quantity, 1.25)
         self.assertEqual(line2.subcontractor_work_ids.cost_price, 562.5)
 
+        # test line label
+        self.assertIn(line_1.task_id.name, line_1.name)
+        self.assertIn(line2.task_id.name, line2.name)
+
     def _test_invoiceable(self, invoicing, finished, expected):
         task = self.line_1.task_id
         if finished:
