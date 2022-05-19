@@ -68,8 +68,8 @@ class AccountAnalyticLine(models.Model):
         for record in self:
             record.invoiceable = record.is_invoiceable()
 
-    def _get_invoiceable_qty_with_project_unit(self):
-        project = self.mapped("project_id")
+    def _get_invoiceable_qty_with_project_unit(self, project=False):
+        project = project or self.mapped("project_id")
         project.ensure_one()
         return self._get_invoiceable_qty_with_unit(project.uom_id)
 

@@ -59,7 +59,7 @@ class SupplierTimesheetInvoice(models.TransientModel):
                 % project.name
             )
 
-        quantity = tlines._get_invoiceable_qty_with_project_unit()
+        quantity = tlines._get_invoiceable_qty_with_project_unit(project=project)
         vals = {
             "task_id": task.id,
             "product_id": project.product_id.id,
