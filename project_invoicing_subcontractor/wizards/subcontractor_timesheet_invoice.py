@@ -130,7 +130,11 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             vals["subcontractor_work_ids"] = subcontractor_vals
         return vals
 
-    def _add_update_invoice_line(self, task_id, all_data):
+    def _get_invoice_line_vals_list(self, task_id, all_data):
+        """
+        return list of vals to be written on account.move.invoice_line_ids
+        [(x, y, z)] ...
+        """
         inv_line_obj = self.env["account.move.line"]
         inv_line = inv_line_obj.search(
             [("move_id", "=", self.invoice_id.id), ("task_id", "=", task_id)]
@@ -140,7 +144,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         # timesheet lines in all_data dict
         if inv_line:
             all_data = self._extract_timesheet(
-                inv_line.subcontractor_work_ids.timesheet_line_ids, all_data
+                inv_line.subcontractor_work_ids.timesheet_line_ids, result=all_data
             )
 
         all_task_timesheet_line_ids = []
@@ -155,7 +159,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         task = self.env["project.task"].browse(task_id)
         line_vals = self._prepare_invoice_line(task, timesheet_lines, task_data)
         if not inv_line:
-            self.invoice_id.write({"invoice_line_ids": [(0, 0, line_vals)]})
+            invoice_line_vals_list = [(0, 0, line_vals)]
         else:
             inv_line.subcontractor_work_ids.unlink()
             # we can't just do a [(1, id, vals)] here because the invoicing
@@ -166,9 +170,8 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             # Maybe we should stop allowing the update on lines, the user could just
             # delete the invoice lines himself and then create a new one...
             # or spend more time to find a cleaner way.
-            self.invoice_id.with_context(test=True).write(
-                {"invoice_line_ids": [(0, 0, line_vals), (2, inv_line.id, 0)]}
-            )
+            invoice_line_vals_list = [(0, 0, line_vals), (2, inv_line.id, 0)]
+        return invoice_line_vals_list
 
     def _get_invoice_vals(self):
         self.ensure_one()
@@ -199,11 +202,12 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         # on invoice line
         # TODO check if still usefull
         self = self.with_context(journal_id=self.invoice_id.journal_id.id)
+        invoice_line_vals_list = []
         for task_id, _data in res.items():
-            self._add_update_invoice_line(task_id, res)
-        #        for task in tasks:
-        #            self._add_update_invoice_line(task)
-        #        self.invoice_id.compute_taxes()
+            invoice_line_vals_list += self._get_invoice_line_vals_list(task_id, res)
+        # we do only one write as odoo recompute all amls for each write which is
+        # not efficient
+        self.invoice_id.write({"invoice_line_ids": invoice_line_vals_list})
 
         # return the invoice view
         action = self.env.ref("account.action_move_out_invoice_type").sudo().read()[0]
