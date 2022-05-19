@@ -1,9 +1,8 @@
-# © 2013-2017 Akretion
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl)
 
 {
     "name": "project_invoicing_subcontractor",
-    "version": "12.0.1.0.0",
+    "version": "14.0.1.0.0",
     "author": "Akretion",
     "website": "www.akretion.com",
     "license": "AGPL-3",
@@ -17,6 +16,7 @@
         "project_time_in_day",
     ],
     "data": [
+        "security/ir.model.access.csv",
         "wizards/subcontractor_timesheet_invoice_view.xml",
         "wizards/supplier_timesheet_invoice_view.xml",
         "views/menu.xml",

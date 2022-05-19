@@ -5,7 +5,6 @@
         <field name="name">Timesheet Line</field>
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">account.analytic.line</field>
-        <field name="view_type">form</field>
         <field name="view_mode">tree,form</field>
         <field name="domain">[("employee_id", "!=", False)]</field>
         <field name="context">{}</field>

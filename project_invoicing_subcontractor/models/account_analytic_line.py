@@ -1,9 +1,6 @@
-# © 2013-2017 Akretion
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl)
 
 from odoo import api, fields, models
-
-import odoo.addons.decimal_precision as dp
 
 
 class AccountAnalyticLine(models.Model):
@@ -11,23 +8,21 @@ class AccountAnalyticLine(models.Model):
 
     subcontractor_work_id = fields.Many2one("subcontractor.work")
     invoice_line_id = fields.Many2one(
-        "account.invoice.line",
+        "account.move.line",
         compute="_compute_invoice_line",
         store=True,
-        readonly=True,
     )
     invoice_id = fields.Many2one(
-        "account.invoice",
-        related="invoice_line_id.invoice_id",
+        "account.move",
+        related="invoice_line_id.move_id",
         store=True,
-        readonly=True,
     )
-    supplier_invoice_line_id = fields.Many2one("account.invoice.line")
+    supplier_invoice_line_id = fields.Many2one("account.move.line")
     task_stage_id = fields.Many2one(
         "project.task.type", related="task_id.stage_id", store=True
     )
     invoiceable = fields.Boolean(compute="_compute_invoiceable", store=True)
-    discount = fields.Float(digits=dp.get_precision("Discount"), default=0)
+    discount = fields.Float(digits="Discount", default=0)
     invoiceable_amount = fields.Float(compute="_compute_invoiceable_amount", store=True)
     date_invoiceable = fields.Date(compute="_compute_date_invoiceable", store=True)
 
@@ -73,8 +68,8 @@ class AccountAnalyticLine(models.Model):
         for record in self:
             record.invoiceable = record.is_invoiceable()
 
-    def _get_invoiceable_qty_with_project_unit(self):
-        project = self.mapped("project_id")
+    def _get_invoiceable_qty_with_project_unit(self, project=False):
+        project = project or self.mapped("project_id")
         project.ensure_one()
         return self._get_invoiceable_qty_with_unit(project.uom_id)
 
