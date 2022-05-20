@@ -66,3 +66,24 @@ def migrate(env, version):
             AND subcontractor_work.old_subcontractor_invoice_line_id IS NOT NULL
         """,
     )
+
+
+    openupgrade.logged_query(
+        env.cr,
+        """
+            UPDATE subcontractor_work
+            SET
+                state = 'posted'
+            WHERE state = 'open'
+        """,
+    )
+
+    openupgrade.logged_query(
+        env.cr,
+        """
+            UPDATE subcontractor_work
+            SET
+                subcontractor_state = 'posted'
+            WHERE subcontractor_state = 'open'
+        """,
+    )
