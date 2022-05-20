@@ -39,10 +39,18 @@ class SupplierTimesheetInvoice(models.TransientModel):
     def _compute_employee(self):
         for record in self:
             tlines = self._get_tlines()
-            if len(tlines.mapped("user_id")) > 1:
+            # check lines are not invoiced already => refactore to put error
+            # in another method I guess
+            if tlines.invoice_line_id:
+                record.error = _(
+                    "Some selected timesheet lines have already been invoiced"
+                )
+                record.employee_id = False
+                record.partner_id = False
+            elif len(tlines.mapped("user_id")) > 1:
                 record.error = "You should invoice only one subcontractor"
                 record.employee_id = False
-                record.partner = False
+                record.partner_id = False
             else:
                 record.error = False
                 record.employee_id = tlines.mapped("user_id.employee_ids")[0]

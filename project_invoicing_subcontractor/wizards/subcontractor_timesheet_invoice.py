@@ -42,6 +42,11 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
                 "You can only invoice timesheet with the same partner."
                 "Partner found %s"
             ) % [x.name for x in partners]
+        timesheet_lines = self.env["account.analytic.line"].browse(
+            self.env.context["active_ids"]
+        )
+        if timesheet_lines.invoice_line_id:
+            self.error = _("Some selected timesheet lines have already been invoiced")
 
     #    def _extract_timesheet(self, timesheet_lines):
     #        """Return a dict with
