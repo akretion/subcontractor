@@ -6,6 +6,8 @@ from datetime import date, timedelta
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+from collections import OrderedDict
+from odoo.fields import first
 
 _logger = logging.getLogger(__name__)
 
@@ -213,6 +215,9 @@ class SubcontractorWork(models.Model):
         partner_id = self[0].customer_id.id
         worktype = self[0].subcontractor_type
         for work in self:
+            dest_invoice_company = work._get_dest_invoice_company()
+            if dest_invoice_company not in self.env.companies:
+                raise UserError(_("You can't generate an invoice for a company you have no access : %s" % dest_invoice_company.name))
             if partner_id != work.customer_id.id:
                 raise UserError(_("All the work should belong to the same supplier"))
             elif work.supplier_invoice_line_id:
@@ -233,39 +238,38 @@ class SubcontractorWork(models.Model):
     @api.model
     def _prepare_invoice(self):
         self.ensure_one()
-        journal_obj = self.env["account.journal"]
-        inv_obj = self.env["account.move"]
         # the source invoice is always from customer, out_invoice or out_refund
         # but, depending on the subcontractor type, we want to create :
         # 1. For internal : the same type of invoice on the subcontractor company side
         # Then the supplier invoice/refund will be created with intercompant invoice
         # module.
         # 2. For external : directly create a supplier invoice/refund
-        if self.sudo().invoice_id.move_type not in ("out_invoice", "out_refund"):
+        orig_invoice = self.sudo().invoice_id
+        if orig_invoice.move_type not in ("out_invoice", "out_refund"):
             raise UserError(
                 "You can only invoice the subcontractors on a customer invoice/refund"
             )
+        company = self._get_dest_invoice_company()
         if self.subcontractor_type == "internal":
-            invoice_type = self.sudo().invoice_id.move_type
+            invoice_type = orig_invoice.move_type
+            journal_type = "sale"
+            partner = self.customer_id
         elif self.subcontractor_type == "external":
             invoice_type = (
-                self.sudo().invoice_id.move_type == "out_invoice"
+                orig_invoice.move_type == "out_invoice"
                 and "in_invoice"
                 or "in_refund"
             )
+            journal_type = "purchase"
+            partner = self.employee_id.user_id.partner_id
         if invoice_type in ["out_invoice", "out_refund"]:
-            company = self.subcontractor_company_id
-            journal_type = "sale"
-            partner = self.customer_id
             user = self.env["res.users"].search(
                 [("company_id", "=", company.id)], limit=1
             )
         elif invoice_type in ["in_invoice", "in_refund"]:
-            company = self.invoice_id.company_id
-            journal_type = "purchase"
-            partner = self.employee_id.user_id.partner_id
             user = self.employee_id.user_id
-        journal = journal_obj.search(
+#        self = self.with_company(dest_invoice_company)
+        journal = self.env["account.journal"].search(
             [("company_id", "=", company.id), ("type", "=", journal_type)], limit=1
         )
         if not journal:
@@ -277,8 +281,8 @@ class SubcontractorWork(models.Model):
         invoice_vals = self.env["account.move"].play_onchanges(
             invoice_vals, ["partner_id"]
         )
-        original_invoice_date = self.sudo().invoice_id.invoice_date
-        last_invoices = inv_obj.search(
+        original_invoice_date = orig_invoice.invoice_date
+        last_invoices = self.env["account.move"].search(
             [
                 ("move_type", "=", invoice_type),
                 ("company_id", "=", company.id),
@@ -313,7 +317,6 @@ class SubcontractorWork(models.Model):
             "name": "Client final {} :{}".format(self.end_customer_id.name, self.name),
             "price_unit": self.cost_price_unit,
             "move_id": invoice.id,
-            "discount": self.sudo().invoice_line_id.discount,
             "subcontractor_work_invoiced_id": self.id,
             "product_uom_id": self.uom_id.id,
         }
@@ -330,32 +333,51 @@ class SubcontractorWork(models.Model):
         line_vals.update(onchange_vals)
         return line_vals
 
+    def _get_subcontractor_invoicing_group(self):
+        groups = OrderedDict() 
+        subcontractors = self.search([("id", "in", self.ids)], order="invoice_date")
+        # order by 
+        for sub in self:
+            if sub.subcontractor_type == "internal":
+                key = (sub.employee_id.id, sub.invoice_id.id)
+            elif sub.subcontractor_type == "external":
+                key = (sub.employee_id.id, False)
+            if key not in groups:
+                groups[key] = self.env["subcontractor.work"]
+            groups[key] |= sub
+        return groups
+
+    def _get_dest_invoice_company(self):
+        self.ensure_one()
+        if self.subcontractor_type == "internal":
+            company = self.subcontractor_company_id
+        elif self.subcontractor_type == "external":
+            company = self.sudo().invoice_id.company_id
+        else:
+            raise NotImplementedError
+        return company
+
     def invoice_from_work(self):
-        # works arrive here already sorted by employee and invoice (sort is done
-        # by the cron or the wizard)? That's why the following code works and make
-        # a good repartition of the work per invoice.
-        # TODO MIGRATION It would be nice to refactore this to make this method work
-        # properly independently of the order of the works.
-        invoice_obj = self.env["account.move"]
+        # group subcontractor by invoice : internal sub should produce one invoice
+        # per (employee/original_invoice_id) and external sub should produce one
+        # invoice per employee
         invoices = self.env["account.move"]
-        current_employee_id = None
-        current_invoice_id = None
-        for work in self:
-            # for internal works we want 1 invoice per employee/source invoice
-            # for external we want one invoice per employee
-            if current_employee_id != work.employee_id or (
-                work.subcontractor_type == "internal"
-                and current_invoice_id != work.invoice_id
-            ):
-                invoice_vals = work._prepare_invoice()
-                invoice = invoice_obj.create(invoice_vals)
-                current_employee_id = work.employee_id
-                current_invoice_id = work.invoice_id
-                invoices |= invoice
-            inv_line_data = work._prepare_invoice_line(invoice)
-            # Need sudo because odoo prefetch de work.invoice_id
-            # and try to read fields on it and that makes access rules fail
-            invoice.sudo().write({"invoice_line_ids": [(0, 0, inv_line_data)]})
+        grouped_subcontractors = self._get_subcontractor_invoicing_group()
+        invoice_obj = self.env["account.move"]
+        for subcontractor_works in grouped_subcontractors.values():
+            invoice_data_list = []
+            # since subcontractor are grouped by dest invoice, they all should
+            # be consitent for finding the dest company or generating the dest invoice
+            # vals
+            first_work = first(subcontractor_works)
+            company = first_work._get_dest_invoice_company()
+            invoice_vals = first_work.with_company(company)._prepare_invoice()
+            invoice = invoice_obj.with_company(company).create(invoice_vals)
+            invoices |= invoice
+            for work in subcontractor_works.with_company(company):
+                inv_line_data = work._prepare_invoice_line(invoice)
+                invoice_data_list.append((0, 0, inv_line_data))
+            invoice.write({"invoice_line_ids": invoice_data_list})
         return invoices
 
     def _scheduler_action_subcontractor_invoice_create(self):
@@ -375,21 +397,20 @@ class SubcontractorWork(models.Model):
                 ("subcontractor_type", "=", "internal"),
                 ("state", "in", ["posted", "paid"]),
             ],
-            order="invoice_date",
         )
         for subcontractor in subcontractors:
             dest_company = subcontractor.subcontractor_company_id
             user = subcontractor.user_id
-            # TOFIX
-            old_company = False
-            if user.company_id != dest_company:
-                if dest_company.id in user.company_ids.ids:
-                    old_company = user.company_id
-                    user.company_id = subcontractor.subcontractor_company_id
-                else:
-                    user = self.env["res.users"].search(
-                        [("company_id", "=", dest_company.id)], limit=1
-                    )
+#            # TOFIX
+#            old_company = False
+#            if user.company_id != dest_company:
+#                if dest_company.id in user.company_ids.ids:
+#                    old_company = user.company_id
+#                    user.company_id = subcontractor.subcontractor_company_id
+#                else:
+#                    user = self.env["res.users"].search(
+#                        [("company_id", "=", dest_company.id)], limit=1
+#                    )
             subcontractor_works = (
                 self.with_user(user)
                 .with_company(dest_company)
@@ -398,7 +419,6 @@ class SubcontractorWork(models.Model):
                         ("id", "in", all_works.ids),
                         ("employee_id", "=", subcontractor.id),
                     ],
-                    order="employee_id, invoice_date, invoice_id",
                 )
             )
             _logger.info(
@@ -408,6 +428,6 @@ class SubcontractorWork(models.Model):
             invoices = subcontractor_works.invoice_from_work()
             for invoice in invoices:
                 invoice.action_post()
-            if old_company:
-                user.company_id = old_company.id
+#            if old_company:
+#                user.company_id = old_company.id
         return True

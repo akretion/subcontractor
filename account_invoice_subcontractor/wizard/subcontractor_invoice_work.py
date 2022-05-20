@@ -13,8 +13,7 @@ class SubcontractorInvoiceWork(models.TransientModel):
     def generate_invoice(self):
         work_obj = self.env["subcontractor.work"]
         work_ids = self._context.get("active_ids")
-        # Search instead of browse to make order it easily
-        works = work_obj.search([("id", "in", work_ids)], order="employee_id, invoice_id")
+        works = work_obj.browse(work_ids)
         works.check()
         invoices = works.invoice_from_work()
         return {
