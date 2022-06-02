@@ -21,7 +21,8 @@ def migrate(env, version):
         """
             UPDATE subcontractor_work
             SET
-                invoice_id = am.id
+                invoice_id = am.id,
+                invoice_date = am.invoice_date
             FROM account_invoice ai
             JOIN account_move am ON am.old_invoice_id = ai.id
             WHERE subcontractor_work.old_invoice_id = ai.id
@@ -66,7 +67,6 @@ def migrate(env, version):
             AND subcontractor_work.old_subcontractor_invoice_line_id IS NOT NULL
         """,
     )
-
 
     openupgrade.logged_query(
         env.cr,
