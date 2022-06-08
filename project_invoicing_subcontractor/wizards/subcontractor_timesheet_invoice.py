@@ -2,7 +2,6 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl)
 
 from odoo import _, api, fields, models
-from odoo.fields import first
 
 
 class SubcontractorTimesheetInvoice(models.TransientModel):
@@ -87,7 +86,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             task_id = timesheet_line.task_id.id
             if task_id not in result:
                 result[task_id] = {}
-            employee_id = first(timesheet_line.user_id.employee_ids).id
+            employee_id = timesheet_line.employee_id.id
             if employee_id not in result[task_id]:
                 result[task_id][employee_id] = []
             if timesheet_line.id not in result[task_id][employee_id]:
