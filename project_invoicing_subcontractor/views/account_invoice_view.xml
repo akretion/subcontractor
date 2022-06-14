@@ -21,10 +21,10 @@
                icon="fa-calendar"/>
         </div>
         <xpath expr="//tree/field[@name='name']" position="after">
-            <field name="task_stage_id"/>
+            <field name="task_stage_id" optional="hide"/>
         </xpath>
         <xpath expr="//tree/field[@name='quantity']" position="after">
-            <field name="timesheet_error" string=""/>
+            <field name="timesheet_error" string="" attrs="{'column_invisible':[('parent.move_type', 'not in', ('out_invoice', 'out_refund'))]}"/>
         </xpath>
     </field>
 </record>
