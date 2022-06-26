@@ -59,7 +59,6 @@ class SupplierTimesheetInvoice(models.TransientModel):
                 )
 
     def _prepare_invoice_line(self, task, tlines):
-        line_obj = self.env["account.move.line"]
         project = self.force_project_id or task.project_id
         if project.invoicing_mode != "supplier":
             raise UserError(
@@ -68,7 +67,7 @@ class SupplierTimesheetInvoice(models.TransientModel):
             )
 
         quantity = tlines._get_invoiceable_qty_with_project_unit(project=project)
-        vals = {
+        return {
             "task_id": task.id,
             "product_id": project.product_id.id,
             "name": "[{}] {}".format(task.id, task.name),
@@ -79,7 +78,6 @@ class SupplierTimesheetInvoice(models.TransientModel):
             "analytic_account_id": project.analytic_account_id.id,
             "quantity": quantity,
         }
-        return line_obj.play_onchanges(vals, ["product_id", "product_uom_id"])
 
     def _add_update_invoice_line(self, task, tlines):
         inv_line = task.invoice_line_ids.filtered(
