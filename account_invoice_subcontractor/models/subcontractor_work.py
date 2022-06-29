@@ -2,11 +2,11 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
+from collections import OrderedDict
 from datetime import date, timedelta
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
-from collections import OrderedDict
 from odoo.fields import first
 
 _logger = logging.getLogger(__name__)
@@ -220,7 +220,12 @@ class SubcontractorWork(models.Model):
         for work in self:
             dest_invoice_company = work._get_dest_invoice_company()
             if dest_invoice_company not in self.env.companies:
-                raise UserError(_("You can't generate an invoice for a company you have no access : %s" % dest_invoice_company.name))
+                raise UserError(
+                    _(
+                        "You can't generate an invoice for a company you have no access : %s"
+                        % dest_invoice_company.name
+                    )
+                )
             if partner_id != work.customer_id.id:
                 raise UserError(_("All the work should belong to the same supplier"))
             elif work.supplier_invoice_line_id:
@@ -259,9 +264,7 @@ class SubcontractorWork(models.Model):
             partner = self.customer_id
         elif self.subcontractor_type == "external":
             invoice_type = (
-                orig_invoice.move_type == "out_invoice"
-                and "in_invoice"
-                or "in_refund"
+                orig_invoice.move_type == "out_invoice" and "in_invoice" or "in_refund"
             )
             journal_type = "purchase"
             partner = self.employee_id.user_id.partner_id
@@ -271,7 +274,7 @@ class SubcontractorWork(models.Model):
             )
         elif invoice_type in ["in_invoice", "in_refund"]:
             user = self.employee_id.user_id
-#        self = self.with_company(dest_invoice_company)
+        #        self = self.with_company(dest_invoice_company)
         journal = self.env["account.journal"].search(
             [("company_id", "=", company.id), ("type", "=", journal_type)], limit=1
         )
@@ -337,10 +340,8 @@ class SubcontractorWork(models.Model):
         return line_vals
 
     def _get_subcontractor_invoicing_group(self):
-        groups = OrderedDict() 
-        subcontractors = self.search([("id", "in", self.ids)], order="invoice_date")
-        # order by 
-        for sub in self:
+        groups = OrderedDict()
+        for sub in self.sorted("invoice_date"):
             if sub.subcontractor_type == "internal":
                 key = (sub.employee_id.id, sub.invoice_id.id)
             elif sub.subcontractor_type == "external":
@@ -404,16 +405,16 @@ class SubcontractorWork(models.Model):
         for subcontractor in subcontractors:
             dest_company = subcontractor.subcontractor_company_id
             user = subcontractor.user_id
-#            # TOFIX
-#            old_company = False
-#            if user.company_id != dest_company:
-#                if dest_company.id in user.company_ids.ids:
-#                    old_company = user.company_id
-#                    user.company_id = subcontractor.subcontractor_company_id
-#                else:
-#                    user = self.env["res.users"].search(
-#                        [("company_id", "=", dest_company.id)], limit=1
-#                    )
+            #            # TOFIX
+            #            old_company = False
+            #            if user.company_id != dest_company:
+            #                if dest_company.id in user.company_ids.ids:
+            #                    old_company = user.company_id
+            #                    user.company_id = subcontractor.subcontractor_company_id
+            #                else:
+            #                    user = self.env["res.users"].search(
+            #                        [("company_id", "=", dest_company.id)], limit=1
+            #                    )
             subcontractor_works = (
                 self.with_user(user)
                 .with_company(dest_company)
@@ -431,6 +432,6 @@ class SubcontractorWork(models.Model):
             invoices = subcontractor_works.invoice_from_work()
             for invoice in invoices:
                 invoice.action_post()
-#            if old_company:
-#                user.company_id = old_company.id
+        #            if old_company:
+        #                user.company_id = old_company.id
         return True

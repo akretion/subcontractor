@@ -35,11 +35,11 @@ class AccountInvoiceLine(models.Model):
     )
     def _compute_timesheet_qty(self):
         for record in self:
-            record.timesheet_qty = record.timesheet_line_ids._get_invoiceable_qty_with_unit(
-                record.uom_id
+            record.timesheet_qty = (
+                record.timesheet_line_ids._get_invoiceable_qty_with_unit(record.uom_id)
             )
             if abs(record.timesheet_qty - record.quantity) > 0.001:
-                record.timesheet_error = u"⏰ %s" % record.timesheet_qty
+                record.timesheet_error = "⏰ %s" % record.timesheet_qty
 
     def open_task(self):
         self.ensure_one()
