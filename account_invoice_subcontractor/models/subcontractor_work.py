@@ -159,6 +159,9 @@ class SubcontractorWork(models.Model):
     # #                 invoice_year.name,
     # #                 supplier_invoice_year.name)
 
+    def _get_commission_rate(self):
+        return self.employee_id.commission_rate / 100.0
+
     @api.depends(
         "employee_id",
         "invoice_line_id",
@@ -174,7 +177,7 @@ class SubcontractorWork(models.Model):
             sale_price_unit = line.price_unit * (1 - line.discount / 100.0)
             rate = 1
             if not work.invoice_line_id.product_id.no_commission:
-                rate -= work.employee_id.commission_rate / 100.0
+                rate -= self._get_commission_rate()
             cost_price_unit = sale_price_unit * rate
             work.sale_price_unit = sale_price_unit
             work.cost_price_unit = cost_price_unit
