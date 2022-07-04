@@ -177,7 +177,7 @@ class SubcontractorWork(models.Model):
             sale_price_unit = line.price_unit * (1 - line.discount / 100.0)
             rate = 1
             if not work.invoice_line_id.product_id.no_commission:
-                rate -= self._get_commission_rate()
+                rate -= work._get_commission_rate()
             cost_price_unit = sale_price_unit * rate
             work.sale_price_unit = sale_price_unit
             work.cost_price_unit = cost_price_unit
