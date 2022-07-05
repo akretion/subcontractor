@@ -107,13 +107,13 @@ class SubcontractorWork(models.Model):
         string="Subcontractor Company",
     )
     subcontractor_state = fields.Selection(
-        compute="_get_state", selection=INVOICE_STATE, store=True, compute_sudo=True
+        compute="_compute_state", selection=INVOICE_STATE, store=True, compute_sudo=True
     )
     subcontractor_type = fields.Selection(
         string="Subcontractor Type", selection="_get_subcontractor_type"
     )
     state = fields.Selection(
-        compute="_get_state",
+        compute="_compute_state",
         selection=INVOICE_STATE,
         store=True,
         default="draft",
@@ -201,7 +201,7 @@ class SubcontractorWork(models.Model):
         "supplier_invoice_line_id.move_id.state",
         "supplier_invoice_line_id.move_id.payment_state",
     )
-    def _get_state(self):
+    def _compute_state(self):
         def get_state(move):
             if move.payment_state == "paid":
                 return "paid"
@@ -255,7 +255,9 @@ class SubcontractorWork(models.Model):
         orig_invoice = self.sudo().invoice_id
         if orig_invoice.move_type not in ("out_invoice", "out_refund"):
             raise UserError(
-                "You can only invoice the subcontractors on a customer invoice/refund"
+                _(
+                    "You can only invoice the subcontractors on a customer invoice/refund"
+                )
             )
         company = self._get_dest_invoice_company()
         if self.subcontractor_type == "internal":
