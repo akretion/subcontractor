@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-
-
+<?xml version="1.0" encoding="utf-8" ?>
 <odoo>
 
         <!-- VIEW FOR THE OBJECT : subcontractor_invoice_work -->
@@ -10,14 +8,20 @@
             <!-- <field name="priority" eval="8"/> -->
             <field name="arch" type="xml">
                 <form string="Generate Invoice">
-                    <separator string="Generate Invoice"/>
-                    <p>For internal Subcontractors one customer invoice will be created in the subcontracted company, for each couple employee/end customer invoice</p>
-                    <p>For external Subcontractors, one supplier invoice will be created for each employee. (even if the work concerns multiple end customer invoice.)</p>
+                    <separator string="Generate Invoice" />
+                    <p
+                >For internal Subcontractors one customer invoice will be created in the subcontracted company, for each couple employee/end customer invoice</p>
+                    <p
+                >For external Subcontractors, one supplier invoice will be created for each employee. (even if the work concerns multiple end customer invoice.)</p>
                     <footer>
-                        <button name="generate_invoice" string="Generate Invoice"
-                                type="object" class="oe_highlight"/>
+                        <button
+                        name="generate_invoice"
+                        string="Generate Invoice"
+                        type="object"
+                        class="oe_highlight"
+                    />
                         or
-                        <button string="Cancel" class="oe_link" special="cancel"/>
+                        <button string="Cancel" class="oe_link" special="cancel" />
                     </footer>
                 </form>
             </field>
@@ -31,7 +35,10 @@
             <field name="domain">[]</field>
             <field name="context">{}</field>
             <field name="target">new</field>
-            <field name="binding_model_id" ref="account_invoice_subcontractor.model_subcontractor_work"/>
+            <field
+            name="binding_model_id"
+            ref="account_invoice_subcontractor.model_subcontractor_work"
+        />
         </record>
 
 </odoo>

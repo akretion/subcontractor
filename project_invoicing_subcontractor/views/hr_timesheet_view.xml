@@ -1,41 +1,60 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
 
     <record id="hr_timesheet_view_search" model="ir.ui.view">
         <field name="model">account.analytic.line</field>
-        <field name="inherit_id" ref="hr_timesheet.hr_timesheet_line_search"/>
+        <field name="inherit_id" ref="hr_timesheet.hr_timesheet_line_search" />
         <field name="arch" type="xml">
             <field name="task_id" position="after">
-                <field name="invoice_id"/>
-                <field name="task_stage_id"/>
-                <field name="date_invoiceable" string="Date Invoice"/>
-                <filter name="to_invoice" string="To invoice" domain="[('invoiceable', '=', True), ('invoice_id', '=', False)]"/>
+                <field name="invoice_id" />
+                <field name="task_stage_id" />
+                <field name="date_invoiceable" string="Date Invoice" />
+                <filter
+                    name="to_invoice"
+                    string="To invoice"
+                    domain="[('invoiceable', '=', True), ('invoice_id', '=', False)]"
+                />
             </field>
 
             <filter name="groupby_task" position="after">
-                <filter string="Stage" name="stage" domain="[]" context="{'group_by':'task_stage_id'}"/>
-                <filter string="Invoiceable Date" name="date_invoiceable" domain="[]" context="{'group_by':'date_invoiceable'}"/>
+                <filter
+                    string="Stage"
+                    name="stage"
+                    domain="[]"
+                    context="{'group_by':'task_stage_id'}"
+                />
+                <filter
+                    string="Invoiceable Date"
+                    name="date_invoiceable"
+                    domain="[]"
+                    context="{'group_by':'date_invoiceable'}"
+                />
             </filter>
         </field>
     </record>
 
     <record id="hr_timesheet_line_tree" model="ir.ui.view">
         <field name="model">account.analytic.line</field>
-        <field name="inherit_id" ref="hr_timesheet.hr_timesheet_line_tree"/>
-        <field name="priority" eval="64"/>
+        <field name="inherit_id" ref="hr_timesheet.hr_timesheet_line_tree" />
+        <field name="priority" eval="64" />
         <field name="arch" type="xml">
             <field name="project_id" position="before">
-                <field name="partner_id" optional="show"/>
+                <field name="partner_id" optional="show" />
             </field>
             <field name="task_id" position="after">
-                <field name="task_stage_id" optional="show"/>
+                <field name="task_stage_id" optional="show" />
             </field>
             <field name="unit_amount" position="after">
-                <field name="discount"/>
-                <field name="invoiceable_amount" widget="timesheet_uom" sum="Total invoiceable" optional="show"/>
-                <field name="invoiceable" optional="hide"/>
-                <field name="date_invoiceable" optional="hide"/>
-                <field name="invoice_id" optional="show"/>
+                <field name="discount" />
+                <field
+                    name="invoiceable_amount"
+                    widget="timesheet_uom"
+                    sum="Total invoiceable"
+                    optional="show"
+                />
+                <field name="invoiceable" optional="hide" />
+                <field name="date_invoiceable" optional="hide" />
+                <field name="invoice_id" optional="show" />
             </field>
         </field>
     </record>
