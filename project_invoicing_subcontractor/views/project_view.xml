@@ -1,40 +1,47 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
 
     <record id="project_project_view_form" model="ir.ui.view">
         <field name="model">project.project</field>
-        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="inherit_id" ref="project.edit_project" />
         <field name="arch" type="xml">
             <group name="extra_settings" position="after">
                 <group string="Invoicing" name="invoicing">
-                    <field name="invoicing_mode"/>
+                    <field name="invoicing_mode" />
                     <field
                         name="invoicing_stage_id"
                         attrs="{
                             'invisible': [('invoicing_mode', '=', 'none')],
                             'required': [('invoicing_mode', '!=', 'none')]
-                        }"/>
-                    <field name="product_id"
+                        }"
+                    />
+                    <field
+                        name="product_id"
                         attrs="{
                             'invisible': [('invoicing_mode', '=', 'none')],
                             'required': [('invoicing_mode', '!=', 'none')]
-                        }"/>
-                    <field name="uom_id"
+                        }"
+                    />
+                    <field
+                        name="uom_id"
                         attrs="{
                             'invisible': [('invoicing_mode', '=', 'none')],
-                        }"/>
+                        }"
+                    />
                     <field
                         name="supplier_invoice_account_expense_id"
                         attrs="{
                             'invisible': [('invoicing_mode', '!=', 'supplier')],
                             'required': [('invoicing_mode', '=', 'supplier')]
-                        }"/>
+                        }"
+                    />
                     <field
                         name="supplier_invoice_price_unit"
                         attrs="{
                             'invisible': [('invoicing_mode', '!=', 'supplier')],
                             'required': [('invoicing_mode', '=', 'supplier')]
-                        }"/>
+                        }"
+                    />
                 </group>
             </group>
         </field>
@@ -42,38 +49,52 @@
 
     <record id="project_task_view_form" model="ir.ui.view">
         <field name="model">project.task</field>
-        <field name="inherit_id" ref="hr_timesheet.view_task_form2_inherited"/>
+        <field name="inherit_id" ref="hr_timesheet.view_task_form2_inherited" />
         <field name="arch" type="xml">
             <field name="tag_ids" position="after">
-                <field name="invoicing"/>
+                <field name="invoicing" />
             </field>
             <xpath expr="//tree/field[@name='unit_amount']" position="after">
-                <field name="discount"/>
+                <field name="discount" />
             </xpath>
             <field name="remaining_hours" position="after">
-                <field name="invoiceable_hours" widget="float_time" class="oe_subtotal_footer_separator"/>
+                <field
+                    name="invoiceable_hours"
+                    widget="float_time"
+                    class="oe_subtotal_footer_separator"
+                />
              </field>
         </field>
     </record>
 
     <record id="view_task_kanban" model="ir.ui.view">
         <field name="model">project.task</field>
-        <field name="inherit_id" ref="project.view_task_kanban"/>
+        <field name="inherit_id" ref="project.view_task_kanban" />
         <field name="arch" type="xml">
             <xpath expr="//kanban/field[@name='color']" position="after">
-                <field name="invoiceable_hours"/>
+                <field name="invoiceable_hours" />
             </xpath>
             <field name="commercial_partner_id" position="attributes">
                 <attribute name="invisible">1</attribute>
             </field>
-            <xpath expr="//div[hasclass('oe_kanban_content')]//field[@name='partner_id']" position="attributes">
+            <xpath
+                expr="//div[hasclass('oe_kanban_content')]//field[@name='partner_id']"
+                position="attributes"
+            >
                 <attribute name="invisible">1</attribute>
             </xpath>
             <xpath expr="//div/strong/field[@name='name']/../.." position="after">
-                <t t-set="badge" t-value=""/>
-                <t t-set="badge" t-value="'badge-danger'" t-if="record.remaining_hours.raw_value &lt; 0 and record.planned_hours.raw_value &gt; 0"/>
-                <div t-attf-class="oe_kanban_align badge {{ badge }}" title="Invoiceable Hours">
-                <field name="invoiceable_hours" sum="Total" widget="timesheet_uom"/>
+                <t t-set="badge" t-value="" />
+                <t
+                    t-set="badge"
+                    t-value="'badge-danger'"
+                    t-if="record.remaining_hours.raw_value &lt; 0 and record.planned_hours.raw_value &gt; 0"
+                />
+                <div
+                    t-attf-class="oe_kanban_align badge {{ badge }}"
+                    title="Invoiceable Hours"
+                >
+                <field name="invoiceable_hours" sum="Total" widget="timesheet_uom" />
                 </div>
             </xpath>
         </field>

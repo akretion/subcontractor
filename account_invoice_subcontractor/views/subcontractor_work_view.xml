@@ -1,26 +1,39 @@
-<?xml version="1.0" encoding="utf-8"?>
-
+<?xml version="1.0" encoding="utf-8" ?>
 <odoo>
 
     <record id="view_subcontractor_work_view_search" model="ir.ui.view">
         <field name="model">subcontractor.work</field>
         <field name="arch" type="xml">
             <search string="Subcontractor work">
-                <field name="invoice_id"/>
-                <field name="employee_id"/>
-                <separator/>
-                <filter string="To invoice" name="to_invoice"
-                        domain="[
+                <field name="invoice_id" />
+                <field name="employee_id" />
+                <separator />
+                <filter
+                    string="To invoice"
+                    name="to_invoice"
+                    domain="[
                             ('subcontractor_type','!=','trainee'),
                             ('subcontractor_invoice_line_id','=',False),
                             ('supplier_invoice_line_id', '=', False),
-                            ('state', 'not in', ['draft', 'cancel'])]"/>
-                <filter string="To pay" name="to_pay"
-                        domain="[('state','=', 'paid'),('subcontractor_state', '!=', 'paid')]"/>
-                <separator/>
+                            ('state', 'not in', ['draft', 'cancel'])]"
+                />
+                <filter
+                    string="To pay"
+                    name="to_pay"
+                    domain="[('state','=', 'paid'),('subcontractor_state', '!=', 'paid')]"
+                />
+                <separator />
                 <group expand="0" string="Group By...">
-                    <filter name="invoice" string="Invoice" context="{'group_by':'invoice_id'}"/>
-                    <filter name="subcontractor" string="Subcontractor" context="{'group_by':'employee_id'}"/>
+                    <filter
+                        name="invoice"
+                        string="Invoice"
+                        context="{'group_by':'invoice_id'}"
+                    />
+                    <filter
+                        name="subcontractor"
+                        string="Subcontractor"
+                        context="{'group_by':'employee_id'}"
+                    />
                 </group>
 
             </search>
@@ -33,33 +46,33 @@
             <form>
                 <sheet>
                     <group>
-                        <field name="id"/>
-                        <field name="name"/>
+                        <field name="id" />
+                        <field name="name" />
                     </group>
                     <group>
-                        <field name="end_customer_id"/>
-                        <field name="invoice_id"/>
-                        <field name="supplier_invoice_id"/>
-                        <field name="employee_id"/>
-                        <field name="subcontractor_type"/>
+                        <field name="end_customer_id" />
+                        <field name="invoice_id" />
+                        <field name="supplier_invoice_id" />
+                        <field name="employee_id" />
+                        <field name="subcontractor_type" />
                     </group>
                     <group>
-                        <field name="quantity"/>
-                        <field name="uom_id"/>
-                        <field name="cost_price_unit"/>
-                        <field name="sale_price_unit"/>
-                        <field name="sale_price"/>
-                        <field name="cost_price"/>
+                        <field name="quantity" />
+                        <field name="uom_id" />
+                        <field name="cost_price_unit" />
+                        <field name="sale_price_unit" />
+                        <field name="sale_price" />
+                        <field name="cost_price" />
                     </group>
                     <group>
-                        <field name="state"/>
-                        <field name="invoice_date"/>
-                        <field name="subcontractor_state"/>
-                        <field name="supplier_invoice_line_id"/>
-                        <field name="subcontractor_invoice_line_id"/>
-                        <field name="customer_id"/>
-                        <field name="subcontractor_company_id"/>
-                        <field name="date_supplier_invoice"/>
+                        <field name="state" />
+                        <field name="invoice_date" />
+                        <field name="subcontractor_state" />
+                        <field name="supplier_invoice_line_id" />
+                        <field name="subcontractor_invoice_line_id" />
+                        <field name="customer_id" />
+                        <field name="subcontractor_company_id" />
+                        <field name="date_supplier_invoice" />
                     </group>
                 </sheet>
             </form>
@@ -70,27 +83,30 @@
         <field name="model">subcontractor.work</field>
         <field name="arch" type="xml">
             <tree string="Subcontractor work" editable="bottom">
-                <field name="id"/>
-                <field name="end_customer_id" string="Custo -mer (end)"/>
-                <field name="invoice_id"/>
-                <field name="supplier_invoice_id"/>
-                <field name="name"/>
-                <field name="employee_id"/>
-                <field name="subcontractor_type" string="Subcon -tractor type"/>
-                <field name="quantity" sum="Total Qty"/>
-                <field name="uom_id"/>
-                <field name="cost_price_unit"/>
-                <field name="sale_price_unit"/>
-                <field name="sale_price" sum="Total Sale Amount"/>
-                <field name="cost_price" sum="Total Cost Amount"/>
-                <field name="state"/>
-                <field name="invoice_date"/>
-                <field name="subcontractor_state" string="Subcon- tractor state"/>
-                <field name="supplier_invoice_line_id"/>
-                <field name="subcontractor_invoice_line_id"/>
-                <field name="customer_id"/>
-                <field name="subcontractor_company_id" string="Subcon- tractor company"/>
-                <field name="date_supplier_invoice"/>
+                <field name="id" />
+                <field name="end_customer_id" string="Custo -mer (end)" />
+                <field name="invoice_id" />
+                <field name="supplier_invoice_id" />
+                <field name="name" />
+                <field name="employee_id" />
+                <field name="subcontractor_type" string="Subcon -tractor type" />
+                <field name="quantity" sum="Total Qty" />
+                <field name="uom_id" />
+                <field name="cost_price_unit" />
+                <field name="sale_price_unit" />
+                <field name="sale_price" sum="Total Sale Amount" />
+                <field name="cost_price" sum="Total Cost Amount" />
+                <field name="state" />
+                <field name="invoice_date" />
+                <field name="subcontractor_state" string="Subcon- tractor state" />
+                <field name="supplier_invoice_line_id" />
+                <field name="subcontractor_invoice_line_id" />
+                <field name="customer_id" />
+                <field
+                    name="subcontractor_company_id"
+                    string="Subcon- tractor company"
+                />
+                <field name="date_supplier_invoice" />
            </tree>
         </field>
     </record>
@@ -104,9 +120,11 @@
         <field name="context">{"search_default_to_invoice":1}</field>
     </record>
 
-    <menuitem action="action_subcontractor_work"
+    <menuitem
+        action="action_subcontractor_work"
         id="menu_action_subcontractor_work"
         parent="account.menu_finance_receivables"
-        sequence="100"/>
+        sequence="100"
+    />
 
 </odoo>

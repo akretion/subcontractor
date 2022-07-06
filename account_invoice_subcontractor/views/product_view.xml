@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <odoo>
 
     <record id="product_template_form_view" model="ir.ui.view">
@@ -7,8 +7,8 @@
         <field name="arch" type="xml">
             <xpath expr="//page[@name='invoicing']" position="inside">
                 <group name="subcontractor_conf" string="Subcontractor" colspan="4">
-                    <field name="no_commission"/>
-                    <field name="subcontracted"/>
+                    <field name="no_commission" />
+                    <field name="subcontracted" />
                 </group>
             </xpath>
         </field>

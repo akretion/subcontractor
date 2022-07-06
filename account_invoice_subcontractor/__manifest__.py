@@ -8,7 +8,7 @@
     "category": "Generic Modules/Others",
     "license": "AGPL-3",
     "author": "Akretion",
-    "website": "http://www.akretion.com/",
+    "website": "https://github.com/akretion/subcontractor",
     "depends": [
         "hr",
         "account_invoice_inter_company",

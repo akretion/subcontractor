@@ -1,14 +1,35 @@
-[![Build Status](https://travis-ci.org/akretion/subcontractor.svg?branch=8.0)](https://travis-ci.org/akretion/)
-[![Coverage Status](https://coveralls.io/repos/akretion/subcontractor/badge.svg?branch=${BRANCH_NAME}&service=github)](https://coveralls.io/github/akretion/subcontractor?branch=8.0)
-[![Code Climate](https://codeclimate.com/github/akretion/subcontractor/badges/gpa.svg)](https://codeclimate.com/github/akretion/8.0)
 
-Sucontractor
+<!-- /!\ Non OCA Context : Set here the badge of your runbot / runboat instance. -->
+[![Pre-commit Status](https://github.com/akretion/subcontractor/actions/workflows/pre-commit.yml/badge.svg?branch=14.0)](https://github.com/akretion/subcontractor/actions/workflows/pre-commit.yml?query=branch%3A14.0)
+[![Build Status](https://github.com/akretion/subcontractor/actions/workflows/test.yml/badge.svg?branch=14.0)](https://github.com/akretion/subcontractor/actions/workflows/test.yml?query=branch%3A14.0)
+[![codecov](https://codecov.io/gh/akretion/subcontractor/branch/14.0/graph/badge.svg)](https://codecov.io/gh/akretion/subcontractor)
+<!-- /!\ Non OCA Context : Set here the badge of your translation instance. -->
 
-Akretion custom module to management subcontractor for service.
-This module add the concept subcontractor_type on employee. Want you invoice a customer you must affect a subcontrator repartition for each invoice line in order to invoice automatically the subcontractor
+<!-- /!\ do not modify above this line -->
 
-Roadmap
-- use black, pre-commit and configure Travis
-- block edition of timesheet if an invoice exist
-- add the concept of percentage of security on project
-- possibility to create an invoice directly from the wizard (with auto label from the project)
+# Subcontractor Work Invoicing
+
+None
+
+<!-- /!\ do not modify below this line -->
+
+<!-- prettier-ignore-start -->
+
+[//]: # (addons)
+
+This part will be replaced when running the oca-gen-addons-table script from OCA/maintainer-tools.
+
+[//]: # (end addons)
+
+<!-- prettier-ignore-end -->
+
+## Licenses
+
+This repository is licensed under [AGPL-3.0](LICENSE).
+
+However, each module can have a totally different license, as long as they adhere to Akretion
+policy. Consult each module's `__manifest__.py` file, which contains a `license` key
+that explains its license.
+
+----
+<!-- /!\ Non OCA Context : Set here the full description of your organization. -->

@@ -1,6 +1,6 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
 
@@ -62,8 +62,10 @@ class ProjectTask(models.Model):
         if "project_id" in vals:
             if not vals["project_id"]:
                 raise UserError(
-                    "The project can not be remove, "
-                    "please remove the timesheet first"
+                    _(
+                        "The project can not be remove, "
+                        "please remove the timesheet first"
+                    )
                 )
             else:
                 project = self.env["project.project"].browse(vals["project_id"])

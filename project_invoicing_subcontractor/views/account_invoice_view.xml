@@ -1,30 +1,38 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
 
 <record id="view_move_form" model="ir.ui.view">
     <field name="model">account.move</field>
-    <field name="inherit_id" ref="account.view_move_form"/>
+    <field name="inherit_id" ref="account.view_move_form" />
     <field name="arch" type="xml">
         <xpath expr="//tree/field[@name='quantity']" position="after">
-            <field name="task_invoiceable_days" optional="hidden"/>
+            <field name="task_invoiceable_days" optional="hidden" />
         </xpath>
         <div name="button_box" position="inside">
-           <button name="action_view_subcontractor"
-               type="object"
-               string="Subcontractor Work"
-               class="oe_stat_button"
-               icon="fa-users"/>
-           <button name="action_view_analytic_line"
-               type="object"
-               string="Timesheet"
-               class="oe_stat_button"
-               icon="fa-calendar"/>
+           <button
+                    name="action_view_subcontractor"
+                    type="object"
+                    string="Subcontractor Work"
+                    class="oe_stat_button"
+                    icon="fa-users"
+                />
+           <button
+                    name="action_view_analytic_line"
+                    type="object"
+                    string="Timesheet"
+                    class="oe_stat_button"
+                    icon="fa-calendar"
+                />
         </div>
         <xpath expr="//tree/field[@name='name']" position="after">
-            <field name="task_stage_id" optional="hide"/>
+            <field name="task_stage_id" optional="hide" />
         </xpath>
         <xpath expr="//tree/field[@name='quantity']" position="after">
-            <field name="timesheet_error" string="" attrs="{'column_invisible':[('parent.move_type', 'not in', ('out_invoice', 'out_refund'))]}"/>
+            <field
+                    name="timesheet_error"
+                    string=""
+                    attrs="{'column_invisible':[('parent.move_type', 'not in', ('out_invoice', 'out_refund'))]}"
+                />
         </xpath>
     </field>
 </record>
@@ -33,29 +41,39 @@
 <record id="view_account_invoice_line_form" model="ir.ui.view">
     <field name="model">account.move.line</field>
     <field name="type">form</field>
-    <field name="inherit_id" ref="account_invoice_subcontractor.view_move_line_subcontractor_form" />
+    <field
+            name="inherit_id"
+            ref="account_invoice_subcontractor.view_move_line_subcontractor_form"
+        />
     <field name="arch" type="xml">
         <xpath expr="//field[@name='product_id']" position="before">
-            <field name="task_id" readonly="1"/>
-            <field name="task_invoiceable_days" readonly="1"/>
+            <field name="task_id" readonly="1" />
+            <field name="task_invoiceable_days" readonly="1" />
         </xpath>
         <field name="quantity" position="after">
             <field
-                name="timesheet_error"
-                attrs="{'invisible': [('timesheet_error', '=', False)]}"/>
+                    name="timesheet_error"
+                    attrs="{'invisible': [('timesheet_error', '=', False)]}"
+                />
         </field>
         <xpath expr="//page[@name='subcontracting_work']" position="after">
-            <page name="timesheet_information"
-                   string="Timesheet"
-                   attrs="{'invisible': [('timesheet_line_ids','=', False)]}">
+            <page
+                    name="timesheet_information"
+                    string="Timesheet"
+                    attrs="{'invisible': [('timesheet_line_ids','=', False)]}"
+                >
                 <field name="timesheet_line_ids">
                     <tree>
-                        <field name="date"/>
-                        <field name="user_id"/>
-                        <field name="name"/>
-                        <field name="unit_amount" sum="Total" widget="float_time"/>
-                        <field name="discount"/>
-                        <field name="invoiceable_amount" sum="Total" widget="float_time"/>
+                        <field name="date" />
+                        <field name="user_id" />
+                        <field name="name" />
+                        <field name="unit_amount" sum="Total" widget="float_time" />
+                        <field name="discount" />
+                        <field
+                                name="invoiceable_amount"
+                                sum="Total"
+                                widget="float_time"
+                            />
                    </tree>
                 </field>
             </page>

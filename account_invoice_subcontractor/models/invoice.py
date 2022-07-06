@@ -21,13 +21,13 @@ class AccountMoveLine(models.Model):
     )
     subcontractor_work_invoiced_id = fields.Many2one(
         "subcontractor.work",
-        compute="_get_work_invoiced",
-        inverse="_set_work_invoiced",
+        compute="_compute_subcontractor_work_invoiced_id",
+        inverse="_inverse_subcontractor_work_invoiced_id",
         string="Invoiced Work",
         store=True,
     )
     invalid_work_amount = fields.Boolean(
-        compute="_is_work_amount_invalid", string="Work Amount Invalid", store=True
+        compute="_compute_invalid_work_amount", string="Work Amount Invalid", store=True
     )
     subcontractors = fields.Char(string="Sub C.", compute="_compute_subcontractors")
 
@@ -44,7 +44,7 @@ class AccountMoveLine(models.Model):
             rec.subcontracted = rec.product_id.subcontracted
 
     @api.depends("move_id", "move_id.move_type")
-    def _get_work_invoiced(self):
+    def _compute_subcontractor_work_invoiced_id(self):
         for line in self:
             field = self._map_type.get(line.move_id.move_type, False)
             if field:
@@ -53,7 +53,7 @@ class AccountMoveLine(models.Model):
                 if work:
                     line.subcontractor_work_invoiced_id = work.id
 
-    def _set_work_invoiced(self):
+    def _inverse_subcontractor_work_invoiced_id(self):
         for line in self:
             work = line.subcontractor_work_invoiced_id
             if work:
@@ -73,7 +73,7 @@ class AccountMoveLine(models.Model):
         "price_subtotal",
         "subcontracted",
     )
-    def _is_work_amount_invalid(self):
+    def _compute_invalid_work_amount(self):
         for line in self:
             if line.subcontracted:
                 if line.move_id.move_type in ["in_invoice", "in_refund"]:
@@ -135,15 +135,17 @@ class AccountMoveLine(models.Model):
 class AccountMove(models.Model):
     _inherit = "account.move"
 
-    to_pay = fields.Boolean(compute="_get_to_pay", store=True, compute_sudo=True)
-    invalid_work_amount = fields.Boolean(compute="_is_work_amount_valid", store=True)
+    to_pay = fields.Boolean(compute="_compute_to_pay", store=True, compute_sudo=True)
+    invalid_work_amount = fields.Boolean(
+        compute="_compute_invalid_work_amount", store=True
+    )
 
     @api.depends(
         "invoice_line_ids",
         "invoice_line_ids.subcontractor_work_invoiced_id",
         "invoice_line_ids.subcontractor_work_invoiced_id.state",
     )
-    def _get_to_pay(self):
+    def _compute_to_pay(self):
         for invoice in self:
             if invoice.move_type in ["in_invoice", "in_refund"]:
                 if invoice.payment_state == "paid":
@@ -157,7 +159,7 @@ class AccountMove(models.Model):
                     )
 
     @api.depends("invoice_line_ids", "invoice_line_ids.invalid_work_amount")
-    def _is_work_amount_valid(self):
+    def _compute_invalid_work_amount(self):
         for invoice in self:
             invoice.invalid_work_amount = any(
                 [line.invalid_work_amount for line in invoice.invoice_line_ids]

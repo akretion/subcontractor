@@ -1,131 +1,155 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
 
     <record id="product_product_1" model="product.product">
         <field name="name">consulting</field>
-        <field name="categ_id" ref="product.product_category_3"/>
+        <field name="categ_id" ref="product.product_category_3" />
         <field name="list_price">500</field>
         <field name="type">service</field>
-        <field name="uom_id" ref="uom.product_uom_day"/>
-        <field name="uom_po_id" ref="uom.product_uom_day"/>
+        <field name="uom_id" ref="uom.product_uom_day" />
+        <field name="uom_po_id" ref="uom.product_uom_day" />
     </record>
 
     <record id="project_project_1" model="project.project">
-        <field name="date_start" eval="time.strftime('%Y-%m-01 10:00:00')"/>
-        <field name="partner_id" ref="base.res_partner_4"/>
+        <field name="date_start" eval="time.strftime('%Y-%m-01 10:00:00')" />
+        <field name="partner_id" ref="base.res_partner_4" />
         <field name="name">Customer Project</field>
         <field name="invoicing_mode">customer</field>
         <field name="color">5</field>
-        <field name="user_id" ref="base.user_demo"/>
-        <field name="invoicing_stage_id" eval="ref('project.project_stage_3')"/>
-        <field name="product_id" eval="ref('product_product_1')"/>
-        <field name="uom_id" eval="ref('uom.product_uom_day')"/>
-        <field name="type_ids" eval="[(4, ref('project.project_stage_0')), (4, ref('project.project_stage_1')), (4, ref('project.project_stage_2')), (4, ref('project.project_stage_3'))]"/>
+        <field name="user_id" ref="base.user_demo" />
+        <field name="invoicing_stage_id" eval="ref('project.project_stage_3')" />
+        <field name="product_id" eval="ref('product_product_1')" />
+        <field name="uom_id" eval="ref('uom.product_uom_day')" />
+        <field
+            name="type_ids"
+            eval="[(4, ref('project.project_stage_0')), (4, ref('project.project_stage_1')), (4, ref('project.project_stage_2')), (4, ref('project.project_stage_3'))]"
+        />
     </record>
 
     <!-- Tasks -->
     <record id="project_task_1" model="project.task">
-        <field name="user_id" ref="base.user_demo"/>
+        <field name="user_id" ref="base.user_demo" />
         <field name="invoicing">finished</field>
         <field name="priority">0</field>
-        <field name="project_id" ref="project_project_1"/>
+        <field name="project_id" ref="project_project_1" />
         <field name="name">Task 1</field>
-        <field name="stage_id" ref="project.project_stage_0"/>
+        <field name="stage_id" ref="project.project_stage_0" />
         <field name="color">3</field>
     </record>
 
     <record id="project_task_2" model="project.task">
-        <field name="user_id" ref="base.user_demo"/>
+        <field name="user_id" ref="base.user_demo" />
         <field name="invoicing">progressive</field>
         <field name="priority">0</field>
-        <field name="project_id" ref="project_project_1"/>
+        <field name="project_id" ref="project_project_1" />
         <field name="name">Task 2</field>
-        <field name="stage_id" ref="project.project_stage_1"/>
+        <field name="stage_id" ref="project.project_stage_1" />
         <field name="color">3</field>
     </record>
 
     <record id="project_task_3" model="project.task">
-        <field name="user_id" ref="base.user_demo"/>
+        <field name="user_id" ref="base.user_demo" />
         <field name="invoicing">finished</field>
         <field name="priority">0</field>
-        <field name="project_id" ref="project_project_1"/>
+        <field name="project_id" ref="project_project_1" />
         <field name="name">Task 3</field>
-        <field name="stage_id" ref="project.project_stage_2"/>
+        <field name="stage_id" ref="project.project_stage_2" />
         <field name="color">3</field>
     </record>
 
     <record id="project_task_4" model="project.task">
-        <field name="user_id" ref="base.user_demo"/>
+        <field name="user_id" ref="base.user_demo" />
         <field name="invoicing">finished</field>
         <field name="priority">0</field>
-        <field name="project_id" ref="project_project_1"/>
+        <field name="project_id" ref="project_project_1" />
         <field name="name">Task 4</field>
-        <field name="stage_id" ref="project.project_stage_2"/>
+        <field name="stage_id" ref="project.project_stage_2" />
         <field name="color">3</field>
     </record>
 
     <!-- Timesheets -->
     <record id="account_analytic_line_1" model="account.analytic.line">
-        <field name="user_id" ref="base.user_demo"/>
+        <field name="user_id" ref="base.user_demo" />
         <field name="name">demo 1</field>
-        <field name="date" eval="(DateTime.today() - relativedelta(days=1)).strftime('%Y-%m-%d %H:%M')"/>
+        <field
+            name="date"
+            eval="(DateTime.today() - relativedelta(days=1)).strftime('%Y-%m-%d %H:%M')"
+        />
         <field name="unit_amount">2.00</field>
-        <field name="project_id" ref="project_project_1"/>
-        <field name="task_id" ref="project_task_1"/>
+        <field name="project_id" ref="project_project_1" />
+        <field name="task_id" ref="project_task_1" />
     </record>
 
     <record id="account_analytic_line_2" model="account.analytic.line">
-        <field name="user_id" ref="base.user_demo"/>
+        <field name="user_id" ref="base.user_demo" />
         <field name="name">demo 2</field>
-        <field name="date" eval="(DateTime.today() - relativedelta(days=2)).strftime('%Y-%m-%d %H:%M')"/>
+        <field
+            name="date"
+            eval="(DateTime.today() - relativedelta(days=2)).strftime('%Y-%m-%d %H:%M')"
+        />
         <field name="unit_amount">10.00</field>
-        <field name="project_id" ref="project_project_1"/>
-        <field name="task_id" ref="project_task_2"/>
+        <field name="project_id" ref="project_project_1" />
+        <field name="task_id" ref="project_task_2" />
     </record>
 
     <record id="account_analytic_line_3" model="account.analytic.line">
-        <field name="user_id" ref="base.user_demo"/>
+        <field name="user_id" ref="base.user_demo" />
         <field name="name">demo 3</field>
-        <field name="date" eval="(DateTime.today() - relativedelta(days=3)).strftime('%Y-%m-%d %H:%M')"/>
+        <field
+            name="date"
+            eval="(DateTime.today() - relativedelta(days=3)).strftime('%Y-%m-%d %H:%M')"
+        />
         <field name="unit_amount">8.00</field>
-        <field name="project_id" ref="project_project_1"/>
-        <field name="task_id" ref="project_task_3"/>
+        <field name="project_id" ref="project_project_1" />
+        <field name="task_id" ref="project_task_3" />
     </record>
 
     <record id="account_analytic_line_4" model="account.analytic.line">
-        <field name="user_id" ref="base.user_demo"/>
+        <field name="user_id" ref="base.user_demo" />
         <field name="name">demo 4</field>
-        <field name="date" eval="(DateTime.today() - relativedelta(days=4)).strftime('%Y-%m-%d %H:%M')"/>
+        <field
+            name="date"
+            eval="(DateTime.today() - relativedelta(days=4)).strftime('%Y-%m-%d %H:%M')"
+        />
         <field name="unit_amount">4.00</field>
-        <field name="project_id" ref="project_project_1"/>
-        <field name="task_id" ref="project_task_3"/>
+        <field name="project_id" ref="project_project_1" />
+        <field name="task_id" ref="project_task_3" />
     </record>
 
     <record id="account_analytic_line_5" model="account.analytic.line">
-        <field name="user_id" ref="base.user_demo"/>
+        <field name="user_id" ref="base.user_demo" />
         <field name="name">demo 5</field>
-        <field name="date" eval="(DateTime.today() - relativedelta(days=5)).strftime('%Y-%m-%d %H:%M')"/>
+        <field
+            name="date"
+            eval="(DateTime.today() - relativedelta(days=5)).strftime('%Y-%m-%d %H:%M')"
+        />
         <field name="unit_amount">6.00</field>
-        <field name="project_id" ref="project_project_1"/>
-        <field name="task_id" ref="project_task_4"/>
+        <field name="project_id" ref="project_project_1" />
+        <field name="task_id" ref="project_task_4" />
     </record>
 
     <record id="account_analytic_line_6" model="account.analytic.line">
-        <field name="user_id" ref="base.user_admin"/>
+        <field name="user_id" ref="base.user_admin" />
         <field name="name">demo 6</field>
-        <field name="date" eval="(DateTime.today() - relativedelta(days=5)).strftime('%Y-%m-%d %H:%M')"/>
+        <field
+            name="date"
+            eval="(DateTime.today() - relativedelta(days=5)).strftime('%Y-%m-%d %H:%M')"
+        />
         <field name="unit_amount">2.00</field>
-        <field name="project_id" ref="project_project_1"/>
-        <field name="task_id" ref="project_task_3"/>
+        <field name="project_id" ref="project_project_1" />
+        <field name="task_id" ref="project_task_3" />
     </record>
 
     <record id="account_analytic_line_7" model="account.analytic.line">
-        <field name="user_id" ref="base.user_demo"/>
+        <field name="user_id" ref="base.user_demo" />
         <field name="name">demo 7</field>
-        <field name="date" eval="(DateTime.today() - relativedelta(days=5)).strftime('%Y-%m-%d %H:%M')"/>
+        <field
+            name="date"
+            eval="(DateTime.today() - relativedelta(days=5)).strftime('%Y-%m-%d %H:%M')"
+        />
         <field name="unit_amount">4.00</field>
-        <field name="project_id" ref="project_project_1"/>
-        <field name="task_id" ref="project_task_4"/>
+        <field name="project_id" ref="project_project_1" />
+        <field name="task_id" ref="project_task_4" />
     </record>
 
 </odoo>

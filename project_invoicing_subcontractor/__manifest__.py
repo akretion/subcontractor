@@ -4,7 +4,7 @@
     "name": "project_invoicing_subcontractor",
     "version": "14.0.1.0.0",
     "author": "Akretion",
-    "website": "www.akretion.com",
+    "website": "https://github.com/akretion/subcontractor",
     "license": "AGPL-3",
     "category": "Generic Modules",
     "summary": """Generate the subcontractor work automatically
