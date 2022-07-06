@@ -67,7 +67,7 @@ class SupplierTimesheetInvoice(models.TransientModel):
             )
 
         quantity = tlines._get_invoiceable_qty_with_project_unit(project=project)
-        return {
+        vals = {
             "task_id": task.id,
             "product_id": project.product_id.id,
             "name": "[{}] {}".format(task.id, task.name),
@@ -75,9 +75,32 @@ class SupplierTimesheetInvoice(models.TransientModel):
             "product_uom_id": project.uom_id.id,
             "price_unit": project.supplier_invoice_price_unit,
             "account_id": project.supplier_invoice_account_expense_id.id,
-            "analytic_account_id": project.analytic_account_id.id,
             "quantity": quantity,
+            "recompute_tax_line": True,
         }
+        # it is important to play the onchanges here because of a (very) obscure bug.
+        # if we do not play onchange, when we write the invoice_line_ids on the invoice
+        # odoo will unlink all existing lines and create new one, so we loose the link
+        # between the timesheet lines and the invoice line.
+        # when we play the onchange, I don't know why but odoo's behavior is different
+        # it will keep the existing invoice lines and so keep the link.
+        # As far as I saw, during the write of invoice_line_ids, odoo goes there :
+        # _move_autocomplete_invoice_lines_write and invoice_new.line_ids are
+        # NewId without origin if we did not play the onchange and with origin if
+        # onchange helper was used.
+        # Then when it goes in _move_autocomplete_invoice_lines_values and if
+        # convert the record to write, if the NewId invoice lines have no origin
+        # Odoo will unlink old lines and create new one. If NewId origin is set
+        # it will keep the old lines.
+        # the test catch the bug anyway...
+        vals = self.env["account.move.line"].play_onchanges(
+            vals, ["product_id", "product_uom_id"]
+        )
+        # Here we add analytic_account_id after the onchange because play_onchanges
+        # drop the value, because it is a compute field with not inverse method.
+        # maybe onchange_helper requires a fix about this
+        vals["analytic_account_id"] = project.analytic_account_id.id
+        return vals
 
     def _add_update_invoice_line(self, task, tlines):
         inv_line = task.invoice_line_ids.filtered(

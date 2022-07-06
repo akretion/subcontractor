@@ -162,6 +162,7 @@ class TestInvoicing(TransactionCase):
                 "supplier_invoice_price_unit": 450,
             }
         )
+        analytic_account = internal_project.analytic_account_id
         line_ids = [self.line_4.id, self.line_5.id]
         wizard = (
             self.env["supplier.timesheet.invoice"]
@@ -182,6 +183,7 @@ class TestInvoicing(TransactionCase):
         )
         self.assertEqual(line1.price_unit, 450)
         self.assertEqual(line1.quantity, 0.5)
+        self.assertEqual(line1.analytic_account_id.id, analytic_account.id)
 
         line_ids = [self.line_3.id]
         wizard = (
@@ -202,3 +204,4 @@ class TestInvoicing(TransactionCase):
         )
         self.assertEqual(line1.quantity, 1.5)
         self.assertEqual(line1.price_unit, 450)
+        self.assertEqual(line1.analytic_account_id.id, analytic_account.id)
