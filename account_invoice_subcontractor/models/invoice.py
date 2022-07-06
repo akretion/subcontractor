@@ -144,6 +144,8 @@ class AccountMove(models.Model):
         "invoice_line_ids",
         "invoice_line_ids.subcontractor_work_invoiced_id",
         "invoice_line_ids.subcontractor_work_invoiced_id.state",
+        "payment_state",
+        "move_type",
     )
     def _compute_to_pay(self):
         for invoice in self:
