@@ -77,6 +77,7 @@ class SupplierTimesheetInvoice(models.TransientModel):
             "account_id": project.supplier_invoice_account_expense_id.id,
             "quantity": quantity,
             "recompute_tax_line": True,
+            "analytic_account_id": project.analytic_account_id.id,
         }
         # it is important to play the onchanges here because of a (very) obscure bug.
         # if we do not play onchange, when we write the invoice_line_ids on the invoice
@@ -96,10 +97,6 @@ class SupplierTimesheetInvoice(models.TransientModel):
         vals = self.env["account.move.line"].play_onchanges(
             vals, ["product_id", "product_uom_id"]
         )
-        # Here we add analytic_account_id after the onchange because play_onchanges
-        # drop the value, because it is a compute field with not inverse method.
-        # maybe onchange_helper requires a fix about this
-        vals["analytic_account_id"] = project.analytic_account_id.id
         return vals
 
     def _add_update_invoice_line(self, task, tlines):
