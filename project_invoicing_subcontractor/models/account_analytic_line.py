@@ -1,6 +1,6 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl)
 
-from odoo import api, fields, models
+from odoo import api, exceptions, fields, models
 
 
 class AccountAnalyticLine(models.Model):
@@ -45,6 +45,16 @@ class AccountAnalyticLine(models.Model):
                 )
             else:
                 record.date_invoiceable = None
+
+    def write(self, vals):
+        if vals.get("subcontractor_work_id"):
+            already_invoiced = self.filtered(lambda aal: aal.subcontractor_work_id)
+            if already_invoiced:
+                raise exceptions.UserError_(
+                    "You can't invoice timesheets %s, it has already been invoiced"
+                    % already_invoiced.ids
+                )
+        return super().write(vals)
 
     def is_invoiceable(self):
         self.ensure_one()
