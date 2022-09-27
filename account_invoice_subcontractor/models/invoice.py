@@ -105,8 +105,8 @@ class AccountMoveLine(models.Model):
             return abs(subtotal - self.price_subtotal) > 5
 
     @api.model
-    def _prepare_account_move_line(self, dest_invoice, dest_company):
-        res = super()._prepare_account_move_line(dest_invoice, dest_company)
+    def _prepare_account_move_line(self, dest_invoice, dest_company, form=False):
+        res = super()._prepare_account_move_line(dest_invoice, dest_company, form=form)
         res["subcontractor_work_invoiced_id"] = self.subcontractor_work_invoiced_id.id
         return res
 
