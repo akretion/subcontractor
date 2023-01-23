@@ -28,3 +28,12 @@ class HrEmployee(models.Model):
     commission_rate = fields.Float(
         help="Rate in % for the commission on subcontractor work", default=10.00
     )
+
+    def _get_employee_invoice_partner(self):
+        self.ensure_one()
+        partner = self.env["res.partner"]
+        if self.subcontractor_type == "internal":
+            partner = self.subcontractor_company_id.partner_id
+        elif self.subcontractor_type == "external":
+            partner = self.user_id.partner_id
+        return partner

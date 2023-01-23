@@ -269,7 +269,7 @@ class SubcontractorWork(models.Model):
                 orig_invoice.move_type == "out_invoice" and "in_invoice" or "in_refund"
             )
             journal_type = "purchase"
-            partner = self.employee_id.user_id.partner_id
+            partner = self.employee_id._get_employee_invoice_partner()
         if invoice_type in ["out_invoice", "out_refund"]:
             user = self.env["res.users"].search(
                 [("company_id", "=", company.id)], limit=1
