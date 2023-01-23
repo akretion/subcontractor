@@ -35,5 +35,5 @@ class HrEmployee(models.Model):
         if self.subcontractor_type == "internal":
             partner = self.subcontractor_company_id.partner_id
         elif self.subcontractor_type == "external":
-            partner = self.employee_id.user_id.partner_id
+            partner = self.user_id.partner_id
         return partner
