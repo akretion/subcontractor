@@ -54,9 +54,7 @@ class SupplierTimesheetInvoice(models.TransientModel):
             else:
                 record.error = False
                 record.employee_id = tlines.mapped("user_id.employee_ids")[0]
-                record.partner_id = (
-                    record.employee_id.subcontractor_company_id.partner_id
-                )
+                record.partner_id = record.employee_id._get_employee_invoice_partner()
 
     def _prepare_invoice_line(self, task, tlines):
         project = self.force_project_id or task.project_id
@@ -69,6 +67,7 @@ class SupplierTimesheetInvoice(models.TransientModel):
         quantity = tlines._get_invoiceable_qty_with_project_unit(project=project)
         vals = {
             "task_id": task.id,
+            "move_id": self.invoice_id.id,
             "product_id": project.product_id.id,
             "name": "[{}] {}".format(task.id, task.name),
             "subcontracted": False,
