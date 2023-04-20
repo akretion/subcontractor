@@ -6,7 +6,7 @@ from odoo import api, exceptions, fields, models
 class AccountAnalyticLine(models.Model):
     _inherit = "account.analytic.line"
 
-    subcontractor_work_id = fields.Many2one("subcontractor.work")
+    subcontractor_work_id = fields.Many2one("subcontractor.work", copy=False)
     invoice_line_id = fields.Many2one(
         "account.move.line",
         compute="_compute_invoice_line",
