@@ -119,6 +119,18 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             "product_uom_id": task.project_id.uom_id.id,
             "quantity": quantity,
         }
+        if hasattr(self.env["account.move.line"], "start_date") and hasattr(
+            self.env["account.move.line"], "end_date"
+        ):
+            start_date = min(timesheet_lines.mapped("date"))
+            end_date = max(timesheet_lines.mapped("date"))
+            vals.update(
+                {
+                    "start_date": start_date,
+                    "end_date": end_date,
+                }
+            )
+
         # onchange_product_id call the product_uom_id on change but with default
         # product_uom (like in UI) So, the uom we give is erased and the price unit
         # is wrong. But AFAIK playonchanges does not erase a given value on original
