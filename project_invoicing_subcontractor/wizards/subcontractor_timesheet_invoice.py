@@ -2,6 +2,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl)
 
 from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 
 class SubcontractorTimesheetInvoice(models.TransientModel):
@@ -96,6 +97,17 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         for timesheet_line in timesheet_lines:
             task = timesheet_line.task_id
             if task.parent_id and self.invoice_parent_task:
+                if task.project_id != task.parent_id.project_id:
+                    raise UserError(
+                        _(
+                            "Task '%(task_name)s' do not belong to the same "
+                            "project of the parent task '%(parent_task_name)s'"
+                        )
+                        % dict(
+                            task_name=task.name,
+                            parent_task_name=task.parent_id.name,
+                        )
+                    )
                 task = task.parent_id
             task_id = task.id
             if task_id not in result:
