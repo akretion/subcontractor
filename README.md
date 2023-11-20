@@ -17,7 +17,12 @@ None
 
 [//]: # (addons)
 
-This part will be replaced when running the oca-gen-addons-table script from OCA/maintainer-tools.
+Available addons
+----------------
+addon | version | maintainers | summary
+--- | --- | --- | ---
+[account_invoice_subcontractor](account_invoice_subcontractor/) | 14.0.0.0.2 |  | Account Invoice Subcontractor
+[project_invoicing_subcontractor](project_invoicing_subcontractor/) | 14.0.1.0.1 |  | Generate the subcontractor work automatically when creating an invoice from the project invoicing menu
 
 [//]: # (end addons)
 

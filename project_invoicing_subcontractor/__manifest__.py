@@ -2,7 +2,7 @@
 
 {
     "name": "project_invoicing_subcontractor",
-    "version": "14.0.1.0.0",
+    "version": "14.0.1.0.1",
     "author": "Akretion",
     "website": "https://github.com/akretion/subcontractor",
     "license": "AGPL-3",
