@@ -78,6 +78,18 @@ class SupplierTimesheetInvoice(models.TransientModel):
             "recompute_tax_line": True,
             "analytic_account_id": project.analytic_account_id.id,
         }
+        if hasattr(self.env["account.move.line"], "start_date") and hasattr(
+            self.env["account.move.line"], "end_date"
+        ):
+            start_date = min(tlines.mapped("date"))
+            end_date = max(tlines.mapped("date"))
+            vals.update(
+                {
+                    "start_date": start_date,
+                    "end_date": end_date,
+                }
+            )
+
         # it is important to play the onchanges here because of a (very) obscure bug.
         # if we do not play onchange, when we write the invoice_line_ids on the invoice
         # odoo will unlink all existing lines and create new one, so we loose the link
