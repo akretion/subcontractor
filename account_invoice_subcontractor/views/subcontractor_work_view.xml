@@ -82,7 +82,7 @@
     <record id="view_subcontractor_work_view_tree" model="ir.ui.view">
         <field name="model">subcontractor.work</field>
         <field name="arch" type="xml">
-            <tree string="Subcontractor work" editable="bottom">
+            <tree editable="bottom">
                 <field name="id" />
                 <field name="end_customer_id" string="Custo -mer (end)" />
                 <field name="invoice_id" />

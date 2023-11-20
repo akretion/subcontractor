@@ -4,35 +4,25 @@
   Copyright (C) 2013-TODAY Akretion <http://www.akretion.com>.
   The licence is in the file __openerp__.py
 -->
-<openerp>
-    <data>
+<odoo>
 
-        <record model="res.groups" id="group_have_subcontractor">
-            <field name="name">Have Subcontractor</field>
-            <field
-                name="category_id"
-                ref="base.module_category_accounting_and_finance"
-            />
-        </record>
+    <record model="res.groups" id="group_have_subcontractor">
+        <field name="name">Have Subcontractor</field>
+        <field name="category_id" ref="base.module_category_accounting_and_finance" />
+    </record>
 
-        <record model="res.groups" id="group_is_subcontractor">
-            <field name="name">Is Subcontractor</field>
-            <field
-                name="category_id"
-                ref="base.module_category_accounting_and_finance"
-            />
-        </record>
-    </data>
+    <record model="res.groups" id="group_is_subcontractor">
+        <field name="name">Is Subcontractor</field>
+        <field name="category_id" ref="base.module_category_accounting_and_finance" />
+    </record>
 
-    <data>
-        <record id="subcontractor_rule" model="ir.rule">
-            <field name="name">Subcontractor_rule</field>
-            <field name="model_id" ref="model_subcontractor_work" />
-            <field name="global" eval="True" />
-            <field
-                name="domain_force"
-            >['|',('subcontractor_company_id','in', company_ids), '|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
-        </record>
+    <record id="subcontractor_rule" model="ir.rule">
+        <field name="name">Subcontractor_rule</field>
+        <field name="model_id" ref="model_subcontractor_work" />
+        <field name="global" eval="True" />
+        <field
+            name="domain_force"
+        >['|',('subcontractor_company_id','in', company_ids), '|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
 
-    </data>
-</openerp>
+</odoo>
