@@ -205,3 +205,10 @@ class TestInvoicing(TransactionCase):
         self.assertEqual(line1.quantity, 1.5)
         self.assertEqual(line1.price_unit, 450)
         self.assertEqual(line1.analytic_account_id.id, analytic_account.id)
+
+    def test_write_unlink_invoiced(self):
+        self._create_invoice()
+        with self.assertRaises(UserError):
+            self.line_3.unit_amount = 1000
+        with self.assertRaises(UserError):
+            self.line_3.unlink()
