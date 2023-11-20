@@ -2,6 +2,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl)
 
 from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 
 class SubcontractorTimesheetInvoice(models.TransientModel):
@@ -15,6 +16,17 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
     )
     invoice_id = fields.Many2one("account.move")
     error = fields.Text(readonly=True)
+    invoice_parent_task = fields.Boolean()
+    has_parent_task = fields.Boolean(compute="_compute_has_parent_task")
+
+    @api.depends_context("active_ids")
+    @api.depends("partner_id")
+    def _compute_has_parent_task(self):
+        for record in self:
+            timesheet_lines = self.env["account.analytic.line"].browse(
+                self.env.context.get("active_ids", [])
+            )
+            record.has_parent_task = bool(timesheet_lines.parent_task_id)
 
     def _get_partner_ids(self):
         partner_ids = []
@@ -83,7 +95,21 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         if result is None:
             result = {}
         for timesheet_line in timesheet_lines:
-            task_id = timesheet_line.task_id.id
+            task = timesheet_line.task_id
+            if task.parent_id and self.invoice_parent_task:
+                if task.project_id != task.parent_id.project_id:
+                    raise UserError(
+                        _(
+                            "Task '%(task_name)s' do not belong to the same "
+                            "project of the parent task '%(parent_task_name)s'"
+                        )
+                        % dict(
+                            task_name=task.name,
+                            parent_task_name=task.parent_id.name,
+                        )
+                    )
+                task = task.parent_id
+            task_id = task.id
             if task_id not in result:
                 result[task_id] = {}
             employee_id = timesheet_line.employee_id.id

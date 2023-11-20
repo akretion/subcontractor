@@ -9,6 +9,12 @@
                 <p>You can select an existing invoice to add new line on it</p>
             <group>
                 <field name='partner_id' />
+                <field name='has_parent_task' invisible="1" />
+                <field
+                        name="invoice_parent_task"
+                        attrs="{'invisible': [('has_parent_task', '=', False)]}"
+                    />
+
                 <field
                         name='create_invoice'
                         attrs="{'invisible': [('invoice_id', '!=', False)]}"

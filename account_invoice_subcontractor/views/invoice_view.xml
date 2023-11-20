@@ -20,7 +20,7 @@
                             <field name="subcontractor_work_ids"
                                    groups="account_invoice_subcontractor.group_have_subcontractor"
                                    nolabel="1">
-                                <tree string="Subcontractor work" editable="bottom">
+                                <tree editable="bottom">
                                     <field name="employee_id"/>
                                     <field name="subcontractor_type" invisible="True"/>
                                     <field name="quantity" sum="Total Qty"/>
@@ -86,7 +86,7 @@
                 />
                     <field name="subcontracted" optional="hide" />
                     <field name="subcontractor_work_ids" invisible="1">
-                        <tree string="Subcontractor work" editable="bottom">
+                        <tree editable="bottom">
                             <field name="employee_id" />
                             <field name="subcontractor_type" invisible="True" />
                             <field name="quantity" sum="Total Qty" />
@@ -103,7 +103,7 @@
             >
                     <field name="subcontracted" optional="hide" />
                     <field name="subcontractor_work_ids" invisible="1">
-                        <tree string="Subcontractor work" editable="bottom">
+                        <tree editable="bottom">
                             <field name="employee_id" />
                             <field name="subcontractor_type" invisible="True" />
                             <field name="quantity" sum="Total Qty" />
@@ -131,7 +131,7 @@
                         groups="account_invoice_subcontractor.group_have_subcontractor"
                         nolabel="1"
                     >
-                            <tree string="Subcontractor work" editable="bottom">
+                            <tree editable="bottom">
                                 <field name="employee_id" />
                                 <field name="subcontractor_type" invisible="True" />
                                 <field name="quantity" sum="Total Qty" />
@@ -226,10 +226,7 @@
                                 groups="account_invoice_subcontractor.group_have_subcontractor"
                                 nolabel="1"
                             >
-                                        <tree
-                                    string="Subcontractor work"
-                                    editable="bottom"
-                                >
+                                        <tree editable="bottom">
                                             <field name="employee_id" />
                                             <field
                                         name="subcontractor_type"

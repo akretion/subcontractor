@@ -25,6 +25,7 @@ class AccountAnalyticLine(models.Model):
     discount = fields.Float(digits="Discount", default=0)
     invoiceable_amount = fields.Float(compute="_compute_invoiceable_amount", store=True)
     date_invoiceable = fields.Date(compute="_compute_date_invoiceable", store=True)
+    parent_task_id = fields.Many2one(related="task_id.parent_id", store=True)
 
     @api.depends("subcontractor_work_id", "supplier_invoice_line_id")
     def _compute_invoice_line(self):
