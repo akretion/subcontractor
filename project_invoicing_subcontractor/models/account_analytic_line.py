@@ -1,6 +1,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl)
 
-from odoo import api, exceptions, fields, models
+from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 
 class AccountAnalyticLine(models.Model):
@@ -48,12 +49,23 @@ class AccountAnalyticLine(models.Model):
                 record.date_invoiceable = None
 
     def write(self, vals):
-        if vals.get("subcontractor_work_id"):
+        if any(
+            field in vals
+            for field in [
+                "employee_id",
+                "unit_amount",
+                "discount",
+                "task_id",
+                "subcontractor_work_id",
+            ]
+        ):
             already_invoiced = self.filtered(lambda aal: aal.subcontractor_work_id)
             if already_invoiced:
-                raise exceptions.UserError_(
-                    "You can't invoice timesheets %s, it has already been invoiced"
-                    % already_invoiced.ids
+                raise UserError(
+                    _(
+                        "You can't edit timesheets %s, it has already been invoiced"
+                        % already_invoiced.ids
+                    )
                 )
         return super().write(vals)
 
@@ -105,3 +117,14 @@ class AccountAnalyticLine(models.Model):
         else:
             # TODO see if we have the case
             raise NotImplementedError
+
+    def unlink(self):
+        already_invoiced = self.filtered(lambda aal: aal.subcontractor_work_id)
+        if already_invoiced:
+            raise UserError(
+                _(
+                    "You can't delete timesheets %s, it has already been invoiced"
+                    % already_invoiced.ids
+                )
+            )
+        return super().unlink()

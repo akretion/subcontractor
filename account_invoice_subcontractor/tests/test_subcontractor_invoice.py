@@ -2,6 +2,7 @@
 
 from datetime import date, timedelta
 
+from odoo.exceptions import UserError
 from odoo.tests.common import Form
 
 from odoo.addons.account_invoice_inter_company.tests.test_inter_company_invoice import (
@@ -139,3 +140,11 @@ class TestSubcontractorInvoice(TestAccountInvoiceInterCompanyBase):
         self.assertEqual(
             invoice_c.invoice_line_ids.subcontractor_work_invoiced_id, subwork
         )
+        with self.assertRaises(UserError):
+            subwork.subcontractor_invoice_line_id = 1000
+        with self.assertRaises(UserError):
+            subwork.supplier_invoice_line_id = 1000
+        with self.assertRaises(UserError):
+            subwork.quantity = 1000
+        with self.assertRaises(UserError):
+            subwork.unlink()

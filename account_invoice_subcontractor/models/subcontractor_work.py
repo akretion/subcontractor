@@ -56,7 +56,6 @@ class SubcontractorWork(models.Model):
         comodel_name="account.move",
         related="supplier_invoice_line_id.move_id",
         string="Supplier Invoice",
-        readonly=True,
         store=True,
     )
     date_supplier_invoice = fields.Date(
@@ -77,20 +76,17 @@ class SubcontractorWork(models.Model):
         comodel_name="res.company",
         related="invoice_line_id.company_id",
         string="Company",
-        readonly=True,
         store=True,
     )
     customer_id = fields.Many2one(
         comodel_name="res.partner",
         related="company_id.partner_id",
-        readonly=True,
         string="Customer",
         store=True,
     )
     end_customer_id = fields.Many2one(
         comodel_name="res.partner",
         related="invoice_id.partner_id",
-        readonly=True,
         store=True,
         string="Customer(end)",
     )
@@ -102,7 +98,6 @@ class SubcontractorWork(models.Model):
     subcontractor_company_id = fields.Many2one(
         comodel_name="res.company",
         related="employee_id.subcontractor_company_id",
-        readonly=True,
         store=True,
         string="Subcontractor Company",
     )
@@ -122,7 +117,6 @@ class SubcontractorWork(models.Model):
     uom_id = fields.Many2one(
         comodel_name="uom.uom",
         related="invoice_line_id.product_uom_id",
-        readonly=True,
         store=True,
         string="Unit",
     )
@@ -437,3 +431,35 @@ class SubcontractorWork(models.Model):
         #            if old_company:
         #                user.company_id = old_company.id
         return True
+
+    def write(self, vals):
+        already_invoiced = self.env["subcontractor.work"]
+        if vals.get("subcontractor_invoice_line_id"):
+            already_invoiced = self.filtered(lambda s: s.subcontractor_invoice_line_id)
+        if vals.get("supplier_invoice_line_id"):
+            already_invoiced = self.filtered(lambda s: s.supplier_invoice_line_id)
+        if any(field in vals for field in ["employee_id", "quantity"]):
+            already_invoiced = self.filtered(
+                lambda s: s.subcontractor_invoice_line_id or s.supplier_invoice_line_id
+            )
+        if already_invoiced:
+            raise UserError(
+                _(
+                    "You can't edit a subcontractor already invoiced %s"
+                    % already_invoiced.ids
+                )
+            )
+        return super().write(vals)
+
+    def unlink(self):
+        already_invoiced = self.filtered(
+            lambda s: s.subcontractor_invoice_line_id or s.supplier_invoice_line_id
+        )
+        if already_invoiced:
+            raise UserError(
+                _(
+                    "You can't delete a subcontractor already invoiced %s"
+                    % already_invoiced.ids
+                )
+            )
+        return super().unlink()
