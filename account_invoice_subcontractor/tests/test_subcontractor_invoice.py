@@ -141,6 +141,10 @@ class TestSubcontractorInvoice(TestAccountInvoiceInterCompanyBase):
             invoice_c.invoice_line_ids.subcontractor_work_invoiced_id, subwork
         )
         with self.assertRaises(UserError):
+            subwork.subcontractor_invoice_line_id = 1000
+        with self.assertRaises(UserError):
+            subwork.supplier_invoice_line_id = 1000
+        with self.assertRaises(UserError):
             subwork.quantity = 1000
         with self.assertRaises(UserError):
             subwork.unlink()

@@ -434,7 +434,7 @@ class SubcontractorWork(models.Model):
 
     def write(self, vals):
         already_invoiced = self.env["subcontractor.work"]
-        if vals.get("subcontractor_work_id"):
+        if vals.get("subcontractor_invoice_line_id"):
             already_invoiced = self.filtered(lambda s: s.subcontractor_invoice_line_id)
         if vals.get("supplier_invoice_line_id"):
             already_invoiced = self.filtered(lambda s: s.supplier_invoice_line_id)
