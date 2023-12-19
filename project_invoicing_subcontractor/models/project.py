@@ -7,43 +7,71 @@ from odoo.exceptions import UserError
 class ProjectProject(models.Model):
     _inherit = "project.project"
 
-    invoicing_stage_id = fields.Many2one("project.task.type", "Invoicing Stage")
-    product_id = fields.Many2one("product.product", "Product")
+    invoicing_typology_id = fields.Many2one(
+        "project.invoice.typology", required=True, check_company=True
+    )
     uom_id = fields.Many2one("uom.uom", "Unit")
     invoicing_mode = fields.Selection(
-        [
-            ("none", "Not invoiceable"),
-            ("customer", "Customer"),
-            ("supplier", "Supplier"),
-        ],
-        string="Invoicing Mode",
-        default="customer",
-        required=True,
+        related="invoicing_typology_id.invoicing_mode", store=True
     )
-    supplier_invoice_account_expense_id = fields.Many2one("account.account")
-    supplier_invoice_price_unit = fields.Float("Unit Price")
+    supplier_invoice_price_unit = fields.Float(
+        "Unit Price",
+        help="For customer prepaid project, the price in the subcontractor invoice is "
+        "computed from the customer sale price and reduced by the akretion "
+        "contribution. If you want to force a different price, you can use this "
+        "field to set a price net of Akretion contribution.\n"
+        "If this is an akretion project, the price is mandatory, and is also "
+        "net of the akretion contribution",
+    )
+    # Not sure  we really need this.
+    #    price_unit = fields.Float(compute="_compute_price_unit")
+    #
+    #    @api.depends("partner_id", "invoicing_typology_id")
+    #    def _compute_price_unit(self):
+    #        for project in self:
+    #            price = project._get_sale_price_unit()
+    #            if project.invoicing_mode == "customer_postpaid":
+    #                project.price_unit = price
+    #            elif project.invoicing_mode == "customer_prepaid":
+    #                contribution = project.company_id.with_context(partner=partner).\
+    # _get_commission_rate()
+    #                project.price_unit = (1-contribution) = price
+    #            else:
+    #                project.price_unit = 0.0
+    #
+
+    def _get_sale_price_unit(self):
+        self.ensure_one()
+        product = self.invoicing_typology_id.product_id
+        partner = self.partner_id
+        price = product.with_context(
+            pricelist=partner.property_product_pricelist.id,
+            partner=partner.id,
+            uom=self.uom_id.id,
+        ).price
+        return price
+
+    @api.constrains("invoicing_mode", "analytic_account_id")
+    def _check_analytic_account(self):
+        for project in self:
+            if (
+                project.invoicing_mode == "customer_prepaid"
+                and not project.analytic_account_id
+            ):
+                raise UserError(
+                    _(
+                        "The analytic account is mandatory on project configured with "
+                        "prepaid invoicing"
+                    )
+                )
 
 
 class ProjectTask(models.Model):
     _inherit = "project.task"
 
-    invoicing = fields.Selection(
-        [("progressive", "Progressive"), ("none", "None"), ("finished", "Finished")],
-        default="finished",
-    )
     invoiceable_hours = fields.Float(compute="_compute_invoiceable", store=True)
     invoiceable_days = fields.Float(compute="_compute_invoiceable", store=True)
     invoice_line_ids = fields.One2many("account.move.line", "task_id", "Invoice Line")
-    to_invoice = fields.Boolean(compute="_compute_to_invoice", store=True)
-
-    @api.depends("invoiceable_hours", "invoice_line_ids", "invoicing")
-    def _compute_to_invoice(self):
-        for record in self:
-            record.to_invoice = (
-                record.invoiceable_hours
-                and not record.invoice_line_ids
-                and record.invoicing != "none"
-            )
 
     @api.depends("timesheet_ids.discount", "timesheet_ids.unit_amount")
     def _compute_invoiceable(self):

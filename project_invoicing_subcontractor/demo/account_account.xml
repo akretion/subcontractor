@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="account_revenue_consulting" model="account.account">
+        <field name="name">Service Consulting</field>
+        <field name="code">706140</field>
+        <field name="user_type_id" ref="account.data_account_type_revenue" />
+    </record>
+
+    <record id="account_revenue_maintenance" model="account.account">
+        <field name="name">Service Maintenance</field>
+        <field name="code">706150</field>
+        <field name="user_type_id" ref="account.data_account_type_revenue" />
+    </record>
+
+    <record id="account_expense_consulting" model="account.account">
+        <field name="name">Consulting subcontracting</field>
+        <field name="code">611140</field>
+        <field name="user_type_id" ref="account.data_account_type_expenses" />
+    </record>
+
+    <record id="account_expense_maintenance" model="account.account">
+        <field name="name">Maintenance Subcontracting</field>
+        <field name="code">611150</field>
+        <field name="user_type_id" ref="account.data_account_type_expenses" />
+    </record>
+
+    <record id="account_expense_internal" model="account.account">
+        <field name="name">Internal task cost</field>
+        <field name="code">611160</field>
+        <field name="user_type_id" ref="account.data_account_type_expenses" />
+    </record>
+
+    <record id="account_prepaid_customer_maintenance" model="account.account">
+        <field name="name">Prepaid Revenues (maintenance)</field>
+        <field name="code">418101</field>
+        <field name="reconcile" eval="False" />
+        <field name="is_prepaid_account" eval="True" />
+        <field name="user_type_id" ref="account.data_account_type_current_assets" />
+    </record>
+
+</odoo>

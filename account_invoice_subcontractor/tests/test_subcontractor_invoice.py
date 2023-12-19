@@ -49,12 +49,12 @@ class TestSubcontractorInvoice(TestAccountInvoiceInterCompanyBase):
             }
         )
 
+        cls.company_a.write({"commission_rate": 10.0})
         cls.customer_a = cls.env["res.partner"].create({"name": "Customer A"})
         cls.employee_b = cls.env["hr.employee"].create(
             {
                 "name": "Employee B",
                 "subcontractor_type": "internal",
-                "commission_rate": "10.0",
                 "company_id": cls.company_a.id,
                 "subcontractor_company_id": cls.company_b.id,
                 "user_id": cls.user_company_b.id,

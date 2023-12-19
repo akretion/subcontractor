@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+        <record id="product_template_form_view" model="ir.ui.view">
+            <field name="model">product.template</field>
+            <field name="priority">50</field>
+            <field name="inherit_id" ref="product.product_template_form_view" />
+            <field name="arch" type="xml">
+                <field name="property_account_income_id" position="after">
+                    <field
+                    name="prepaid_revenue_account_id"
+                    groups="account_invoice_subcontractor.group_project_subcontractor_manager"
+                />
+                </field>
+            </field>
+        </record>
+
+</odoo>

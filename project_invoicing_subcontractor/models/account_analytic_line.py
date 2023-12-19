@@ -25,7 +25,6 @@ class AccountAnalyticLine(models.Model):
     invoiceable = fields.Boolean(compute="_compute_invoiceable", store=True)
     discount = fields.Float(digits="Discount", default=0)
     invoiceable_amount = fields.Float(compute="_compute_invoiceable_amount", store=True)
-    date_invoiceable = fields.Date(compute="_compute_date_invoiceable", store=True)
     parent_task_id = fields.Many2one(related="task_id.parent_id", store=True)
 
     @api.depends("subcontractor_work_id", "supplier_invoice_line_id")
@@ -35,18 +34,6 @@ class AccountAnalyticLine(models.Model):
                 record.subcontractor_work_id.invoice_line_id
                 or record.supplier_invoice_line_id
             )
-
-    @api.depends("invoiceable", "task_id.timesheet_ids", "task_id.invoicing")
-    def _compute_date_invoiceable(self):
-        for record in self:
-            if record.task_id.invoicing == "progressive":
-                record.date_invoiceable = record.date
-            elif record.invoiceable:
-                record.date_invoiceable = max(
-                    record.task_id.mapped("timesheet_ids.date")
-                )
-            else:
-                record.date_invoiceable = None
 
     def write(self, vals):
         if any(
@@ -71,21 +58,14 @@ class AccountAnalyticLine(models.Model):
 
     def is_invoiceable(self):
         self.ensure_one()
-        invoicing = self.task_id.invoicing
-        if self.discount == 100:
-            return False
-        elif invoicing == "progressive":
+        if self.discount < 100 and self.project_id.invoicing_mode:
             return True
-        elif invoicing == "none":
+        else:
             return False
-        elif invoicing == "finished":
-            return self.task_stage_id == self.project_id.invoicing_stage_id
 
     @api.depends(
         "discount",
-        "task_id.stage_id",
-        "task_id.invoicing",
-        "project_id.invoicing_stage_id",
+        "project_id.invoicing_mode",
     )
     def _compute_invoiceable(self):
         for record in self:

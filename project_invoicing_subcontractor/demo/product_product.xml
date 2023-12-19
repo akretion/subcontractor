@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="product_product_1" model="product.product">
+        <field name="name">consulting</field>
+        <field name="categ_id" ref="product.product_category_3" />
+        <field name="list_price">500</field>
+        <field name="type">service</field>
+        <field name="uom_id" ref="uom.product_uom_day" />
+        <field name="uom_po_id" ref="uom.product_uom_day" />
+        <field name="property_account_income_id" ref="account_revenue_consulting" />
+        <field name="property_account_expense_id" ref="account_expense_consulting" />
+        <field name="subcontracted" eval="True" />
+    </record>
+
+    <record id="product_product_2" model="product.product">
+        <field name="name">consulting (maintenance package)</field>
+        <field name="categ_id" ref="product.product_category_3" />
+        <field name="list_price">600</field>
+        <field name="type">service</field>
+        <field name="uom_id" ref="uom.product_uom_day" />
+        <field name="uom_po_id" ref="uom.product_uom_day" />
+        <field name="property_account_income_id" ref="account_revenue_maintenance" />
+        <field name="property_account_expense_id" ref="account_expense_maintenance" />
+        <field
+            name="prepaid_revenue_account_id"
+            ref="account_prepaid_customer_maintenance"
+        />
+    </record>
+
+    <record id="product_product_3" model="product.product">
+        <field name="name">Internal Task</field>
+        <field name="categ_id" ref="product.product_category_3" />
+        <field name="list_price">0</field>
+        <field name="type">service</field>
+        <field name="uom_id" ref="uom.product_uom_day" />
+        <field name="uom_po_id" ref="uom.product_uom_day" />
+        <field name="property_account_expense_id" ref="account_expense_internal" />
+    </record>
+
+</odoo>

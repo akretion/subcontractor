@@ -7,38 +7,18 @@
         <field name="arch" type="xml">
             <group name="extra_settings" position="after">
                 <group string="Invoicing" name="invoicing">
+                    <field name="invoicing_typology_id" />
                     <field name="invoicing_mode" />
-                    <field
-                        name="invoicing_stage_id"
-                        attrs="{
-                            'invisible': [('invoicing_mode', '=', 'none')],
-                            'required': [('invoicing_mode', '!=', 'none')]
-                        }"
-                    />
-                    <field
-                        name="product_id"
-                        attrs="{
-                            'invisible': [('invoicing_mode', '=', 'none')],
-                            'required': [('invoicing_mode', '!=', 'none')]
-                        }"
-                    />
                     <field
                         name="uom_id"
                         attrs="{
-                            'invisible': [('invoicing_mode', '=', 'none')],
-                        }"
-                    />
-                    <field
-                        name="supplier_invoice_account_expense_id"
-                        attrs="{
-                            'invisible': [('invoicing_mode', '!=', 'supplier')],
-                            'required': [('invoicing_mode', '=', 'supplier')]
+                            'invisible': [('invoicing_typology_id', '=', False)],
                         }"
                     />
                     <field
                         name="supplier_invoice_price_unit"
                         attrs="{
-                            'invisible': [('invoicing_mode', '!=', 'supplier')],
+                            'invisible': [('invoicing_mode', 'not in', ('customer_prepaid', 'supplier'))],
                             'required': [('invoicing_mode', '=', 'supplier')]
                         }"
                     />
@@ -51,9 +31,6 @@
         <field name="model">project.task</field>
         <field name="inherit_id" ref="hr_timesheet.view_task_form2_inherited" />
         <field name="arch" type="xml">
-            <field name="tag_ids" position="after">
-                <field name="invoicing" />
-            </field>
             <xpath expr="//tree/field[@name='unit_amount']" position="after">
                 <field name="discount" />
             </xpath>

@@ -25,9 +25,6 @@ class HrEmployee(models.Model):
         required=True,
         default="internal",
     )
-    commission_rate = fields.Float(
-        help="Rate in % for the commission on subcontractor work", default=10.00
-    )
 
     def _get_employee_invoice_partner(self):
         self.ensure_one()

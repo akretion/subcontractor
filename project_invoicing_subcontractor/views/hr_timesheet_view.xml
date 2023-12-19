@@ -8,7 +8,6 @@
             <field name="task_id" position="after">
                 <field name="invoice_id" />
                 <field name="task_stage_id" />
-                <field name="date_invoiceable" string="Date Invoice" />
                 <filter
                     name="to_invoice"
                     string="To invoice"
@@ -22,12 +21,6 @@
                     name="stage"
                     domain="[]"
                     context="{'group_by':'task_stage_id'}"
-                />
-                <filter
-                    string="Invoiceable Date"
-                    name="date_invoiceable"
-                    domain="[]"
-                    context="{'group_by':'date_invoiceable'}"
                 />
                 <filter
                     string="Parent Task"
@@ -60,7 +53,6 @@
                     optional="show"
                 />
                 <field name="invoiceable" optional="hide" />
-                <field name="date_invoiceable" optional="hide" />
                 <field name="invoice_id" optional="show" />
             </field>
         </field>

@@ -24,6 +24,13 @@
                     icon="fa-calendar"
                 />
         </div>
+        <field name="ref" position="before">
+            <field
+                    name="customer_id"
+                    readonly="1"
+                    attrs="{'invisible': [('customer_id', '=', False)]}"
+                />
+        </field>
         <xpath expr="//tree/field[@name='name']" position="after">
             <field name="task_stage_id" optional="hide" />
         </xpath>

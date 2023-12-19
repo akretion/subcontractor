@@ -24,6 +24,7 @@
         "views/invoice_view.xml",
         "wizard/subcontractor_invoice_work_view.xml",
         "views/product_view.xml",
+        "wizard/res_config_settings.xml",
     ],
     "demo": [
         "demo/demo.xml",

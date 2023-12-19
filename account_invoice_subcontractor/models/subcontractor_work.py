@@ -154,7 +154,8 @@ class SubcontractorWork(models.Model):
     # #                 supplier_invoice_year.name)
 
     def _get_commission_rate(self):
-        return self.employee_id.commission_rate / 100.0
+        company = self.invoice_line_id.company_id or self.env.company
+        return company._get_commission_rate()
 
     @api.depends(
         "employee_id",
