@@ -67,13 +67,10 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         default=lambda self: self._get_default_timesheet_lines(),
     )
 
-    @api.depends_context("active_ids")
-    @api.depends("partner_id")
+    @api.depends("timesheet_line_ids")
     def _compute_has_parent_task(self):
         for record in self:
-            timesheet_lines = self.env["account.analytic.line"].browse(
-                self.env.context.get("active_ids", [])
-            )
+            timesheet_lines = self.timesheet_line_ids
             record.has_parent_task = bool(timesheet_lines.parent_task_id)
 
     @api.depends("invoicing_mode")
@@ -119,6 +116,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         ids = self.env.context.get("active_ids", False)
         return self.env["account.analytic.line"].browse(ids)
 
+    @api.depends("timesheet_line_ids", "force_project_id")
     def _compute_invoicing_typology_id(self):
         timesheet_lines = self.timesheet_line_ids
         for rec in self:
@@ -448,7 +446,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         action = self.env.ref("account.action_move_in_invoice_type").sudo().read()[0]
         if len(invoices) == 1:
             action["views"] = [(self.env.ref("account.view_move_form").id, "form")]
-            action["res_id"] = self.invoice_id.id
+            action["res_id"] = invoices.id
         else:
             action["domain"] = [("id", "in", invoices.ids)]
         return action

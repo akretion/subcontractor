@@ -177,6 +177,7 @@ class AccountMove(models.Model):
             "date": self.date,
             "currency_id": self.currency_id.id,
             "company_id": self.company_id.id,
+            "move_type": "entry",
         }
         if self.company_id.prepaid_countdown_journal_id:
             vals["journal_id"] = self.company_id.prepaid_countdown_journal_id.id

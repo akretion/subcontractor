@@ -15,7 +15,7 @@ class ProjectProject(models.Model):
         related="invoicing_typology_id.invoicing_mode", store=True
     )
     supplier_invoice_price_unit = fields.Float(
-        "Unit Price",
+        "Force Unit Price",
         help="For customer prepaid project, the price in the subcontractor invoice is "
         "computed from the customer sale price and reduced by the akretion "
         "contribution. If you want to force a different price, you can use this "

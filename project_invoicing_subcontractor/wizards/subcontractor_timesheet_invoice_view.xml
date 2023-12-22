@@ -5,11 +5,19 @@
     <field name="model">subcontractor.timesheet.invoice</field>
     <field name="arch" type="xml">
         <form string="Invoice">
+            <div
+                    class="alert alert-danger"
+                    attrs="{'invisible': [('error', '=', False)]}"
+                >
                 <field name='error' />
-                <field
-                    name='explanation'
+                </div>
+            <div
+                    class="alert alert-info"
+                    role="alert"
                     attrs="{'invisible': [('error', '!=', False)]}"
-                />
+                >
+                <field name='explanation' />
+                </div>
             <group>
                 <field name='partner_id' />
                 <field name='has_parent_task' invisible="1" />
@@ -21,6 +29,7 @@
                 <field name="to_invoice_partner_id" invisible="1" />
                 <field name="move_type" invisible="1" />
                 <field name='invoicing_mode' invisible="1" />
+                <field name='timesheet_line_ids' invisible="1" />
                 <field
                         name='create_invoice'
                         attrs="{'invisible': [('invoice_id', '!=', False), ('to_invoice_partner_id', '=', False)]}"
@@ -28,7 +37,7 @@
                 <field
                         name='invoice_id'
                         domain="[('partner_id', '=', to_invoice_partner_id), ('state', '=', 'draft'), ('move_type', '=', move_type)]"
-                        attrs="{'invisible': [('create_invoice', '=', True), ('to_invoice_partner_id', '=', False)], 'required': [('create_invoice', '!=', True)]}"
+                        attrs="{'invisible': ['|', ('create_invoice', '=', True), ('to_invoice_partner_id', '=', False)], 'required': [('create_invoice', '!=', True)]}"
                     />
                 <field
                         name='force_project_id'
