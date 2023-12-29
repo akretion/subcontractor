@@ -9,8 +9,9 @@
                 <group string="Invoicing" name="invoicing">
                     <field name="invoicing_typology_id" />
                     <field name="invoicing_mode" />
+                    <field name="uom_id" invisible="1" />
                     <field
-                        name="uom_id"
+                        name="force_uom_id"
                         attrs="{
                             'invisible': [('invoicing_typology_id', '=', False)],
                         }"
@@ -24,6 +25,14 @@
                     />
                 </group>
             </group>
+            <field name="force_uom_id" position="after">
+                <field name="hour_uom_id" position="move" />
+            </field>
+            <field name="hour_uom_id" position="attributes">
+                <attribute
+                    name="attrs"
+                >{'invisible': [('uom_id', '!=', %(uom.product_uom_day)d)]}</attribute>
+            </field>
         </field>
     </record>
 

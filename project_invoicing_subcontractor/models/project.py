@@ -10,7 +10,19 @@ class ProjectProject(models.Model):
     invoicing_typology_id = fields.Many2one(
         "project.invoice.typology", required=True, check_company=True
     )
-    uom_id = fields.Many2one("uom.uom", "Unit")
+    force_uom_id = fields.Many2one(
+        "uom.uom",
+        "Force Unit",
+        help="If empty, the unit of measure will be taken on the product use for "
+        "invoicing (usuallly in day)",
+    )
+    uom_id = fields.Many2one("uom.uom", compute="_compute_uom_id")
+    hour_uom_id = fields.Many2one(
+        help="The default hour uom considers there are 8H in a day of work. If it is "
+        "different for your project, choose an other uom with a different "
+        "conversion, like 7h/day. \n Odoo will use this to convert the work "
+        "amount in hour to a number of day in the invoice."
+    )
     invoicing_mode = fields.Selection(
         related="invoicing_typology_id.invoicing_mode", store=True
     )
@@ -39,6 +51,16 @@ class ProjectProject(models.Model):
     #            else:
     #                project.price_unit = 0.0
     #
+
+    @api.depends("force_uom_id", "invoicing_typology_id")
+    def _compute_uom_id(self):
+        for project in self:
+            uom = (
+                project.force_uom_id
+                or project.invoicing_typology_id.product_id.uom_id
+                or False
+            )
+            project.uom_id = uom and uom.id or False
 
     def _get_sale_price_unit(self):
         self.ensure_one()

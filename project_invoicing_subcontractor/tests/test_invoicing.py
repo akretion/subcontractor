@@ -104,7 +104,7 @@ class TestInvoicing(AccountTestInvoicingCommon):
         self.assertTrue(line_1.tax_ids)
 
     def test_invoicing_in_hours(self):
-        self.project.uom_id = self.hour_uom
+        self.project.force_uom_id = self.hour_uom
         invoice = self._create_customer_invoice()
         self.assertEqual(invoice.amount_untaxed, 1125)
         self.assertEqual(len(invoice.invoice_line_ids), 2)
@@ -116,7 +116,7 @@ class TestInvoicing(AccountTestInvoicingCommon):
 
     def test_invoicing_with_discount(self):
         self.line_3.discount = 50
-        self.project.uom_id = self.hour_uom
+        self.project.force_uom_id = self.hour_uom
         invoice = self._create_customer_invoice()
         self.assertEqual(invoice.amount_untaxed, 875)
         self.assertEqual(len(invoice.invoice_line_ids), 2)

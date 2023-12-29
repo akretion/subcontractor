@@ -8,7 +8,7 @@
         <field name="name">Customer Project</field>
         <field name="color">5</field>
         <field name="user_id" ref="base.user_demo" />
-        <field name="uom_id" eval="ref('uom.product_uom_day')" />
+        <field name="force_uom_id" eval="ref('uom.product_uom_day')" />
         <field
             name="type_ids"
             eval="[(4, ref('project.project_stage_0')), (4, ref('project.project_stage_1')), (4, ref('project.project_stage_2')), (4, ref('project.project_stage_3'))]"
@@ -144,7 +144,6 @@
         <field name="name">Customer Project (Maintenance)</field>
         <field name="color">5</field>
         <field name="user_id" ref="base.user_demo" />
-        <field name="uom_id" eval="ref('uom.product_uom_day')" />
         <field
             name="type_ids"
             eval="[(4, ref('project.project_stage_0')), (4, ref('project.project_stage_1')), (4, ref('project.project_stage_2')), (4, ref('project.project_stage_3'))]"
@@ -280,7 +279,6 @@
         <field name="name">Customer Project 2</field>
         <field name="color">5</field>
         <field name="user_id" ref="base.user_demo" />
-        <field name="uom_id" eval="ref('uom.product_uom_day')" />
         <field
             name="type_ids"
             eval="[(4, ref('project.project_stage_0')), (4, ref('project.project_stage_1')), (4, ref('project.project_stage_2')), (4, ref('project.project_stage_3'))]"
@@ -317,7 +315,6 @@
         <field name="name">Internal Project</field>
         <field name="color">4</field>
         <field name="user_id" ref="base.user_demo" />
-        <field name="uom_id" eval="ref('uom.product_uom_day')" />
         <field name="supplier_invoice_price_unit">400</field>
         <field
             name="type_ids"
