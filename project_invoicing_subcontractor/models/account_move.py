@@ -210,7 +210,7 @@ class AccountMove(models.Model):
                 raise exceptions.ValidationError(
                     _("The linked prepaid entry should be canceled.")
                 )
-            prepaid_move.button_draft()
+            prepaid_move.with_context(prepaid_reset=True).button_draft()
             prepaid_move.line_ids.unlink()
         else:
             vals = self._create_prepare_prepaid_move_vals()
@@ -319,9 +319,26 @@ class AccountMove(models.Model):
                 move.compute_enought_analytic_amount(partner_id=move.customer_id.id)
         return res
 
+    def _check_reset_allowed(self):
+        prepaid_move = self.filtered(lambda m: m.supplier_invoice_ids)
+        if prepaid_move and not self.env.context.get("prepaid_reset"):
+            raise exceptions.ValidationError(
+                _(
+                    "You can't reset a prepaid acconting entry as it is synchronized "
+                    "automatically with its linked supplier invoice"
+                )
+            )
+
     def button_draft(self):
+        self._check_reset_allowed()
         res = super().button_draft()
-        self.prepaid_countdown_move_id.button_cancel()
+        self.prepaid_countdown_move_id.with_context(prepaid_reset=True).button_cancel()
+        return res
+
+    def button_cancel(self):
+        self._check_reset_allowed()
+        res = super().button_cancel()
+        self.prepaid_countdown_move_id.with_context(prepaid_reset=True).button_cancel()
         return res
 
     # also called by cron
