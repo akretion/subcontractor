@@ -212,6 +212,7 @@ class SubcontractorWork(models.Model):
     def check(self, work_type=False):
         partner_id = self[0].customer_id.id
         worktype = self[0].subcontractor_type
+        invoice_type = self[0].invoice_id.move_type
         for work in self:
             dest_invoice_company = work._get_dest_invoice_company()
             if dest_invoice_company not in self.env.companies:
@@ -236,6 +237,13 @@ class SubcontractorWork(models.Model):
             elif work_type and work.subcontractor_type != work_type:
                 raise UserError(
                     _("You can invoice on only the %s subcontractors" % work_type)
+                )
+            elif invoice_type != work.invoice_id.move_type:
+                raise UserError(
+                    _(
+                        "You can't invoice refund and invoice together, you should do "
+                        "it separately"
+                    )
                 )
 
     @api.model
