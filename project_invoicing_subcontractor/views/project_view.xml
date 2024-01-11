@@ -5,6 +5,16 @@
         <field name="model">project.project</field>
         <field name="inherit_id" ref="project.edit_project" />
         <field name="arch" type="xml">
+            <field name="partner_id" position="attributes">
+                <attribute
+                    name="attrs"
+                >{'required': [('invoicing_typology_id', '!=', False)]}</attribute>
+            </field>
+            <field name="analytic_account_id" position="attributes">
+                <attribute
+                    name="attrs"
+                >{'required': [('invoicing_mode', '=', 'customer_prepaid')]}</attribute>
+            </field>
             <group name="extra_settings" position="after">
                 <group string="Invoicing" name="invoicing">
                     <field name="invoicing_typology_id" />
