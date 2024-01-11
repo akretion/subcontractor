@@ -9,9 +9,14 @@
                 <group string="Invoicing" name="invoicing">
                     <field name="invoicing_typology_id" />
                     <field name="invoicing_mode" />
-                    <field name="uom_id" invisible="1" />
+                    <field
+                        name="uom_id"
+                        string="Default Invoice uom"
+                        attrs="{'invisible': [('force_uom_id', '!=', False)]}"
+                    />
                     <field
                         name="force_uom_id"
+                        string="Force Invoice uom"
                         attrs="{
                             'invisible': [('invoicing_typology_id', '=', False)],
                         }"

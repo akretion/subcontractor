@@ -7,12 +7,16 @@ from odoo.exceptions import UserError
 class ProjectProject(models.Model):
     _inherit = "project.project"
 
+    def _get_force_uom_id_domain(self):
+        return [("category_id", "=", self.env.ref("uom.uom_categ_wtime").id)]
+
     invoicing_typology_id = fields.Many2one(
-        "project.invoice.typology", required=True, check_company=True
+        "project.invoice.typology", check_company=True
     )
     force_uom_id = fields.Many2one(
         "uom.uom",
         "Force Unit",
+        domain=_get_force_uom_id_domain,
         help="If empty, the unit of measure will be taken on the product use for "
         "invoicing (usuallly in day)",
     )
