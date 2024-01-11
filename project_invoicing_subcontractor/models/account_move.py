@@ -332,13 +332,19 @@ class AccountMove(models.Model):
     def button_draft(self):
         self._check_reset_allowed()
         res = super().button_draft()
-        self.prepaid_countdown_move_id.with_context(prepaid_reset=True).button_cancel()
+        if self.prepaid_countdown_move_id:
+            self.prepaid_countdown_move_id.with_context(
+                prepaid_reset=True
+            ).button_cancel()
         return res
 
     def button_cancel(self):
         self._check_reset_allowed()
         res = super().button_cancel()
-        self.prepaid_countdown_move_id.with_context(prepaid_reset=True).button_cancel()
+        if self.prepaid_countdown_move_id:
+            self.prepaid_countdown_move_id.with_context(
+                prepaid_reset=True
+            ).button_cancel()
         return res
 
     # also called by cron
