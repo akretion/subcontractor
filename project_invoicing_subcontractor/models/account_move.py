@@ -142,16 +142,30 @@ class AccountMove(models.Model):
             .sudo()
             .read()[0]
         )
-        action["context"] = {
-            "search_default_invoice_id": self.id,
-            "search_default_subcontractor": 1,
-        }
+        if self.move_type in ["out_invoice", "out_refund"]:
+            action["context"] = {
+                "search_default_invoice_id": self.id,
+                "search_default_subcontractor": 1,
+            }
+        elif self.move_type in ["in_invoice", "in_refund"]:
+            action["context"] = {
+                "search_default_supplier_invoice_id": self.id,
+            }
         return action
 
     def action_view_analytic_line(self):
         self.ensure_one()
         action = self.env.ref("hr_timesheet.act_hr_timesheet_line").sudo().read()[0]
-        action["domain"] = [("invoice_id", "=", self.id)]
+        if self.move_type in ["out_invoice", "out_refund"]:
+            action["domain"] = [("invoice_id", "=", self.id)]
+        elif self.move_type in ["in_invoice", "in_refund"]:
+            action["domain"] = [
+                (
+                    "id",
+                    "=",
+                    self.invoice_line_ids.subcontractor_work_invoiced_id.timesheet_line_ids.ids,
+                )
+            ]
         return action
 
     def _move_autocomplete_invoice_lines_values(self):

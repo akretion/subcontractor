@@ -2,7 +2,8 @@
 # @author Sébastien BEAU <sebastien.beau@akretion.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 
 class AccountMoveLine(models.Model):
@@ -139,6 +140,21 @@ class AccountMove(models.Model):
     invalid_work_amount = fields.Boolean(
         compute="_compute_invalid_work_amount", store=True
     )
+    customer_invoice_id = fields.Many2one(
+        comodel_name="account.move", string="Customer invoice", readonly=True
+    )
+    subcontractor_invoice_ids = fields.One2many(
+        comodel_name="account.move",
+        inverse_name="customer_invoice_id",
+        string="Supplier invoices",
+        readonly=True,
+    )
+    origin_customer_invoice_id = fields.Many2one(
+        comodel_name="account.move",
+        string="Original customer invoice",
+        readonly=True,
+        prefetch=False,
+    )
 
     @api.depends(
         "invoice_line_ids",
@@ -166,3 +182,34 @@ class AccountMove(models.Model):
             invoice.invalid_work_amount = any(
                 [line.invalid_work_amount for line in invoice.invoice_line_ids]
             )
+
+    def action_view_subcontractor_invoices(self):
+        self.ensure_one()
+        action = self.env.ref("account.action_move_out_invoice_type").sudo().read()[0]
+        action["domain"] = [("id", "in", self.subcontractor_invoice_ids.ids)]
+        action["context"] = {
+            "default_move_type": "out_invoice",
+            "move_type": "out_invoice",
+            "journal_type": "sale",
+            "active_test": False,
+        }
+        return action
+
+    def already_subcontracted(self):
+        invoices = self.subcontractor_invoice_ids
+        invoices |= self.sudo().search([("origin_customer_invoice_id", "in", self.ids)])
+        return invoices and True or False
+
+    def button_draft(self):
+        if self.already_subcontracted():
+            raise UserError(
+                _("You can't set to draft an invoice already invoiced by subcontractor")
+            )
+        return super().button_draft()
+
+    def button_cancel(self):
+        if self.already_subcontracted():
+            raise UserError(
+                _("You can't cancel an invoice already invoiced by subcontractor")
+            )
+        return super().button_cancel()

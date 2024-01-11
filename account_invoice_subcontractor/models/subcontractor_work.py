@@ -176,8 +176,8 @@ class SubcontractorWork(models.Model):
             cost_price_unit = sale_price_unit * rate
             work.sale_price_unit = sale_price_unit
             work.cost_price_unit = cost_price_unit
-            work.cost_price = work.quantity * cost_price_unit
-            work.sale_price = work.quantity * sale_price_unit
+            work.cost_price = work.quantity * work.cost_price_unit
+            work.sale_price = work.quantity * work.sale_price_unit
 
     @api.onchange("employee_id")
     def employee_id_onchange(self):
@@ -308,6 +308,10 @@ class SubcontractorWork(models.Model):
                 "user_id": user.id,
             }
         )
+        if invoice_type in ["out_invoice", "out_refund"]:
+            invoice_vals["origin_customer_invoice_id"] = orig_invoice.id
+        elif invoice_type in ["in_invoice", "in_refund"]:
+            invoice_vals["customer_invoice_id"] = orig_invoice.id
         return invoice_vals
 
     @api.model
@@ -464,3 +468,11 @@ class SubcontractorWork(models.Model):
                 )
             )
         return super().unlink()
+
+    def action_post(self):
+        invalid_invoice = self.filtered(lambda m: m.invalid_work_amount)
+        if invalid_invoice:
+            raise UserError(
+                _("You can't validate an invoice with invalid work amount!")
+            )
+        return super().action_post()
