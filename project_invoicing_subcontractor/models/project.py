@@ -7,8 +7,14 @@ from odoo.exceptions import UserError
 class ProjectProject(models.Model):
     _inherit = "project.project"
 
+    def _get_allowed_uom_ids(self):
+        return [
+            self.env.ref("uom.product_uom_hour").id,
+            self.env.ref("uom.product_uom_day").id,
+        ]
+
     def _get_force_uom_id_domain(self):
-        return [("category_id", "=", self.env.ref("uom.uom_categ_wtime").id)]
+        return [("id", "in", self._get_allowed_uom_ids())]
 
     invoicing_typology_id = fields.Many2one(
         "project.invoice.typology", check_company=True
@@ -20,7 +26,7 @@ class ProjectProject(models.Model):
         help="If empty, the unit of measure will be taken on the product use for "
         "invoicing (usuallly in day)",
     )
-    uom_id = fields.Many2one("uom.uom", compute="_compute_uom_id")
+    uom_id = fields.Many2one("uom.uom", compute="_compute_uom_id", store=True)
     hour_uom_id = fields.Many2one(
         help="The default hour uom considers there are 8H in a day of work. If it is "
         "different for your project, choose an other uom with a different "
@@ -59,12 +65,16 @@ class ProjectProject(models.Model):
     @api.depends("force_uom_id", "invoicing_typology_id")
     def _compute_uom_id(self):
         for project in self:
-            uom = (
-                project.force_uom_id
-                or project.invoicing_typology_id.product_id.uom_id
-                or False
-            )
-            project.uom_id = uom and uom.id or False
+            if project.force_uom_id:
+                uom_id = project.force_uom_id.id
+            elif (
+                project.invoicing_typology_id.product_id.uom_id.id
+                in self._get_allowed_uom_ids()
+            ):
+                uom_id = project.invoicing_typology_id.product_id.uom_id.id
+            else:
+                uom_id = False
+            project.uom_id = uom_id
 
     def _get_sale_price_unit(self):
         self.ensure_one()

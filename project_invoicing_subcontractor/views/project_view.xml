@@ -22,13 +22,14 @@
                     <field
                         name="uom_id"
                         string="Default Invoice uom"
-                        attrs="{'invisible': [('force_uom_id', '!=', False)]}"
+                        attrs="{'invisible': ['|', ('force_uom_id', '!=', False), ('uom_id', '=', False)]}"
                     />
                     <field
                         name="force_uom_id"
                         string="Force Invoice uom"
                         attrs="{
                             'invisible': [('invoicing_typology_id', '=', False)],
+                            'required': [('uom_id', '=', False)]
                         }"
                     />
                     <field
