@@ -76,9 +76,13 @@ class ProjectProject(models.Model):
                 uom_id = False
             project.uom_id = uom_id
 
+    def _get_project_invoicing_product(self):
+        self.ensure_one()
+        return self.invoicing_typology_id.product_id
+
     def _get_sale_price_unit(self):
         self.ensure_one()
-        product = self.invoicing_typology_id.product_id
+        product = self._get_project_invoicing_product()
         partner = self.partner_id
         price = product.with_context(
             pricelist=partner.property_product_pricelist.id,
