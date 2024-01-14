@@ -46,7 +46,9 @@ class AccountAnalyticLine(models.Model):
                 "subcontractor_work_id",
             ]
         ):
-            already_invoiced = self.filtered(lambda aal: aal.subcontractor_work_id)
+            already_invoiced = self.filtered(
+                lambda aal: aal.subcontractor_work_id or aal.supplier_invoice_line_id
+            )
             if already_invoiced:
                 raise UserError(
                     _(
@@ -99,7 +101,9 @@ class AccountAnalyticLine(models.Model):
             raise NotImplementedError
 
     def unlink(self):
-        already_invoiced = self.filtered(lambda aal: aal.subcontractor_work_id)
+        already_invoiced = self.filtered(
+            lambda aal: aal.subcontractor_work_id or aal.supplier_invoice_line_id
+        )
         if already_invoiced:
             raise UserError(
                 _(

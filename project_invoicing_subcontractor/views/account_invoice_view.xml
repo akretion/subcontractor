@@ -41,6 +41,36 @@
                     attrs="{'column_invisible':[('parent.move_type', 'not in', ('out_invoice', 'out_refund'))]}"
                 />
         </xpath>
+        <xpath expr="//field[@name='state']/.." position="after">
+            <div
+                    groups="account.group_account_invoice,account.group_account_readonly"
+                    class="alert alert-danger"
+                    role="alert"
+                    style="margin-bottom:0px;"
+                    attrs="{'invisible': ['|', ('subcontractor_state_message', '=', False), ('subcontractor_state_color', '!=', 'danger')]}"
+                >
+                <field name="subcontractor_state_message" nolabel="1" />
+            </div>
+            <div
+                    groups="account.group_account_invoice,account.group_account_readonly"
+                    class="alert alert-info"
+                    role="alert"
+                    style="margin-bottom:0px;"
+                    attrs="{'invisible': ['|', ('subcontractor_state_message', '=', False), ('subcontractor_state_color', '!=', 'info')]}"
+                >
+                <field name="subcontractor_state_message" nolabel="1" />
+            </div>
+            <div
+                    groups="account.group_account_invoice,account.group_account_readonly"
+                    class="alert alert-success"
+                    role="alert"
+                    style="margin-bottom:0px;"
+                    attrs="{'invisible': ['|', ('subcontractor_state_message', '=', False), ('subcontractor_state_color', '!=', 'success')]}"
+                >
+                <field name="subcontractor_state_message" nolabel="1" />
+            </div>
+            <field name="subcontractor_state_color" invisible="1" />
+        </xpath>
     </field>
 </record>
 
@@ -87,6 +117,22 @@
         </xpath>
     </field>
 </record>
+
+    <record id="view_account_move_line_filter" model="ir.ui.view">
+        <field name="model">account.move.line</field>
+        <field name="inherit_id" ref="account.view_account_move_line_filter" />
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='receivable']" position="after">
+                <separator />
+                <filter
+                    string="Prepaid is paid"
+                    name="prepaid_is_paid"
+                    domain="[['prepaid_is_paid', '=',True]]"
+                />
+            </xpath>
+        </field>
+    </record>
+
 
 
 </odoo>

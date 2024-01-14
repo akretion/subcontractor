@@ -111,6 +111,11 @@ class AccountMoveLine(models.Model):
         res["subcontractor_work_invoiced_id"] = self.subcontractor_work_invoiced_id.id
         return res
 
+    def _prepare_invoice_data(self, dest_company):
+        vals = super()._prepare_invoice_data(dest_company)
+        vals["customer_invoice_id"] = self.origin_customer_invoice_id.id
+        return vals
+
     def edit_subcontractor(self):
         view = {
             "name": ("Details"),

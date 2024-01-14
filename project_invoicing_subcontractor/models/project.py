@@ -45,6 +45,8 @@ class ProjectProject(models.Model):
         "If this is an akretion project, the price is mandatory, and is also "
         "net of the akretion contribution",
     )
+    prepaid_available_amount = fields.Float(compute="_compute_prepaid_amount")
+    prepaid_total_amount = fields.Float(compute="_compute_prepaid_amount")
     # Not sure  we really need this.
     #    price_unit = fields.Float(compute="_compute_price_unit")
     #
@@ -61,6 +63,44 @@ class ProjectProject(models.Model):
     #            else:
     #                project.price_unit = 0.0
     #
+
+    def _prepaid_move_lines(self):
+        self.ensure_one()
+        move_lines = self.env["account.move.line"].search(
+            [
+                ("analytic_account_id", "=", self.analytic_account_id.id),
+                ("account_id.is_prepaid_account", "=", True),
+            ],
+        )
+        paid_lines = move_lines.filtered(
+            lambda m: m.prepaid_is_paid
+            or (
+                m.move_id.supplier_invoice_ids
+                and all(
+                    [
+                        x.to_pay and x.payment_state != "paid"
+                        for x in m.move_id.supplier_invoice_ids
+                    ]
+                )
+            )
+        )
+        return move_lines, paid_lines
+
+    @api.depends(
+        "invoicing_mode",
+        "analytic_account_id",
+        "analytic_account_id.account_move_line_ids.prepaid_is_paid",
+    )
+    def _compute_prepaid_amount(self):
+        for project in self:
+            total_amount = 0
+            available_amount = 0
+            if project.invoicing_mode == "customer_prepaid":
+                move_lines, paid_lines = project._prepaid_move_lines()
+                total_amount = -sum(move_lines.mapped("amount_currency")) or 0.0
+                available_amount = -sum(paid_lines.mapped("amount_currency")) or 0.0
+            project.prepaid_total_amount = total_amount
+            project.prepaid_available_amount = available_amount
 
     @api.depends("force_uom_id", "invoicing_typology_id")
     def _compute_uom_id(self):
@@ -105,6 +145,21 @@ class ProjectProject(models.Model):
                     )
                 )
 
+    def action_project_prepaid_move_line(self):
+        self.ensure_one()
+        action = self.env.ref("account.action_account_moves_all_tree").sudo().read()[0]
+        move_lines, paid_lines = self._prepaid_move_lines()
+        if self.env.context.get("prepaid_is_paid"):
+            move_lines = paid_lines
+        action["domain"] = [("id", "in", move_lines.ids)]
+        action["context"] = {
+            "search_default_group_by_account": 1,
+            "create": False,
+            "edit": False,
+            "delete": False,
+        }
+        return action
+
 
 class ProjectTask(models.Model):
     _inherit = "project.task"
@@ -131,7 +186,7 @@ class ProjectTask(models.Model):
             if not vals["project_id"]:
                 raise UserError(
                     _(
-                        "The project can not be remove, "
+                        "The project can not be removed, "
                         "please remove the timesheet first"
                     )
                 )

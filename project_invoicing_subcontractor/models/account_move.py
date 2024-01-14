@@ -3,6 +3,7 @@
 from collections import defaultdict
 
 from odoo import _, api, exceptions, fields, models
+from odoo.tools import float_compare
 
 
 class AccountMoveLine(models.Model):
@@ -28,6 +29,12 @@ class AccountMoveLine(models.Model):
         help="Total days of the task, helper to check if you miss some timesheet",
     )
     prepaid_is_paid = fields.Boolean(compute="_compute_prepaid_is_paid", store=True)
+    contribution_price_subtotal = fields.Float(
+        compute="_compute_contribution_subtotal", store=True
+    )
+
+    # TODO contrainte product.prepaid_revenue_account_id et compte analytic ?
+    # et account_id is prepaid account ?
 
     @api.depends(
         "account_id",
@@ -77,6 +84,27 @@ class AccountMoveLine(models.Model):
             if abs(record.timesheet_qty - record.quantity) > 0.001:
                 record.timesheet_error = "⏰ %s" % record.timesheet_qty
 
+    @api.depends(
+        "move_id",
+        "analytic_account_id.partner_id",
+        "move_id.move_type",
+        "product_id.prepaid_revenue_account_id",
+        "amount_currency",
+    )
+    def _compute_contribution_subtotal(self):
+        for line in self:
+            contribution_price = 0
+            if (
+                line.move_id.move_type in ["in_invoice", "in_refund"]
+                and line.product_id.prepaid_revenue_account_id
+                and line.analytic_account_id
+            ):
+                contribution = line.company_id.with_context(
+                    partner=line.analytic_account_id.partner_id
+                )._get_commission_rate()
+                contribution_price = line.amount_currency / (1 - contribution)
+            line.contribution_price_subtotal = contribution_price
+
     def open_task(self):
         self.ensure_one()
         action = self.env.ref("project.action_view_task").sudo().read()[0]
@@ -97,6 +125,23 @@ class AccountMoveLine(models.Model):
         else:
             return super()._get_computed_account()
 
+    def _prepaid_account_amounts(self):
+        account_amounts = defaultdict(float)
+        for prepaid_line in self:
+            if (
+                not prepaid_line.product_id.prepaid_revenue_account_id
+                or not prepaid_line.product_id.property_account_income_id
+            ):
+                raise  # TODO what is it ?? contrainte ?
+            account_amounts[
+                (
+                    prepaid_line.product_id.prepaid_revenue_account_id,
+                    prepaid_line.product_id.property_account_income_id,
+                    prepaid_line.analytic_account_id,
+                )
+            ] += prepaid_line.contribution_price_subtotal
+        return account_amounts
+
 
 class AccountMove(models.Model):
     _inherit = "account.move"
@@ -112,6 +157,12 @@ class AccountMove(models.Model):
     )
     customer_id = fields.Many2one(
         "res.partner", compute="_compute_customer_id", store=True
+    )
+    subcontractor_state_message = fields.Text(
+        compute="_compute_subcontractor_state", compute_sudo=True
+    )
+    subcontractor_state_color = fields.Char(
+        compute="_compute_subcontractor_state", compute_sudo=True
     )
 
     @api.depends("invoice_line_ids.analytic_account_id")
@@ -134,6 +185,126 @@ class AccountMove(models.Model):
                 inv.is_supplier_prepaid = True
             else:
                 pass
+
+    def _compute_subcontractor_state(self):  # noqa: C901
+        precision = self.env["decimal.precision"].precision_get("Account")
+        for inv in self:
+            reason = ""
+            color = ""
+            if (
+                inv.move_type != "in_invoice"
+                or inv.payment_state == "paid"
+                or inv.state == "cancel"
+            ):
+                inv.subcontractor_state_message = reason
+                inv.subcontractor_state_color = color
+                continue
+            if inv.to_pay:
+                if inv.line_ids.payment_line_ids:
+                    reason = (
+                        """La facture a été ajoutée au prochain ordre de paiement qui """
+                        """est à l'état '%s'.\nElle devrait être payée dans les prochains """
+                        """jours""" % inv.line_ids.payment_line_ids.mapped("state")[0]
+                    )
+                    color = "success"
+                else:
+                    reason = (
+                        """La facture est à payer, elle sera incluse dans le prochain """
+                        """ordre de paiement."""
+                    )
+                    color = "success"
+            elif inv.customer_invoice_id:
+                if (
+                    inv.state == "draft"
+                    and inv.auto_invoice_id
+                    and float_compare(
+                        inv.amount_total,
+                        inv.auto_invoice_id.amount_total,
+                        precision_digits=precision,
+                    )
+                ):
+                    reason = (
+                        """La facture est en brouillon car le montant de la facture ne """
+                        """correspond pas à celui de la facture inter société."""
+                    )  # TODO block action_post ?
+                    color = "danger"
+                if inv.invalid_work_amount:
+                    reason = (
+                        """Le montant des lignes de factures n'est pas cohérent avec le """
+                        """montant des lignes de sous-traitance."""  # TODO block to pay ?
+                    )
+                    color = "danger"
+                if inv.customer_invoice_id.payment_state != "paid":
+                    reason = (
+                        """La facture client Akretion %s n'est pas encore payée ou son """
+                        """paiement n'a pas encore été importé dans l'erp."""
+                        % inv.customer_invoice_id.name
+                    )
+                    color = "info"
+            elif inv.is_supplier_prepaid:
+                prepaid_lines = inv.invoice_line_ids.filtered(
+                    lambda line: line.product_id.prepaid_revenue_account_id
+                )
+                account_amounts = prepaid_lines._prepaid_account_amounts()
+                account_reasons = []
+                other_draft_invoices = self.env["account.move"]
+                for (
+                    _prepaid_revenue_account,
+                    _revenue_account,
+                    analytic_account,
+                ), amount in account_amounts.items():
+                    # read on project not very intuitive to discuss
+                    project = analytic_account.project_ids[0]
+                    total_amount = project.prepaid_total_amount
+                    available_amount = project.prepaid_available_amount
+                    if inv.state == "draft":
+                        total_amount -= amount
+                        available_amount -= amount
+                        other_draft_invoices = self.env["account.move.line"].search(
+                            [
+                                ("parent_state", "=", "draft"),
+                                ("analytic_account_id", "=", analytic_account.id),
+                                ("move_id", "!=", inv.id),
+                                ("move_id.move_type", "=", ["in_invoice", "in_refund"]),
+                            ]
+                        )
+                    if float_compare(total_amount, 0, precision_digits=precision) == -1:
+                        account_reasons.append(
+                            """Le solde du compte analytique %s est négatif %s. """
+                            """Il est necessaire de facturer le client."""
+                            % (analytic_account.name, total_amount)
+                        )
+                        color = "danger"
+                    elif (
+                        float_compare(available_amount, 0, precision_digits=precision)
+                        == -1
+                    ):
+                        account_reasons.append(
+                            """Le solde payé du compte analytique %s est insuffisant %s. """
+                            """La facture sera payable une fois que le client aura reglé """
+                            """ses factures."""
+                            % (analytic_account.name, available_amount)
+                        )
+                        if color != "red":
+                            color = "info"
+                    else:
+                        account_reasons.append(
+                            """Le solde payé du compte analytique %s est suffisant. """
+                            """La facture sera payable une fois que la tâche planifiée """
+                            """aura tourné.""" % analytic_account.name
+                        )
+                        if not color:
+                            color = "success"
+                if other_draft_invoices:
+                    account_reasons.append(
+                        """Attention, il existe des factures à l'état 'brouillon' pour """
+                        """ce/ces comptes analytiques, elle peuvent influer les montants """
+                        """disponibles."""
+                    )
+                reason = "\n".join(account_reasons)
+            # TODO infra
+            inv.subcontractor_state_message = reason
+            inv.subcontractor_state_color = color
 
     def action_view_subcontractor(self):
         self.ensure_one()
@@ -159,11 +330,12 @@ class AccountMove(models.Model):
         if self.move_type in ["out_invoice", "out_refund"]:
             action["domain"] = [("invoice_id", "=", self.id)]
         elif self.move_type in ["in_invoice", "in_refund"]:
+            works = self.invoice_line_ids.subcontractor_work_invoiced_id
             action["domain"] = [
                 (
                     "id",
                     "=",
-                    self.invoice_line_ids.subcontractor_work_invoiced_id.timesheet_line_ids.ids,
+                    works.timesheet_line_ids.ids,
                 )
             ]
         return action
@@ -217,48 +389,20 @@ class AccountMove(models.Model):
             prepaid_move = self.create(vals)
             self.write({"prepaid_countdown_move_id": prepaid_move.id})
         line_vals_list = []
-        account_amounts = defaultdict(float)
-        for prepaid_line in prepaid_lines:
-            #            line_vals = {
-            #            "name": prepaid_line.name,
-            #            "account_id": prepaid_line.account_id.id,
-            #            "amount_currency": -prepaid_line.amount_currency,
-            #            "move_id": prepaid_move.id,
-            #            }
-            #            line_vals = self.env["account.move.line"].play_onchanges(
-            #                line_vals, ["account_id", "amount_currency"]
-            #            )
-            #            line_vals_list.append(line_vals)
-            if (
-                not prepaid_line.product_id.prepaid_revenue_account_id
-                or not prepaid_line.product_id.property_account_income_id
-            ):
-                raise
-            account_amounts[
-                (
-                    prepaid_line.product_id.prepaid_revenue_account_id,
-                    prepaid_line.product_id.property_account_income_id,
-                    prepaid_line.analytic_account_id,
-                )
-            ] += prepaid_line.amount_currency
+        account_amounts = prepaid_lines._prepaid_account_amounts()
         for (
-            prepaid_revenue_accout,
+            prepaid_revenue_account,
             revenue_account,
             analytic_account,
-        ), amount_curr in account_amounts.items():
+        ), amount in account_amounts.items():
             # prepaid line
-            # Add AK contribution
             name = "prepaid transfer from invoice %s - %s" % (
                 self.name,
                 self.customer_id.name,
             )
-            contribution = self.company_id.with_context(
-                partner=analytic_account.partner_id
-            )._get_commission_rate()
-            amount = amount_curr / (1 - contribution)
             line_vals = {
                 "name": name,
-                "account_id": prepaid_revenue_accout.id,
+                "account_id": prepaid_revenue_account.id,
                 "amount_currency": amount,
                 "move_id": prepaid_move.id,
                 "partner_id": analytic_account.partner_id.id,

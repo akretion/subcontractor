@@ -27,6 +27,7 @@
         "views/project_invoice_typology.xml",
         "views/product_template.xml",
         "views/account_account.xml",
+        "views/res_partner.xml",
         "wizards/res_config_settings.xml",
         "data/ir_cron.xml",
     ],
