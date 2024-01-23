@@ -4,6 +4,7 @@
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+from odoo.tools import float_compare
 
 
 class AccountMoveLine(models.Model):
@@ -218,3 +219,27 @@ class AccountMove(models.Model):
                 _("You can't cancel an invoice already invoiced by subcontractor")
             )
         return super().button_cancel()
+
+    def action_post(self):
+        invalid_invoice = self.filtered(lambda m: m.invalid_work_amount)
+        if invalid_invoice:
+            raise UserError(
+                _("You can't validate an invoice with invalid work amount!")
+            )
+        precision = self.env["decimal.precision"].precision_get("Account")
+        invalid_invoice = self.filtered(
+            lambda m: m.auto_invoice_id
+            and float_compare(
+                m.amount_total,
+                m.auto_invoice_id.amount_total,
+                precision_digits=precision,
+            )
+        )
+        if invalid_invoice:
+            raise UserError(
+                _(
+                    "You can't validate an invoice that is not consistent with its "
+                    "intercompany invoice."
+                )
+            )
+        return super().action_post()

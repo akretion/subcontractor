@@ -6,20 +6,37 @@ from odoo import api, fields, models
 class AccountAnalyticAccount(models.Model):
     _inherit = "account.analytic.account"
 
-    available_amount = fields.Monetary(compute="_compute_available_amount")
+    available_amount = fields.Monetary(compute="_compute_prepaid_amount")
+    total_amount = fields.Monetary(compute="_compute_prepaid_amount")
     account_move_line_ids = fields.One2many("account.move.line", "analytic_account_id")
 
     @api.depends("account_move_line_ids.prepaid_is_paid")
     def _compute_available_amount(self):
         for account in self:
-            account_amounts = self.env["account.move.line"].read_group(
-                [
-                    ("analytic_account_id", "=", account.id),
-                    ("prepaid_is_paid", "=", True),
-                ],
-                ["analytic_account_id", "amount_currency"],
-                ["analytic_account_id"],
+            move_lines, paid_lines = account._prepaid_move_lines()
+            total_amount = -sum(move_lines.mapped("amount_currency")) or 0.0
+            available_amount = -sum(paid_lines.mapped("amount_currency")) or 0.0
+            account.total_amount = total_amount
+            account.available_amount = available_amount
+
+    def _prepaid_move_lines(self):
+        self.ensure_one()
+        move_lines = self.env["account.move.line"].search(
+            [
+                ("analytic_account_id", "=", self.id),
+                ("account_id.is_prepaid_account", "=", True),
+            ],
+        )
+        paid_lines = move_lines.filtered(
+            lambda m: m.prepaid_is_paid
+            or (
+                m.move_id.supplier_invoice_ids
+                and all(
+                    [
+                        x.to_pay and x.payment_state != "paid"
+                        for x in m.move_id.supplier_invoice_ids
+                    ]
+                )
             )
-            account.available_amount = -(
-                account_amounts and account_amounts[0]["amount_currency"] or 0.0
-            )
+        )
+        return move_lines, paid_lines

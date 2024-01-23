@@ -6,8 +6,8 @@ from odoo import fields, models
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
-    prepaid_available_amount = fields.Float(compute="_compute_prepaid_amount")
-    prepaid_total_amount = fields.Float(compute="_compute_prepaid_amount")
+    prepaid_available_amount = fields.Monetary(compute="_compute_prepaid_amount")
+    prepaid_total_amount = fields.Monetary(compute="_compute_prepaid_amount")
 
     def _compute_prepaid_amount(self):
         for partner in self:
@@ -33,7 +33,10 @@ class ResPartner(models.Model):
         )
         move_lines = paid_lines = self.env["account.move.line"]
         for project in projects:
-            project_move_lines, project_paid_lines = project._prepaid_move_lines()
+            (
+                project_move_lines,
+                project_paid_lines,
+            ) = project.analytic_account_id._prepaid_move_lines()
             move_lines |= project_move_lines
             paid_lines |= project_paid_lines
         if self.env.context.get("prepaid_is_paid"):

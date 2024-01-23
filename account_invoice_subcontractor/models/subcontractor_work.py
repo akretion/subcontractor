@@ -476,11 +476,3 @@ class SubcontractorWork(models.Model):
                 )
             )
         return super().unlink()
-
-    def action_post(self):
-        invalid_invoice = self.filtered(lambda m: m.invalid_work_amount)
-        if invalid_invoice:
-            raise UserError(
-                _("You can't validate an invoice with invalid work amount!")
-            )
-        return super().action_post()

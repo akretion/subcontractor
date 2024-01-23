@@ -33,9 +33,6 @@ class AccountMoveLine(models.Model):
         compute="_compute_contribution_subtotal", store=True
     )
 
-    # TODO contrainte product.prepaid_revenue_account_id et compte analytic ?
-    # et account_id is prepaid account ?
-
     @api.depends(
         "account_id",
         "move_id.payment_state",
@@ -149,6 +146,19 @@ class AccountMove(models.Model):
     subcontractor_state_color = fields.Char(
         compute="_compute_subcontractor_state", compute_sudo=True
     )
+    invoicing_mode = fields.Char(compute="_compute_invoicing_mode", store=True)
+
+    @api.depends("invoice_line_ids.analytic_account_id")
+    def _compute_invoicing_mode(self):
+        for move in self:
+            if move.move_type not in ("in_invoice", "in_refund"):
+                continue
+            modes = move.invoice_line_ids.analytic_account_id.project_ids.mapped(
+                "invoicing_mode"
+            )
+            move.invoicing_mode = (
+                modes and all(x == modes[0] for x in modes) and modes[0] or False
+            )
 
     def _prepaid_account_amounts(self):
         self.ensure_one()
@@ -234,12 +244,12 @@ class AccountMove(models.Model):
                     reason = (
                         """La facture est en brouillon car le montant de la facture ne """
                         """correspond pas à celui de la facture inter société."""
-                    )  # TODO block action_post ?
+                    )
                     color = "danger"
                 if inv.invalid_work_amount:
                     reason = (
                         """Le montant des lignes de factures n'est pas cohérent avec le """
-                        """montant des lignes de sous-traitance."""  # TODO block to pay ?
+                        """montant des lignes de sous-traitance."""
                     )
                     color = "danger"
                 if inv.customer_invoice_id.payment_state != "paid":
@@ -259,9 +269,14 @@ class AccountMove(models.Model):
                     analytic_account,
                 ), amount in account_amounts.items():
                     # read on project not very intuitive to discuss
-                    project = analytic_account.project_ids[0]
-                    total_amount = project.prepaid_total_amount
-                    available_amount = project.prepaid_available_amount
+                    if not analytic_account:
+                        reason = (
+                            """Le compte analytic est obligatoire sur les lignes de """
+                            """cette facture."""
+                        )
+                        break
+                    total_amount = analytic_account.total_amount
+                    available_amount = analytic_account.available_amount
                     if inv.state == "draft":
                         total_amount -= amount
                         available_amount -= amount
@@ -307,7 +322,11 @@ class AccountMove(models.Model):
                         """disponibles."""
                     )
                 reason = "\n".join(account_reasons)
-            # TODO infra
+            elif inv.invoicing_mode == "supplier":
+                reason = (
+                    """La validation et le paiement de cette facture se font manuellement """
+                    """selon la gestion des budgets."""
+                )
             inv.subcontractor_state_message = reason
             inv.subcontractor_state_color = color
 
@@ -452,7 +471,7 @@ class AccountMove(models.Model):
             raise exceptions.ValidationError(
                 _(
                     "All invoice lines of a supplier invoice with prepaid product "
-                    "should be consistent"
+                    "should be consistent."
                 )
             )
         if self.is_supplier_prepaid and not self.customer_id:
@@ -462,6 +481,13 @@ class AccountMove(models.Model):
                     "Check that all the analytic accounts of the line belong to the "
                     "same partner"
                 )
+            )
+        modes = self.invoice_line_ids.analytic_account_id.project_ids.mapped(
+            "invoicing_mode"
+        )
+        if modes and not all(x == modes[0] for x in modes):
+            raise exceptions.ValidationError(
+                _("All invoice lines should have the same invoicing mode.")
             )
 
     def _post(self, soft=True):
