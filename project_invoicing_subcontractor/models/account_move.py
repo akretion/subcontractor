@@ -3,6 +3,7 @@
 from collections import defaultdict
 
 from odoo import _, api, exceptions, fields, models
+from odoo.fields import first
 from odoo.tools import float_compare
 
 
@@ -463,6 +464,29 @@ class AccountMove(models.Model):
                         % line.name
                     )
                 )
+            if (
+                line.product_id.prepaid_revenue_account_id
+                and line.move_id.move_type in ("out_invoice", "out_refund")
+            ):
+                project_typology = first(
+                    line.analytic_account_id.project_ids
+                ).invoicing_typology_id
+                if project_typology.product_id != line.product_id:
+                    raise exceptions.ValidationError(
+                        _(
+                            "Line %s is not valid, the analytic_account is not "
+                            "consistent with the chosen product" % line.name
+                        )
+                    )
+                project_partner = first(line.analytic_account_id.project_ids).partner_id
+                if project_partner != line.move_id.partner_id:
+                    raise exceptions.ValidationError(
+                        _(
+                            "Line %s is not valid, the analytic_account is not "
+                            "consistent with the chosen customer" % line.name
+                        )
+                    )
+
         if self.is_supplier_prepaid and not all(
             [
                 line.product_id.prepaid_revenue_account_id
