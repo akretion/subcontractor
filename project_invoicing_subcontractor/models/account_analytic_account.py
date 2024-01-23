@@ -11,7 +11,7 @@ class AccountAnalyticAccount(models.Model):
     account_move_line_ids = fields.One2many("account.move.line", "analytic_account_id")
 
     @api.depends("account_move_line_ids.prepaid_is_paid")
-    def _compute_available_amount(self):
+    def _compute_prepaid_amount(self):
         for account in self:
             move_lines, paid_lines = account._prepaid_move_lines()
             total_amount = -sum(move_lines.mapped("amount_currency")) or 0.0

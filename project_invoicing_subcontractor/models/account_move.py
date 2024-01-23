@@ -271,7 +271,7 @@ class AccountMove(models.Model):
                     # read on project not very intuitive to discuss
                     if not analytic_account:
                         reason = (
-                            """Le compte analytic est obligatoire sur les lignes de """
+                            """Le compte analytique est obligatoire sur les lignes de """
                             """cette facture."""
                         )
                         break
@@ -310,16 +310,17 @@ class AccountMove(models.Model):
                     else:
                         account_reasons.append(
                             """Le solde payé du compte analytique %s est suffisant. """
-                            """La facture sera payable une fois que la tâche planifiée """
-                            """aura tourné.""" % analytic_account.name
+                            """La facture sera payable une fois qu'elle sera validée et """
+                            """que la tâche planifiée aura tourné."""
+                            % analytic_account.name
                         )
                         if not color:
                             color = "success"
                 if other_draft_invoices:
                     account_reasons.append(
                         """Attention, il existe des factures à l'état 'brouillon' pour """
-                        """ce/ces comptes analytiques, elle peuvent influer les montants """
-                        """disponibles."""
+                        """ce/ces comptes analytiques, si elles sont validées, elles """
+                        """peuvent influer les montants disponibles."""
                     )
                 reason = "\n".join(account_reasons)
             elif inv.invoicing_mode == "supplier":
