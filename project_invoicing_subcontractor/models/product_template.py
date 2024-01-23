@@ -13,3 +13,8 @@ class ProductTemplate(models.Model):
         help="Configure a prepaid account only if this product is used to invoice stuff"
         " in advance.",
     )
+
+    def _get_product_accounts(self):
+        res = super()._get_product_accounts()
+        res["prepaid"] = self.prepaid_revenue_account_id
+        return res

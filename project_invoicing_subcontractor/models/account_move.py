@@ -121,26 +121,11 @@ class AccountMoveLine(models.Model):
             self.move_id.move_type in ("out_refund", "out_invoice")
             and self.product_id.prepaid_revenue_account_id
         ):
-            return self.product_id.prepaid_revenue_account_id
+            return self.product_id.product_tmpl_id.get_product_accounts(
+                self.move_id.fiscal_position_id
+            ).get("prepaid")
         else:
             return super()._get_computed_account()
-
-    def _prepaid_account_amounts(self):
-        account_amounts = defaultdict(float)
-        for prepaid_line in self:
-            if (
-                not prepaid_line.product_id.prepaid_revenue_account_id
-                or not prepaid_line.product_id.property_account_income_id
-            ):
-                raise  # TODO what is it ?? contrainte ?
-            account_amounts[
-                (
-                    prepaid_line.product_id.prepaid_revenue_account_id,
-                    prepaid_line.product_id.property_account_income_id,
-                    prepaid_line.analytic_account_id,
-                )
-            ] += prepaid_line.contribution_price_subtotal
-        return account_amounts
 
 
 class AccountMove(models.Model):
@@ -164,6 +149,29 @@ class AccountMove(models.Model):
     subcontractor_state_color = fields.Char(
         compute="_compute_subcontractor_state", compute_sudo=True
     )
+
+    def _prepaid_account_amounts(self):
+        self.ensure_one()
+        prepaid_lines = self.invoice_line_ids.filtered(
+            lambda line: line.product_id.prepaid_revenue_account_id
+        )
+        account_amounts = defaultdict(float)
+        fpos = self.customer_id.property_account_position_id
+
+        for prepaid_line in prepaid_lines:
+            accounts = prepaid_line.product_id.product_tmpl_id.get_product_accounts(
+                fiscal_pos=fpos
+            )
+            prepaid_account = accounts.get("prepaid")
+            revenue_account = accounts.get("income")
+            account_amounts[
+                (
+                    prepaid_account,
+                    revenue_account,
+                    prepaid_line.analytic_account_id,
+                )
+            ] += prepaid_line.contribution_price_subtotal
+        return account_amounts
 
     @api.depends("invoice_line_ids.analytic_account_id")
     def _compute_customer_id(self):
@@ -242,10 +250,7 @@ class AccountMove(models.Model):
                     )
                     color = "info"
             elif inv.is_supplier_prepaid:
-                prepaid_lines = inv.invoice_line_ids.filtered(
-                    lambda line: line.product_id.prepaid_revenue_account_id
-                )
-                account_amounts = prepaid_lines._prepaid_account_amounts()
+                account_amounts = inv._prepaid_account_amounts()
                 account_reasons = []
                 other_draft_invoices = self.env["account.move"]
                 for (
@@ -371,10 +376,7 @@ class AccountMove(models.Model):
 
     def _manage_prepaid_lines(self):
         self.ensure_one()
-        prepaid_lines = self.invoice_line_ids.filtered(
-            lambda line: line.product_id.prepaid_revenue_account_id
-        )
-        if not prepaid_lines:
+        if not self.is_supplier_prepaid:
             return self.browse(False)
         prepaid_move = self.prepaid_countdown_move_id
         if prepaid_move:
@@ -389,7 +391,7 @@ class AccountMove(models.Model):
             prepaid_move = self.create(vals)
             self.write({"prepaid_countdown_move_id": prepaid_move.id})
         line_vals_list = []
-        account_amounts = prepaid_lines._prepaid_account_amounts()
+        account_amounts = self._prepaid_account_amounts()
         for (
             prepaid_revenue_account,
             revenue_account,
@@ -451,6 +453,14 @@ class AccountMove(models.Model):
                 _(
                     "All invoice lines of a supplier invoice with prepaid product "
                     "should be consistent"
+                )
+            )
+        if self.is_supplier_prepaid and not self.customer_id:
+            raise exceptions.ValidationError(
+                _(
+                    "You can't have a supplier invoice related to multiple end-customer"
+                    "Check that all the analytic accounts of the line belong to the "
+                    "same partner"
                 )
             )
 
