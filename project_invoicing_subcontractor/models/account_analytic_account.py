@@ -7,7 +7,8 @@ class AccountAnalyticAccount(models.Model):
     _inherit = "account.analytic.account"
 
     available_amount = fields.Monetary(compute="_compute_prepaid_amount")
-    total_amount = fields.Monetary(compute="_compute_prepaid_amount")
+    prepaid_total_amount = fields.Monetary(compute="_compute_prepaid_amount")
+    prepaid_available_amount = fields.Monetary(compute="_compute_prepaid_amount")
     account_move_line_ids = fields.One2many("account.move.line", "analytic_account_id")
 
     @api.depends("account_move_line_ids.prepaid_is_paid")
@@ -16,8 +17,17 @@ class AccountAnalyticAccount(models.Model):
             move_lines, paid_lines = account._prepaid_move_lines()
             total_amount = -sum(move_lines.mapped("amount_currency")) or 0.0
             available_amount = -sum(paid_lines.mapped("amount_currency")) or 0.0
-            account.total_amount = total_amount
-            account.available_amount = available_amount
+            account.prepaid_total_amount = total_amount
+            account.prepaid_available_amount = available_amount
+            # Keep available_amount without to_pay supplier invoices
+            account.available_amount = (
+                -sum(
+                    move_lines.filtered(lambda m: m.prepaid_is_paid).mapped(
+                        "amount_currency"
+                    )
+                )
+                or 0.0
+            )
 
     def _prepaid_move_lines(self):
         self.ensure_one()

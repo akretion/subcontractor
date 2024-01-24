@@ -278,8 +278,8 @@ class AccountMove(models.Model):
                             """cette facture."""
                         )
                         break
-                    total_amount = analytic_account.total_amount
-                    available_amount = analytic_account.available_amount
+                    total_amount = analytic_account.prepaid_total_amount
+                    available_amount = analytic_account.prepaid_available_amount
                     if inv.state == "draft":
                         total_amount -= amount
                         available_amount -= amount

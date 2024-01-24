@@ -78,8 +78,8 @@ class ProjectProject(models.Model):
                     move_lines,
                     paid_lines,
                 ) = project.analytic_account_id._prepaid_move_lines()
-                total_amount = -sum(move_lines.mapped("amount_currency")) or 0.0
-                available_amount = -sum(paid_lines.mapped("amount_currency")) or 0.0
+                total_amount = project.analytic_account_id.prepaid_total_amount
+                available_amount = project.analytic_account_id.prepaid_available_amount
             project.prepaid_total_amount = total_amount
             project.prepaid_available_amount = available_amount
 
