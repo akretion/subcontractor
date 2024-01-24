@@ -189,7 +189,9 @@ class AccountMove(models.Model):
         for move in self:
             if move.move_type not in ("in_invoice", "in_refund"):
                 continue
-            partner = move.invoice_line_ids.analytic_account_id.partner_id
+            partner = first(
+                move.invoice_line_ids.analytic_account_id.project_ids
+            ).partner_id
             move.customer_id = len(partner) == 1 and partner.id or False
 
     @api.depends("move_type", "invoice_line_ids.product_id")
@@ -428,14 +430,14 @@ class AccountMove(models.Model):
                 "account_id": prepaid_revenue_account.id,
                 "amount_currency": amount,
                 "move_id": prepaid_move.id,
-                "partner_id": analytic_account.partner_id.id,
+                "partner_id": self.customer_id.id,
                 "analytic_account_id": analytic_account.id,
             }
             line_vals = self.env["account.move.line"].play_onchanges(
                 line_vals, ["account_id", "amount_currency"]
             )
             line_vals_list.append(line_vals)
-            # revenu line
+            # revenue line
             line_vals = {
                 "name": name,
                 "account_id": revenue_account.id,
