@@ -73,10 +73,11 @@
                         name="force_uom_id"
                         string="Force Invoice uom"
                         attrs="{
-                            'invisible': [('invoicing_typology_id', '=', False)],
+                            'invisible': ['|', ('invoicing_typology_id', '=', False), ('invoicing_mode', '!=', 'customer_postpaid')],
                             'required': [('uom_id', '=', False)]
                         }"
                     />
+                    <field name="price_unit" />
                     <field
                         name="supplier_invoice_price_unit"
                         attrs="{

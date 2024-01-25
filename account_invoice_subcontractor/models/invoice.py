@@ -112,11 +112,6 @@ class AccountMoveLine(models.Model):
         res["subcontractor_work_invoiced_id"] = self.subcontractor_work_invoiced_id.id
         return res
 
-    def _prepare_invoice_data(self, dest_company):
-        vals = super()._prepare_invoice_data(dest_company)
-        vals["customer_invoice_id"] = self.origin_customer_invoice_id.id
-        return vals
-
     def edit_subcontractor(self):
         view = {
             "name": ("Details"),
@@ -227,7 +222,7 @@ class AccountMove(models.Model):
                 _("You can't validate an invoice with invalid work amount!")
             )
         precision = self.env["decimal.precision"].precision_get("Account")
-        invalid_invoice = self.filtered(
+        invalid_invoice = self.sudo().filtered(
             lambda m: m.auto_invoice_id
             and float_compare(
                 m.amount_total,
@@ -243,3 +238,8 @@ class AccountMove(models.Model):
                 )
             )
         return super().action_post()
+
+    def _prepare_invoice_data(self, dest_company):
+        vals = super()._prepare_invoice_data(dest_company)
+        vals["customer_invoice_id"] = self.origin_customer_invoice_id.id
+        return vals

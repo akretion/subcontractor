@@ -47,22 +47,28 @@ class ProjectProject(models.Model):
     )
     prepaid_available_amount = fields.Monetary(compute="_compute_prepaid_amount")
     prepaid_total_amount = fields.Monetary(compute="_compute_prepaid_amount")
-    # Not sure  we really need this.
-    #    price_unit = fields.Float(compute="_compute_price_unit")
-    #
-    #    @api.depends("partner_id", "invoicing_typology_id")
-    #    def _compute_price_unit(self):
-    #        for project in self:
-    #            price = project._get_sale_price_unit()
-    #            if project.invoicing_mode == "customer_postpaid":
-    #                project.price_unit = price
-    #            elif project.invoicing_mode == "customer_prepaid":
-    #                contribution = project.company_id.with_context(partner=partner).\
-    # _get_commission_rate()
-    #                project.price_unit = (1-contribution) = price
-    #            else:
-    #                project.price_unit = 0.0
-    #
+    price_unit = fields.Float(compute="_compute_price_unit", store=True)
+
+    @api.depends(
+        "partner_id", "invoicing_typology_id", "uom_id", "supplier_invoice_price_unit"
+    )
+    def _compute_price_unit(self):
+        for project in self:
+            if (
+                project.supplier_invoice_price_unit
+                and project.invoicing_mode == "customer_prepaid"
+            ):
+                project.price_unit = project.supplier_invoice_price_unit
+            elif project.invoicing_mode in ["customer_postpaid", "customer_prepaid"]:
+                price = project._get_sale_price_unit()
+                project.price_unit = price
+            #            elif project.invoicing_mode == "customer_prepaid":
+            #                contribution = project.company_id.with_context(
+            #                    partner=self.partner_id
+            #                )._get_commission_rate()
+            #                project.price_unit = (1 - contribution) * price
+            else:
+                project.price_unit = 0.0
 
     @api.depends(
         "invoicing_mode",
@@ -86,7 +92,10 @@ class ProjectProject(models.Model):
     @api.depends("force_uom_id", "invoicing_typology_id")
     def _compute_uom_id(self):
         for project in self:
-            if project.force_uom_id:
+            # Force day if not customer postpaid it makes no sense to use other uom
+            if project.invoicing_mode != "customer_postpaid":
+                uom_id = self.env.ref("uom.product_uom_day").id
+            elif project.force_uom_id:
                 uom_id = project.force_uom_id.id
             elif (
                 project.invoicing_typology_id.product_id.uom_id.id
@@ -121,8 +130,8 @@ class ProjectProject(models.Model):
             ):
                 raise UserError(
                     _(
-                        "The analytic account is mandatory on project configured with "
-                        "prepaid invoicing"
+                        "The analytic account is mandatory on project [%s] %s configured with "
+                        "prepaid invoicing" % (project.id, project.name)
                     )
                 )
 

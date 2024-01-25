@@ -100,7 +100,7 @@
                     name="edit_subcontractor"
                     type="object"
                     string="Edit Sub."
-                    attrs="{'invisible': [('parent.move_type', 'not in', [('out_invoice', 'out_refund')])]}"
+                    attrs="{'invisible': ['|', ('parent.move_type', 'not in', ['out_invoice', 'out_refund']), ('subcontracted', '=', False)]}"
                 />
                     <field name="subcontracted" optional="hide" />
                     <field name="subcontractor_work_ids" invisible="1">

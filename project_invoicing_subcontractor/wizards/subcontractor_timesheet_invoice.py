@@ -19,7 +19,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         for wizard in self:
             wizard.partner_id = len(partners) == 1 and partners.id or False
 
-    @api.depends("partner_id", "force_project_id")
+    @api.depends("partner_id", "force_project_id", "invoicing_mode")
     def _compute_to_invoice_partner_id(self):
         for wizard in self:
             if wizard.invoicing_mode == "customer_postpaid":
@@ -47,7 +47,9 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         help="Check this box if you do not want to use an existing invoice but create "
         "a new one instead.",
     )
-    invoice_id = fields.Many2one("account.move")
+    invoice_id = fields.Many2one(
+        "account.move", compute="_compute_invoice", readonly=False, store=True
+    )
     invoice_parent_task = fields.Boolean()
     has_parent_task = fields.Boolean(compute="_compute_has_parent_task")
 
@@ -81,6 +83,18 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             else:
                 rec.move_type = "in_invoice"
 
+    @api.depends("to_invoice_partner_id")
+    def _compute_invoice(self):
+        for rec in self:
+            if rec.invoice_id and (
+                (
+                    rec.to_invoice_partner_id
+                    and rec.invoice_id.partner_id != rec.to_invoice_partner_id
+                )
+                or not rec.to_invoice_partner_id
+            ):
+                rec.invoice_id = False
+
     @api.depends(
         "to_invoice_partner_id", "invoicing_mode", "create_invoice", "force_project_id"
     )
@@ -108,8 +122,8 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             elif rec.invoicing_mode == "customer_prepaid" and rec.invoice_id:
                 explanation = (
                     "Les temps vont être facturée dans la facture "
-                    " fournisseur existante %s et décomptés des budgets du client %s"
-                )(rec.invoice_id.display_name, rec.partner_id.name)
+                    "fournisseur existante %s et décomptés des budgets du client %s"
+                ) % (rec.invoice_id.display_name, rec.partner_id.name)
             rec.explanation = explanation
 
     def _get_default_timesheet_lines(self):
@@ -152,7 +166,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         elif len(partner_ids) != 1:
             partners = self.env["res.partner"].browse(partner_ids)
             error = _(
-                "You can only invoice timesheet with the same partner."
+                "You can only invoice timesheet with the same partner. "
                 "Partner found %s"
             ) % [x.name for x in partners]
         return error
@@ -261,12 +275,9 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             )
         if project.invoicing_typology_id.invoicing_mode != "customer_postpaid":
             vals["analytic_account_id"] = project.analytic_account_id.id
-            if project.supplier_invoice_price_unit:
-                vals["price_unit"] = project.supplier_invoice_price_unit
-            else:
-                sale_price = project._get_sale_price_unit()
-                contribution = invoice.company_id._get_commission_rate()
-                vals["price_unit"] = (1 - contribution) * sale_price
+            contribution = invoice.company_id._get_commission_rate()
+            vals["price_unit"] = (1 - contribution) * project.price_unit
+        # TODO test price unit for prepaid, postpaid et supplier avec le force
 
         # onchange_product_id call the product_uom_id on change but with default
         # product_uom (like in UI) So, the uom we give is erased and the price unit
