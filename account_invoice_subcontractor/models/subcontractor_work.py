@@ -318,8 +318,6 @@ class SubcontractorWork(models.Model):
         )
         if invoice_type in ["out_invoice", "out_refund"]:
             invoice_vals["origin_customer_invoice_id"] = orig_invoice.id
-        elif invoice_type in ["in_invoice", "in_refund"]:
-            invoice_vals["customer_invoice_id"] = orig_invoice.id
         return invoice_vals
 
     @api.model
@@ -387,10 +385,18 @@ class SubcontractorWork(models.Model):
             invoice_vals = first_work.with_company(company)._prepare_invoice()
             invoice = invoice_obj.with_company(company).create(invoice_vals)
             invoices |= invoice
+            orig_invoices = self.env["account.move"]
             for work in subcontractor_works.with_company(company):
                 inv_line_data = work._prepare_invoice_line(invoice)
                 invoice_data_list.append((0, 0, inv_line_data))
-            invoice.write({"invoice_line_ids": invoice_data_list})
+                if invoice.move_type in ["in_invoice", "in_refund"]:
+                    orig_invoices |= work.sudo().invoice_id
+            invoice.write(
+                {
+                    "invoice_line_ids": invoice_data_list,
+                    "customer_invoice_ids": [(6, 0, orig_invoices.ids)],
+                }
+            )
         return invoices
 
     def _scheduler_action_subcontractor_invoice_create(self):

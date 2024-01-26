@@ -48,14 +48,19 @@
                     string="Subcontractor Invoices"
                     class="oe_stat_button"
                     icon="fa-pencil-square-o"
-                    attrs="{'invisible': [('move_type', 'not in', ['out_invoice', 'out_refund'])]}"
+                    attrs="{'invisible': [('subcontractor_invoice_ids', '=', [])]}"
+                />
+                    <button
+                    name="action_view_customer_invoices"
+                    type="object"
+                    string="Customer Invoices"
+                    class="oe_stat_button"
+                    icon="fa-pencil-square-o"
+                    attrs="{'invisible': [('customer_invoice_ids', '=', [])]}"
                 />
                 </div>
                 <field name="partner_id" position="after">
-                    <field
-                    name="customer_invoice_id"
-                    attrs="{'invisible': [('customer_invoice_id', '=', False)]}"
-                />
+                    <field name="customer_invoice_ids" invisible="1" />
                     <field name="subcontractor_invoice_ids" invisible="1" />
                 </field>
                 <xpath expr="//tree/field[@name='name']" position="after">

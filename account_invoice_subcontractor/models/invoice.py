@@ -141,12 +141,19 @@ class AccountMove(models.Model):
     invalid_work_amount = fields.Boolean(
         compute="_compute_invalid_work_amount", store=True
     )
-    customer_invoice_id = fields.Many2one(
-        comodel_name="account.move", string="Customer invoice", readonly=True
-    )
-    subcontractor_invoice_ids = fields.One2many(
+    customer_invoice_ids = fields.Many2many(
         comodel_name="account.move",
-        inverse_name="customer_invoice_id",
+        relation="customer_subcontractor_invoice_rel",
+        column1="customer_invoice_id",
+        column2="sub_invoice_id",
+        string="Customer invoices",
+        readonly=True,
+    )
+    subcontractor_invoice_ids = fields.Many2many(
+        comodel_name="account.move",
+        relation="customer_subcontractor_invoice_rel",
+        column1="sub_invoice_id",
+        column2="customer_invoice_id",
         string="Supplier invoices",
         readonly=True,
     )
@@ -186,8 +193,20 @@ class AccountMove(models.Model):
 
     def action_view_subcontractor_invoices(self):
         self.ensure_one()
-        action = self.env.ref("account.action_move_out_invoice_type").sudo().read()[0]
+        action = self.env.ref("account.action_move_in_invoice_type").sudo().read()[0]
         action["domain"] = [("id", "in", self.subcontractor_invoice_ids.ids)]
+        action["context"] = {
+            "default_move_type": "in_invoice",
+            "move_type": "in_invoice",
+            "journal_type": "sale",
+            "active_test": False,
+        }
+        return action
+
+    def action_view_customer_invoices(self):
+        self.ensure_one()
+        action = self.env.ref("account.action_move_out_invoice_type").sudo().read()[0]
+        action["domain"] = [("id", "in", self.customer_invoice_ids.ids)]
         action["context"] = {
             "default_move_type": "out_invoice",
             "move_type": "out_invoice",
@@ -241,5 +260,5 @@ class AccountMove(models.Model):
 
     def _prepare_invoice_data(self, dest_company):
         vals = super()._prepare_invoice_data(dest_company)
-        vals["customer_invoice_id"] = self.origin_customer_invoice_id.id
+        vals["customer_invoice_ids"] = [(6, 0, self.origin_customer_invoice_id.ids)]
         return vals

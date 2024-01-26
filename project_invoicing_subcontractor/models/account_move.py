@@ -234,7 +234,7 @@ class AccountMove(models.Model):
                         """ordre de paiement."""
                     )
                     color = "success"
-            elif inv.customer_invoice_id:
+            elif inv.customer_invoice_ids:
                 if (
                     inv.state == "draft"
                     and inv.auto_invoice_id
@@ -255,11 +255,11 @@ class AccountMove(models.Model):
                         """montant des lignes de sous-traitance."""
                     )
                     color = "danger"
-                if inv.customer_invoice_id.payment_state != "paid":
+                if any([x.payment_state != "paid" for x in inv.customer_invoice_ids]):
                     reason = (
-                        """La facture client Akretion %s n'est pas encore payée ou son """
-                        """paiement n'a pas encore été importé dans l'erp."""
-                        % inv.customer_invoice_id.name
+                        """Les factures clients Akretion %s ne sont pas encore payées ou """
+                        """leur paiement n'a pas encore été importé dans l'erp."""
+                        % ", ".join(inv.customer_invoice_ids.mapped("name"))
                     )
                     color = "info"
             elif inv.is_supplier_prepaid:
@@ -279,7 +279,7 @@ class AccountMove(models.Model):
                         )
                         break
                     total_amount = analytic_account.prepaid_total_amount
-                    available_amount = analytic_account.prepaid_available_amount
+                    available_amount = analytic_account.available_amount
                     if inv.state == "draft":
                         total_amount -= amount
                         available_amount -= amount
@@ -299,7 +299,9 @@ class AccountMove(models.Model):
                         )
                         color = "danger"
                     elif (
-                        float_compare(available_amount, 0, precision_digits=precision)
+                        float_compare(
+                            available_amount, amount, precision_digits=precision
+                        )
                         == -1
                     ):
                         account_reasons.append(
@@ -358,14 +360,12 @@ class AccountMove(models.Model):
         if self.move_type in ["out_invoice", "out_refund"]:
             action["domain"] = [("invoice_id", "=", self.id)]
         elif self.move_type in ["in_invoice", "in_refund"]:
-            works = self.invoice_line_ids.subcontractor_work_invoiced_id
-            action["domain"] = [
-                (
-                    "id",
-                    "=",
-                    works.timesheet_line_ids.ids,
-                )
-            ]
+            if self.is_supplier_prepaid:
+                lines = self.invoice_line_ids.timesheet_line_ids
+            else:
+                works = self.invoice_line_ids.subcontractor_work_invoiced_id
+                lines = works.timesheet_line_ids
+            action["domain"] = [("id", "=", lines.ids)]
         return action
 
     def _move_autocomplete_invoice_lines_values(self):
