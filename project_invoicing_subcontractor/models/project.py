@@ -47,7 +47,7 @@ class ProjectProject(models.Model):
     )
     prepaid_available_amount = fields.Monetary(compute="_compute_prepaid_amount")
     prepaid_total_amount = fields.Monetary(compute="_compute_prepaid_amount")
-    price_unit = fields.Float(compute="_compute_price_unit", store=True)
+    price_unit = fields.Float(compute="_compute_price_unit")
 
     @api.depends(
         "partner_id", "invoicing_typology_id", "uom_id", "supplier_invoice_price_unit"
@@ -56,7 +56,7 @@ class ProjectProject(models.Model):
         for project in self:
             if (
                 project.supplier_invoice_price_unit
-                and project.invoicing_mode == "customer_prepaid"
+                and project.invoicing_mode != "customer_postpaid"
             ):
                 project.price_unit = project.supplier_invoice_price_unit
             elif project.invoicing_mode in ["customer_postpaid", "customer_prepaid"]:

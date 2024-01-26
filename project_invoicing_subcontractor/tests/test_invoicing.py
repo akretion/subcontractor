@@ -243,7 +243,7 @@ class TestInvoicing(AccountTestInvoicingCommon):
         self.assertTrue(demo_invoice.to_pay)
 
     def test_prepaid_invoicing_multiple_project_multiple_employee(self):
-        self.line_6_2.project_id.supplier_invoice_price_unit = 630
+        self.line_6_2.project_id.supplier_invoice_price_unit = 700
         wizard_form = Form(
             self.env["subcontractor.timesheet.invoice"].with_context(
                 active_ids=(self.line_6_2 | self.line_7_2 | self.line_1).ids

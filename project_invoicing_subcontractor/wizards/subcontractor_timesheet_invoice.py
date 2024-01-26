@@ -275,8 +275,10 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             )
         if project.invoicing_typology_id.invoicing_mode != "customer_postpaid":
             vals["analytic_account_id"] = project.analytic_account_id.id
-            contribution = invoice.company_id._get_commission_rate()
-            vals["price_unit"] = (1 - contribution) * project.price_unit
+            vals["price_unit"] = project.price_unit
+            if project.invoicing_typology_id.invoicing_mode == "customer_prepaid":
+                contribution = invoice.company_id._get_commission_rate()
+                vals["price_unit"] = (1 - contribution) * vals["price_unit"]
         # TODO test price unit for prepaid, postpaid et supplier avec le force
 
         # onchange_product_id call the product_uom_id on change but with default
