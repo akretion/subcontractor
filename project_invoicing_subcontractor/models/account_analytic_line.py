@@ -60,10 +60,7 @@ class AccountAnalyticLine(models.Model):
 
     def is_invoiceable(self):
         self.ensure_one()
-        if self.discount < 100 and self.project_id.invoicing_mode:
-            return True
-        else:
-            return False
+        return self.discount < 100 and self.project_id.invoicing_mode
 
     @api.depends(
         "discount",

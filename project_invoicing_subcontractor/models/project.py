@@ -62,11 +62,6 @@ class ProjectProject(models.Model):
             elif project.invoicing_mode in ["customer_postpaid", "customer_prepaid"]:
                 price = project._get_sale_price_unit()
                 project.price_unit = price
-            #            elif project.invoicing_mode == "customer_prepaid":
-            #                contribution = project.company_id.with_context(
-            #                    partner=self.partner_id
-            #                )._get_commission_rate()
-            #                project.price_unit = (1 - contribution) * price
             else:
                 project.price_unit = 0.0
 
