@@ -44,6 +44,9 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
     )
     create_invoice = fields.Boolean(
         default=True,
+        compute="_compute_create_invoice",
+        store=True,
+        readonly=False,
         help="Check this box if you do not want to use an existing invoice but create "
         "a new one instead.",
     )
@@ -82,6 +85,12 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
                 rec.move_type = "out_invoice"
             else:
                 rec.move_type = "in_invoice"
+
+    @api.depends("to_invoice_partner_id")
+    def _compute_create_invoice(self):
+        for rec in self:
+            if not rec.to_invoice_partner_id:
+                rec.create_invoice = True
 
     @api.depends("to_invoice_partner_id")
     def _compute_invoice(self):

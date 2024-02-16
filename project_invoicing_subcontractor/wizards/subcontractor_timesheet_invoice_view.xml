@@ -32,7 +32,7 @@
                 <field name='timesheet_line_ids' invisible="1" />
                 <field
                         name='create_invoice'
-                        attrs="{'invisible': [('invoice_id', '!=', False), ('to_invoice_partner_id', '=', False)]}"
+                        attrs="{'invisible': [('invoice_id', '!=', False), ('to_invoice_partner_id', '=', False)], 'readonly': [('to_invoice_partner_id', '=', False)]}"
                     />
                 <field
                         name='invoice_id'
