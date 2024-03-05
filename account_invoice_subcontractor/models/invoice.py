@@ -82,6 +82,8 @@ class AccountMoveLine(models.Model):
                     line.invalid_work_amount = line._check_in_invoice_amount()
                 else:
                     line.invalid_work_amount = line._check_out_invoice_amount()
+            else:
+                line.invalid_work_amount = False
 
     def _check_in_invoice_amount(self):
         return (
