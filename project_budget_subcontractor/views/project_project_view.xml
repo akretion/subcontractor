@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="edit_project" model="ir.ui.view">
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project" />
+        <field name="arch" type="xml">
+            <div name="options_active" position="after">
+                <group attrs="{'invisible': [('current_budget_id', '=', False)]}">
+                    <group>
+                        <field name="current_budget_id" invisible="1" />
+                        <field name="currency_id" invisible="1" />
+                        <field
+                            name="current_budget_amount"
+                            widget="monetary"
+                            options="{'currency_field': 'currency_id'}"
+                        />
+                        <field
+                            name="current_invoiced_amount"
+                            widget="monetary"
+                            options="{'currency_field': 'currency_id'}"
+                        />
+                        <field
+                            name="current_to_invoice_amount"
+                            widget="monetary"
+                            options="{'currency_field': 'currency_id'}"
+                        />
+                        <field
+                            name="current_remaining_amount"
+                            widget="monetary"
+                            options="{'currency_field': 'currency_id'}"
+                        />
+                    </group>
+                    <group>
+                        <field
+                            name="current_remaining_budget"
+                            widget="monetary"
+                            options="{'currency_field': 'currency_id'}"
+                        />
+                        <field
+                            name="current_budget_amount_prorata"
+                            widget="monetary"
+                            options="{'currency_field': 'currency_id'}"
+                        />
+                        <field
+                            name="current_budget_progress"
+                            widget="percentage"
+                            decoration-danger="current_budget_progress >= 100"
+                            decoration-warning="current_budget_progress >= 80 and current_budget_progress &lt; 100"
+                        />
+                        <field
+                            name="current_time_progress"
+                            widget="percentage"
+                            decoration-warning="current_budget_progress > current_time_progress"
+                        />
+                    </group>
+                </group>
+            </div>
+
+            <page name="description_page" position="after">
+                <page name="budget_page" string="Budgets">
+                    <field name="budget_ids">
+                        <tree
+                            editable="bottom"
+                            decoration-bf="id == parent.current_budget_id"
+                        >
+                            <field name="id" invisible="1" />
+                            <field name="currency_id" invisible="1" />
+                            <field name="name" />
+                            <field name="start_date" />
+                            <field name="end_date" />
+                            <field
+                                name="budget_amount"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                            />
+                            <field
+                                name="invoiced_amount"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                            />
+                            <field
+                                name="to_invoice_amount"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                            />
+                            <field
+                                name="remaining_amount"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                            />
+                            <field
+                                name="remaining_budget"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                            />
+                        </tree>
+                    </field>
+                </page>
+            </page>
+        </field>
+    </record>
+
+
+    <record id="view_project_kanban" model="ir.ui.view">
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.view_project_kanban" />
+        <field name="arch" type="xml">
+            <field name="analytic_account_id" position="after">
+                <field name="current_budget_progress" />
+            </field>
+            <div class="o_project_kanban_boxes" position="inside">
+
+                <a
+                    t-if="record.current_budget_progress.raw_value > 0"
+                    class="o_project_kanban_box o_project_timesheet_box"
+                    type="open"
+                    groups="project.group_project_user"
+                >
+                    <div>
+                        <t t-esc="record.current_budget_progress.raw_value * 100" />%
+                    </div>
+                </a>
+            </div>
+        </field>
+    </record>
+</odoo>
