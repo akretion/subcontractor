@@ -6,6 +6,7 @@
         <field name="arch" type="xml">
             <search string="Subcontractor work">
                 <field name="invoice_id" />
+                <field name="supplier_invoice_id" />
                 <field name="employee_id" />
                 <separator />
                 <filter

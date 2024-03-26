@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record model="ir.ui.view" id="partner_view_form">
+        <field name="name">partner.view.buttons</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form" />
+        <field
+            name="groups_id"
+            eval="[(4, ref('account.group_account_invoice')), (4, ref('account.group_account_readonly'))]"
+        />
+        <field name="arch" type="xml">
+            <div name="button_box" position="inside">
+                <button
+                    class="oe_stat_button"
+                    name="action_partner_prepaid_move_line"
+                    type="object"
+                    icon="fa-usd"
+                >
+                    <div class="o_field_widget o_stat_info">
+                        <div class="oe_inline">
+                            <span class="o_stat_value mr-1">
+                                <field
+                                    name="prepaid_total_amount"
+                                    widget="statinfo"
+                                    nolabel="1"
+                                />
+                            </span>
+                            <span class="o_stat_text">€</span>
+                        </div>
+                        <span class="o_stat_text">Total</span>
+                    </div>
+                </button>
+                <button
+                    class="oe_stat_button"
+                    name="action_partner_prepaid_move_line"
+                    type="object"
+                    icon="fa-usd"
+                    context="{'prepaid_is_paid': True}"
+                >
+                    <div class="o_field_widget o_stat_info">
+                        <div class="oe_inline">
+                            <span class="o_stat_value mr-1">
+                                <field
+                                    name="prepaid_available_amount"
+                                    widget="statinfo"
+                                    nolabel="1"
+                                />
+                            </span>
+                            <span class="o_stat_text">€</span>
+                        </div>
+                        <span class="o_stat_text">Available</span>
+                    </div>
+                </button>
+            </div>
+        </field>
+    </record>
+
+</odoo>

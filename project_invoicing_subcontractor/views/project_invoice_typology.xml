@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="view_project_invoice_typology_view_search" model="ir.ui.view">
+        <field name="model">project.invoice.typology</field>
+        <field name="arch" type="xml">
+            <search string="Project Invoice Typology">
+                <field name="name" />
+                <field name="product_id" />
+            </search>
+        </field>
+    </record>
+
+    <record id="view_project_invoice_typology_view_tree" model="ir.ui.view">
+        <field name="model">project.invoice.typology</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom">
+                <field name="name" />
+                <field name="product_id" />
+                <field name="invoicing_mode" />
+                <field name="company_id" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_project_invoice_typology" model="ir.actions.act_window">
+        <field name="name">Project Invoicing Typology</field>
+        <field name="res_model">project.invoice.typology</field>
+        <field name="view_mode">tree</field>
+    </record>
+
+    <menuitem
+        action="action_project_invoice_typology"
+        id="menu_action_project_invoice_typology"
+        parent="account.account_invoicing_menu"
+        sequence="100"
+    />
+
+</odoo>

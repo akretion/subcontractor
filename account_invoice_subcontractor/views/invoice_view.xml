@@ -41,6 +41,28 @@
             <field name="model">account.move</field>
             <field name="inherit_id" ref="account.view_move_form" />
             <field name="arch" type="xml">
+                <div name="button_box" position="inside">
+                    <button
+                    name="action_view_subcontractor_invoices"
+                    type="object"
+                    string="Subcontractor Invoices"
+                    class="oe_stat_button"
+                    icon="fa-pencil-square-o"
+                    attrs="{'invisible': [('subcontractor_invoice_ids', '=', [])]}"
+                />
+                    <button
+                    name="action_view_customer_invoices"
+                    type="object"
+                    string="Customer Invoices"
+                    class="oe_stat_button"
+                    icon="fa-pencil-square-o"
+                    attrs="{'invisible': [('customer_invoice_ids', '=', [])]}"
+                />
+                </div>
+                <field name="partner_id" position="after">
+                    <field name="customer_invoice_ids" invisible="1" />
+                    <field name="subcontractor_invoice_ids" invisible="1" />
+                </field>
                 <xpath expr="//tree/field[@name='name']" position="after">
                     <field
                     name="subcontractors"
@@ -83,6 +105,7 @@
                     name="edit_subcontractor"
                     type="object"
                     string="Edit Sub."
+                    attrs="{'invisible': ['|', ('parent.move_type', 'not in', ['out_invoice', 'out_refund']), ('subcontracted', '=', False)]}"
                 />
                     <field name="subcontracted" optional="hide" />
                     <field name="subcontractor_work_ids" invisible="1">

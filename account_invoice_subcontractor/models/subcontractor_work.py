@@ -154,7 +154,8 @@ class SubcontractorWork(models.Model):
     # #                 supplier_invoice_year.name)
 
     def _get_commission_rate(self):
-        return self.employee_id.commission_rate / 100.0
+        company = self.invoice_line_id.company_id or self.env.company
+        return company._get_commission_rate()
 
     @api.depends(
         "employee_id",
@@ -175,8 +176,8 @@ class SubcontractorWork(models.Model):
             cost_price_unit = sale_price_unit * rate
             work.sale_price_unit = sale_price_unit
             work.cost_price_unit = cost_price_unit
-            work.cost_price = work.quantity * cost_price_unit
-            work.sale_price = work.quantity * sale_price_unit
+            work.cost_price = work.quantity * work.cost_price_unit
+            work.sale_price = work.quantity * work.sale_price_unit
 
     @api.onchange("employee_id")
     def employee_id_onchange(self):
@@ -211,6 +212,7 @@ class SubcontractorWork(models.Model):
     def check(self, work_type=False):
         partner_id = self[0].customer_id.id
         worktype = self[0].subcontractor_type
+        invoice_type = self[0].invoice_id.move_type
         for work in self:
             dest_invoice_company = work._get_dest_invoice_company()
             if dest_invoice_company not in self.env.companies:
@@ -235,6 +237,13 @@ class SubcontractorWork(models.Model):
             elif work_type and work.subcontractor_type != work_type:
                 raise UserError(
                     _("You can invoice on only the %s subcontractors" % work_type)
+                )
+            elif invoice_type != work.invoice_id.move_type:
+                raise UserError(
+                    _(
+                        "You can't invoice refund and invoice together, you should do "
+                        "it separately"
+                    )
                 )
 
     @api.model
@@ -307,6 +316,8 @@ class SubcontractorWork(models.Model):
                 "user_id": user.id,
             }
         )
+        if invoice_type in ["out_invoice", "out_refund"]:
+            invoice_vals["origin_customer_invoice_id"] = orig_invoice.id
         return invoice_vals
 
     @api.model
@@ -374,10 +385,18 @@ class SubcontractorWork(models.Model):
             invoice_vals = first_work.with_company(company)._prepare_invoice()
             invoice = invoice_obj.with_company(company).create(invoice_vals)
             invoices |= invoice
+            orig_invoices = self.env["account.move"]
             for work in subcontractor_works.with_company(company):
                 inv_line_data = work._prepare_invoice_line(invoice)
                 invoice_data_list.append((0, 0, inv_line_data))
-            invoice.write({"invoice_line_ids": invoice_data_list})
+                if invoice.move_type in ["in_invoice", "in_refund"]:
+                    orig_invoices |= work.sudo().invoice_id
+            invoice.write(
+                {
+                    "invoice_line_ids": invoice_data_list,
+                    "customer_invoice_ids": [(6, 0, orig_invoices.ids)],
+                }
+            )
         return invoices
 
     def _scheduler_action_subcontractor_invoice_create(self):

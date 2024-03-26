@@ -14,7 +14,7 @@ class SubcontractorInvoiceWork(models.TransientModel):
         work_obj = self.env["subcontractor.work"]
         work_ids = self._context.get("active_ids")
         works = work_obj.browse(work_ids)
-        works.check()
+        works.sudo().check()
         invoices = works.invoice_from_work()
         return {
             "name": _("Customer Invoices"),

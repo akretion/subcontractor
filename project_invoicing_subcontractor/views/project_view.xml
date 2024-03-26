@@ -5,45 +5,96 @@
         <field name="model">project.project</field>
         <field name="inherit_id" ref="project.edit_project" />
         <field name="arch" type="xml">
+            <div name="button_box" position="inside">
+                <button
+                    class="oe_stat_button"
+                    name="action_project_prepaid_move_line"
+                    type="object"
+                    icon="fa-usd"
+                    attrs="{'invisible': [('invoicing_mode', '!=', 'customer_prepaid')]}"
+                >
+                    <div class="o_field_widget o_stat_info">
+                        <div class="oe_inline">
+                            <span class="o_stat_value mr-1">
+                                <field
+                                    name="prepaid_total_amount"
+                                    widget="statinfo"
+                                    nolabel="1"
+                                />
+                            </span>
+                            <span class="o_stat_text">€</span>
+                        </div>
+                        <span class="o_stat_text">Total</span>
+                    </div>
+                </button>
+                <button
+                    class="oe_stat_button"
+                    name="action_project_prepaid_move_line"
+                    type="object"
+                    icon="fa-usd"
+                    attrs="{'invisible': [('invoicing_mode', '!=', 'customer_prepaid')]}"
+                    context="{'prepaid_is_paid': True}"
+                >
+                    <div class="o_field_widget o_stat_info">
+                        <div class="oe_inline">
+                            <span class="o_stat_value mr-1">
+                                <field
+                                    name="prepaid_available_amount"
+                                    widget="statinfo"
+                                    nolabel="1"
+                                />
+                            </span>
+                            <span class="o_stat_text">€</span>
+                        </div>
+                        <span class="o_stat_text">Available</span>
+                    </div>
+                </button>
+            </div>
+            <field name="partner_id" position="attributes">
+                <attribute
+                    name="attrs"
+                >{'required': [('invoicing_typology_id', '!=', False)]}</attribute>
+            </field>
+            <field name="analytic_account_id" position="attributes">
+                <attribute
+                    name="attrs"
+                >{'required': [('invoicing_mode', '=', 'customer_prepaid')]}</attribute>
+            </field>
             <group name="extra_settings" position="after">
                 <group string="Invoicing" name="invoicing">
+                    <field name="invoicing_typology_id" />
                     <field name="invoicing_mode" />
                     <field
-                        name="invoicing_stage_id"
-                        attrs="{
-                            'invisible': [('invoicing_mode', '=', 'none')],
-                            'required': [('invoicing_mode', '!=', 'none')]
-                        }"
-                    />
-                    <field
-                        name="product_id"
-                        attrs="{
-                            'invisible': [('invoicing_mode', '=', 'none')],
-                            'required': [('invoicing_mode', '!=', 'none')]
-                        }"
-                    />
-                    <field
                         name="uom_id"
-                        attrs="{
-                            'invisible': [('invoicing_mode', '=', 'none')],
-                        }"
+                        string="Default Invoice uom"
+                        attrs="{'invisible': ['|', ('force_uom_id', '!=', False), ('uom_id', '=', False)]}"
                     />
                     <field
-                        name="supplier_invoice_account_expense_id"
+                        name="force_uom_id"
+                        string="Force Invoice uom"
                         attrs="{
-                            'invisible': [('invoicing_mode', '!=', 'supplier')],
-                            'required': [('invoicing_mode', '=', 'supplier')]
+                            'invisible': ['|', ('invoicing_typology_id', '=', False), ('invoicing_mode', '!=', 'customer_postpaid')],
+                            'required': [('uom_id', '=', False)]
                         }"
                     />
+                    <field name="price_unit" />
                     <field
                         name="supplier_invoice_price_unit"
                         attrs="{
-                            'invisible': [('invoicing_mode', '!=', 'supplier')],
+                            'invisible': [('invoicing_mode', 'not in', ('customer_prepaid', 'supplier'))],
                             'required': [('invoicing_mode', '=', 'supplier')]
                         }"
                     />
                 </group>
             </group>
+            <field name="force_uom_id" position="after">
+                <field name="hour_uom_id" position="move" />
+            </field>
+            <field name="hour_uom_id" position="attributes">
+                <attribute
+                    name="attrs"
+                >{'invisible': [('uom_id', '!=', %(uom.product_uom_day)d)]}</attribute>
+            </field>
         </field>
     </record>
 
@@ -51,9 +102,6 @@
         <field name="model">project.task</field>
         <field name="inherit_id" ref="hr_timesheet.view_task_form2_inherited" />
         <field name="arch" type="xml">
-            <field name="tag_ids" position="after">
-                <field name="invoicing" />
-            </field>
             <xpath expr="//tree/field[@name='unit_amount']" position="after">
                 <field name="discount" />
             </xpath>

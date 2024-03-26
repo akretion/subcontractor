@@ -2,3 +2,9 @@ from . import project
 from . import account_move
 from . import subcontractor_work
 from . import account_analytic_line
+from . import project_invoice_typology
+from . import product_template
+from . import res_company
+from . import account_analytic_account
+from . import account_account
+from . import res_partner

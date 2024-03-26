@@ -6,13 +6,12 @@
         <field name="inherit_id" ref="hr_timesheet.hr_timesheet_line_search" />
         <field name="arch" type="xml">
             <field name="task_id" position="after">
-                <field name="invoice_id" />
-                <field name="task_stage_id" />
-                <field name="date_invoiceable" string="Date Invoice" />
+                <field name="invoice_id" string="Invoice" />
+                <field name="task_stage_id" string="Task Stage" />
                 <filter
                     name="to_invoice"
                     string="To invoice"
-                    domain="[('invoiceable', '=', True), ('invoice_id', '=', False)]"
+                    domain="[('invoiceable_amount', '>', 0.0), ('invoice_id', '=', False), ('project_id.invoicing_typology_id', '!=', False)]"
                 />
             </field>
 
@@ -22,12 +21,6 @@
                     name="stage"
                     domain="[]"
                     context="{'group_by':'task_stage_id'}"
-                />
-                <filter
-                    string="Invoiceable Date"
-                    name="date_invoiceable"
-                    domain="[]"
-                    context="{'group_by':'date_invoiceable'}"
                 />
                 <filter
                     string="Parent Task"
@@ -60,7 +53,6 @@
                     optional="show"
                 />
                 <field name="invoiceable" optional="hide" />
-                <field name="date_invoiceable" optional="hide" />
                 <field name="invoice_id" optional="show" />
             </field>
         </field>
