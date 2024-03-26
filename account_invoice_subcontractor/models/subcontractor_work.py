@@ -267,12 +267,27 @@ class SubcontractorWork(models.Model):
             invoice_type = orig_invoice.move_type
             journal_type = "sale"
             partner = self.customer_id
+            original_invoice_date = orig_invoice.invoice_date
+            last_invoices = self.env["account.move"].search(
+                [
+                    ("move_type", "=", invoice_type),
+                    ("company_id", "=", company.id),
+                    ("invoice_date", ">", original_invoice_date),
+                    ("name", "!=", False),
+                ],
+                order="invoice_date desc",
+            )
+            if not last_invoices:
+                invoice_date = original_invoice_date
+            else:
+                invoice_date = last_invoices[0].invoice_date
         elif self.subcontractor_type == "external":
             invoice_type = (
                 orig_invoice.move_type == "out_invoice" and "in_invoice" or "in_refund"
             )
             journal_type = "purchase"
             partner = self.employee_id._get_employee_invoice_partner()
+            invoice_date = fields.Date.today()
         if invoice_type in ["out_invoice", "out_refund"]:
             user = self.env["res.users"].search(
                 [("company_id", "=", company.id)], limit=1
@@ -292,20 +307,6 @@ class SubcontractorWork(models.Model):
         invoice_vals = self.env["account.move"].play_onchanges(
             invoice_vals, ["partner_id"]
         )
-        original_invoice_date = orig_invoice.invoice_date
-        last_invoices = self.env["account.move"].search(
-            [
-                ("move_type", "=", invoice_type),
-                ("company_id", "=", company.id),
-                ("invoice_date", ">", original_invoice_date),
-                ("name", "!=", False),
-            ],
-            order="invoice_date desc",
-        )
-        if not last_invoices:
-            invoice_date = original_invoice_date
-        else:
-            invoice_date = last_invoices[0].invoice_date
         invoice_vals.update(
             {
                 "invoice_date": invoice_date,
