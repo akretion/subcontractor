@@ -518,9 +518,12 @@ class AccountMove(models.Model):
             )
 
     def _post(self, soft=True):
+        for move in self:
+            if move.subcontractor_state_color == "danger":
+                raise exceptions.UserError(move.subcontractor_state_message)
+            move._check_invoice_mode_validity()
         res = super()._post(soft=soft)
         for move in self:
-            move._check_invoice_mode_validity()
             if move.is_supplier_prepaid:
                 move._manage_prepaid_lines()
                 move.compute_enought_analytic_amount(partner_id=move.customer_id.id)

@@ -216,12 +216,8 @@ class TestInvoicing(AccountTestInvoicingCommon):
         self.assertTrue(demo_invoice.to_pay)
 
         # set admin invoice one day later to be sure demo invoice has priority
-        admin_invoice.write({"invoice_date": date.today() + timedelta(days=1)})
-        admin_invoice.action_post()
-        self.env["account.move"].compute_enought_analytic_amount()
-        self.assertFalse(admin_invoice.to_pay)
-        self.assertTrue(demo_invoice.to_pay)
-
+        # Add customer invoice so there is enough amount to validate the admin invoice
+        # but it is not paid
         customer_invoice2 = self._create_prepaid_customer_invoice(
             1.99, self.line_5_2.project_id.analytic_account_id
         )
@@ -230,6 +226,12 @@ class TestInvoicing(AccountTestInvoicingCommon):
             0.01, self.line_5_2.project_id.analytic_account_id
         )
         customer_invoice3.action_post()
+        admin_invoice.write({"invoice_date": date.today() + timedelta(days=1)})
+        admin_invoice.action_post()
+        self.env["account.move"].compute_enought_analytic_amount()
+        self.assertFalse(admin_invoice.to_pay)
+        self.assertTrue(demo_invoice.to_pay)
+
         self.env["account.payment.register"].with_context(
             active_ids=customer_invoice2.ids, active_model="account.move"
         ).create({})._create_payments()
