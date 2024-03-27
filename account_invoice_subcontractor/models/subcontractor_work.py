@@ -287,7 +287,7 @@ class SubcontractorWork(models.Model):
             )
             journal_type = "purchase"
             partner = self.employee_id._get_employee_invoice_partner()
-            invoice_date = fields.Date.today()
+            invoice_date = False
         if invoice_type in ["out_invoice", "out_refund"]:
             user = self.env["res.users"].search(
                 [("company_id", "=", company.id)], limit=1
