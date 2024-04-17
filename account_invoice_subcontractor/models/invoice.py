@@ -83,7 +83,10 @@ class AccountMoveLine(models.Model):
                 else:
                     line.invalid_work_amount = line._check_out_invoice_amount()
             else:
-                line.invalid_work_amount = False
+                if line.subcontractor_work_ids:
+                    line.invalid_work_amount = line.price_subtotal
+                else:
+                    line.invalid_work_amount = False
 
     def _check_in_invoice_amount(self):
         return (
