@@ -40,6 +40,9 @@
             <field name="project_id" position="before">
                 <field name="partner_id" optional="show" />
             </field>
+            <field name="task_id" position="attributes">
+                <attribute name="required">1</attribute>
+            </field>
             <field name="task_id" position="after">
                 <field name="parent_task_id" optional="hide" />
                 <field name="task_stage_id" optional="show" />
