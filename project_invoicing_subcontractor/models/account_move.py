@@ -299,9 +299,7 @@ class AccountMove(models.Model):
                         )
                         color = "danger"
                     elif (
-                        float_compare(
-                            available_amount, amount, precision_digits=precision
-                        )
+                        float_compare(available_amount, 0, precision_digits=precision)
                         == -1
                     ):
                         account_reasons.append(
