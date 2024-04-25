@@ -11,6 +11,17 @@
             >
                 <field name="discount" />
             </xpath>
+            <field name="add_line_task_id" position="attributes">
+                <attribute
+                    name="attrs"
+                >{'required': [('add_line_project_id', '!=', False)]}</attribute>
+            </field>
+            <xpath
+                expr="//field[@name='timesheet_ids']/tree/field[@name='task_id']"
+                position="attributes"
+            >
+                <attribute name="required">1</attribute>
+            </xpath>
         </field>
     </record>
 
