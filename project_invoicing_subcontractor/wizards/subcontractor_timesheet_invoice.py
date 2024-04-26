@@ -53,7 +53,9 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
     invoice_id = fields.Many2one(
         "account.move", compute="_compute_invoice", readonly=False, store=True
     )
-    invoice_parent_task = fields.Boolean()
+    invoice_parent_task = fields.Boolean(
+        compute="_compute_invoice_parent_task", store=True, readonly=False
+    )
     has_parent_task = fields.Boolean(compute="_compute_has_parent_task")
 
     invoicing_typology_id = fields.Many2one(
@@ -71,6 +73,27 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         "account.analytic.line",
         default=lambda self: self._get_default_timesheet_lines(),
     )
+
+    @api.depends("invoice_id", "create_invoice")
+    def _compute_invoice_parent_task(self):
+        for rec in self:
+            # In case an invoice is beeing modified, if invoice_parent_task option
+            # was used when it was first created, it has to be used also during
+            # modification. For consistency, of course, but also because the method
+            # we use to update an invoice is to delete an invoice line and re-create
+            # it. If we are not in the same mode, we may delete an invoice line
+            # linked to multiple task and try to recreate multiple lines...It is
+            # not what we want, and it is not implemented either, so it fails.
+            if rec.invoice_id and not rec.create_invoice:
+                is_invoiced_with_parent_task = (
+                    rec.invoice_id._is_invoiced_with_parent_task_option()
+                )
+                # if result is None, there were no child task timesheet on the invoice
+                # in that case, do not change the option choosen by user.
+                if is_invoiced_with_parent_task is True:
+                    rec.invoice_parent_task = True
+                elif is_invoiced_with_parent_task is False:
+                    rec.invoice_parent_task = False
 
     @api.depends("timesheet_line_ids")
     def _compute_has_parent_task(self):

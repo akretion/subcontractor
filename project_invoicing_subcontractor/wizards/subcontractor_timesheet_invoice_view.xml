@@ -23,7 +23,7 @@
                 <field name='has_parent_task' invisible="1" />
                 <field
                         name="invoice_parent_task"
-                        attrs="{'invisible': [('has_parent_task', '=', False)]}"
+                        attrs="{'invisible': [('has_parent_task', '=', False)], 'readonly': [('invoice_id', '!=', False)]}"
                     />
 
                 <field name="to_invoice_partner_id" invisible="1" />
