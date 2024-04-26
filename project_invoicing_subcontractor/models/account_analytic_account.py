@@ -17,9 +17,17 @@ class AccountAnalyticAccount(models.Model):
             move_lines, paid_lines = account._prepaid_move_lines()
             total_amount = -sum(move_lines.mapped("amount_currency")) or 0.0
             available_amount = -sum(paid_lines.mapped("amount_currency")) or 0.0
+            not_paid_lines = move_lines - paid_lines
+            supplier_not_paid = not_paid_lines.filtered(
+                lambda line: line.amount_currency > 0.0
+            )
+            available_amount -= sum(supplier_not_paid.mapped("amount_currency"))
             account.prepaid_total_amount = total_amount
+            # this one is used for display/info, so we show what is really available
+            # as if all supplier invoices were paid.
             account.prepaid_available_amount = available_amount
-            # Keep available_amount without to_pay supplier invoices
+            # Keep available_amount without to_pay supplier invoices neither ongoing
+            # supplier invoices because it is used to make them to pay.
             account.available_amount = (
                 -sum(
                     move_lines.filtered(lambda m: m.prepaid_is_paid).mapped(
