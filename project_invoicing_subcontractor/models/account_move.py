@@ -637,3 +637,28 @@ class AccountMove(models.Model):
                 "paid",
             ):
                 invoice.to_pay = True
+
+    def _is_invoiced_with_parent_task_option(self):
+        """
+        Res is True if invoice has been invoiced with parent task option
+               False if invoice has been invoiced without parent task option
+               None if it was not applicable. (no child task in the invoice)
+        """
+        self.ensure_one()
+        res = None
+        # check if invoice parent task was used during invoicing
+        has_child_task = False
+        for inv_line in self.invoice_line_ids:
+            timesheet_tasks = inv_line.subcontractor_work_ids.timesheet_line_ids.task_id
+            if not timesheet_tasks:
+                continue
+            if not has_child_task and inv_line.task_id.parent_id:
+                has_child_task = True
+            if len(timesheet_tasks) > 1 or (
+                len(timesheet_tasks) == 1 and timesheet_tasks.id != inv_line.task_id
+            ):
+                res = True
+                break
+        if not res and has_child_task:
+            res = False
+        return res
