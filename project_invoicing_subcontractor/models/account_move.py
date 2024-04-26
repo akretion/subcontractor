@@ -279,10 +279,8 @@ class AccountMove(models.Model):
                         )
                         break
                     total_amount = analytic_account.prepaid_total_amount
-                    available_amount = analytic_account.available_amount
+                    available_amount = analytic_account.prepaid_available_amount
                     if inv.state == "draft":
-                        total_amount -= amount
-                        available_amount -= amount
                         other_draft_invoices = self.env["account.move.line"].search(
                             [
                                 ("parent_state", "=", "draft"),
@@ -291,17 +289,46 @@ class AccountMove(models.Model):
                                 ("move_id.move_type", "=", ["in_invoice", "in_refund"]),
                             ]
                         )
-                    if float_compare(total_amount, 0, precision_digits=precision) == -1:
+                    if (
+                        inv.state == "draft"
+                        and float_compare(
+                            total_amount, amount, precision_digits=precision
+                        )
+                        == -1
+                    ):
+                        account_reasons.append(
+                            """Le solde du compte analytique %s n'est pas suffisant : %s. """
+                            """Il est necessaire de facturer le client."""
+                            % (analytic_account.name, total_amount)
+                        )
+                        color = "danger"
+                    elif inv.state == "draft" and (
+                        float_compare(
+                            available_amount, amount, precision_digits=precision
+                        )
+                        == -1
+                    ):
+                        account_reasons.append(
+                            """Le solde payé du compte analytique %s est insuffisant %s. """
+                            """La facture sera payable une fois que le client aura reglé """
+                            """ses factures."""
+                            % (analytic_account.name, available_amount)
+                        )
+                        if color != "red":
+                            color = "info"
+                    elif (
+                        inv.state != "draft"
+                        and float_compare(total_amount, 0, precision_digits=precision)
+                        == -1
+                    ):
                         account_reasons.append(
                             """Le solde du compte analytique %s est négatif %s. """
                             """Il est necessaire de facturer le client."""
                             % (analytic_account.name, total_amount)
                         )
                         color = "danger"
-                    elif (
-                        float_compare(
-                            available_amount, amount, precision_digits=precision
-                        )
+                    elif inv.state != "draft" and (
+                        float_compare(available_amount, 0, precision_digits=precision)
                         == -1
                     ):
                         account_reasons.append(
