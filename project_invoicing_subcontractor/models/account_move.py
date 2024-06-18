@@ -508,7 +508,7 @@ class AccountMove(models.Model):
                         )
                     )
                 project_partner = first(line.analytic_account_id.project_ids).partner_id
-                if project_partner != line.move_id.partner_id:
+                if project_partner != line.move_id.partner_id.commercial_partner_id:
                     raise exceptions.ValidationError(
                         _(
                             "Line %s is not valid, the analytic_account is not "
