@@ -12,6 +12,9 @@ class ProjectBudget(models.Model):
 
     name = fields.Char(required=True)
     project_id = fields.Many2one("project.project", required=True, tracking=True)
+    partner_id = fields.Many2one(
+        "res.partner", related="project_id.partner_id", store=True
+    )
     start_date = fields.Date(required=True, tracking=True)
     end_date = fields.Date(required=True, tracking=True)
     currency_id = fields.Many2one(
@@ -19,10 +22,18 @@ class ProjectBudget(models.Model):
     )
     budget_amount = fields.Float(required=True, tracking=True)
 
-    invoiced_amount = fields.Float(compute="_compute_invoiced_amount")
-    to_invoice_amount = fields.Float(compute="_compute_to_invoice_amount")
-    remaining_amount = fields.Float(compute="_compute_remaining_amount")
-    remaining_budget = fields.Float(compute="_compute_remaining_budget")
+    invoiced_amount = fields.Float(
+        compute="_compute_invoiced_amount", string="Montant Facturé"
+    )
+    to_invoice_amount = fields.Float(
+        compute="_compute_to_invoice_amount", string="Montant à Facturer"
+    )
+    remaining_amount = fields.Float(
+        compute="_compute_remaining_amount", string="Montant Restant Estimé"
+    )
+    remaining_budget = fields.Float(
+        compute="_compute_remaining_budget", string="Budget Restant"
+    )
     budget_amount_prorata = fields.Float(
         compute="_compute_budget_amount_prorata", string="Time Prorata"
     )
@@ -69,22 +80,26 @@ class ProjectBudget(models.Model):
     @api.depends("project_id.timesheet_ids", "start_date", "end_date")
     def _compute_to_invoice_amount(self):
         today = fields.Date.today()
+        data = self.env["account.analytic.line"].read_group(
+            [
+                ("project_id", "in", self.project_id.ids),
+                "|",
+                ("invoice_line_id", "=", False),
+                ("invoice_line_id.parent_state", "=", "draft"),
+            ],
+            ["invoiceable_amount:sum"],
+            ["project_id"],
+        )
+        p2hours = {item["project_id"][0]: item["invoiceable_amount"] for item in data}
         for budget in self:
             if not budget.start_date or not budget.end_date or budget.end_date < today:
                 budget.to_invoice_amount = 0.0
                 continue
-            account_analytic_line = budget.project_id.timesheet_ids.filtered(
-                lambda aal: (
-                    not aal.invoice_line_id
-                    or aal.invoice_line_id.parent_state == "draft"
-                )
-            )
-            budget.to_invoice_amount = -sum(
-                budget.project_id.convert_hours_to_days(
-                    aal.unit_amount * (1 - aal.discount / 100.0)
-                )
-                * aal.amount
-                for aal in account_analytic_line
+            project = budget.project_id
+            if isinstance(project.id, models.NewId):
+                project = project._origin
+            budget.to_invoice_amount = (
+                project.convert_hours_to_days(p2hours[project.id]) * project.price_unit
             )
 
     @api.depends(

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="project_budget_view_tree" model="ir.ui.view">
+        <field name="model">project.budget</field>
+        <field name="arch" type="xml">
+            <tree create="0" edit="0">
+                <field name="partner_id" />
+                <field name="project_id" />
+                <field name="name" />
+                <field name="start_date" />
+                <field name="end_date" />
+                <field
+                    name="budget_amount"
+                    widget="monetary"
+                    options="{'currency_field': 'currency_id'}"
+                />
+                <field
+                    name="invoiced_amount"
+                    widget="monetary"
+                    options="{'currency_field': 'currency_id'}"
+                />
+                <field
+                    name="to_invoice_amount"
+                    widget="monetary"
+                    options="{'currency_field': 'currency_id'}"
+                />
+                <field
+                    name="remaining_amount"
+                    widget="monetary"
+                    options="{'currency_field': 'currency_id'}"
+                />
+                <field
+                    name="remaining_budget"
+                    widget="monetary"
+                    options="{'currency_field': 'currency_id'}"
+                />
+            </tree>
+        </field>
+    </record>
+
+    <record id="project_budget_view_search" model="ir.ui.view">
+        <field name="model">project.budget</field>
+        <field name="arch" type="xml">
+            <search string="Budget">
+                <field name="project_id" />
+                <filter
+                    name="current"
+                    domain="[
+                    ('start_date', '&lt;=', context_today().strftime('%Y-%m-%d')),
+                    ('end_date', '&gt;=', context_today().strftime('%Y-%m-%d')),
+                    ]"
+                />
+                <group expand="0" string="Group By">
+                    <filter
+                        string="Customer"
+                        name="customer"
+                        domain="[]"
+                        context="{'group_by': 'partner_id'}"
+                    />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="project_budget_action">
+        <field name="name">Budget</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">project.budget</field>
+        <field name="view_mode">tree</field>
+        <field name="search_view_id" ref="project_budget_view_search" />
+        <field name="domain">[]</field>
+        <field name="context">{"search_default_current": 1}</field>
+    </record>
+
+    <menuitem
+        id="project_budget_menu"
+        parent="project.menu_main_pm"
+        sequence="20"
+        action="project_budget_action"
+    />
+
+</odoo>
