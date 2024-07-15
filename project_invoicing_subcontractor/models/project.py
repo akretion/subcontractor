@@ -125,8 +125,8 @@ class ProjectProject(models.Model):
             ):
                 raise UserError(
                     _(
-                        "The analytic account is mandatory on project [%s] %s configured with "
-                        "prepaid invoicing" % (project.id, project.name)
+                        f"The analytic account is mandatory on project [{project.id}] "
+                        f"{project.name} configured with prepaid invoicing"
                     )
                 )
 
@@ -139,8 +139,8 @@ class ProjectProject(models.Model):
             ):
                 raise UserError(
                     _(
-                        "All projects linked to a same analytic account has to have the "
-                        "same customer."
+                        "All projects linked to a same analytic account has to have the"
+                        " same customer."
                     )
                 )
             if project.analytic_account_id and not all(
@@ -151,8 +151,8 @@ class ProjectProject(models.Model):
             ):
                 raise UserError(
                     _(
-                        "All projects linked to a same analytic account has to have the "
-                        "same invoicing mode."
+                        "All projects linked to a same analytic account has to have the"
+                        " same invoicing mode."
                     )
                 )
 

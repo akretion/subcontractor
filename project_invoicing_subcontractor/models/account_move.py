@@ -223,15 +223,16 @@ class AccountMove(models.Model):
             if inv.to_pay:
                 if inv.line_ids.payment_line_ids:
                     reason = (
-                        """La facture a été ajoutée au prochain ordre de paiement qui """
-                        """est à l'état '%s'.\nElle devrait être payée dans les prochains """
-                        """jours""" % inv.line_ids.payment_line_ids.mapped("state")[0]
+                        "La facture a été ajoutée au prochain ordre de paiement qui "
+                        "est à l'état '%s'.\nElle devrait être payée dans les prochains"
+                        " jours"
+                        "" % inv.line_ids.payment_line_ids.mapped("state")[0]
                     )
                     color = "success"
                 else:
                     reason = (
-                        """La facture est à payer, elle sera incluse dans le prochain """
-                        """ordre de paiement."""
+                        "La facture est à payer, elle sera incluse dans le prochain "
+                        "ordre de paiement."
                     )
                     color = "success"
             elif inv.customer_invoice_ids:
@@ -245,20 +246,20 @@ class AccountMove(models.Model):
                     )
                 ):
                     reason = (
-                        """La facture est en brouillon car le montant de la facture ne """
-                        """correspond pas à celui de la facture inter société."""
+                        "La facture est en brouillon car le montant de la facture ne "
+                        "correspond pas à celui de la facture inter société."
                     )
                     color = "danger"
                 if inv.invalid_work_amount:
                     reason = (
-                        """Le montant des lignes de factures n'est pas cohérent avec le """
-                        """montant des lignes de sous-traitance."""
+                        "Le montant des lignes de factures n'est pas cohérent avec le "
+                        "montant des lignes de sous-traitance."
                     )
                     color = "danger"
                 if any([x.payment_state != "paid" for x in inv.customer_invoice_ids]):
                     reason = (
-                        """Les factures clients Akretion %s ne sont pas encore payées ou """
-                        """leur paiement n'a pas encore été importé dans l'erp."""
+                        "Les factures clients Akretion %s ne sont pas encore payées ou"
+                        " leur paiement n'a pas encore été importé dans l'erp."
                         % ", ".join(inv.customer_invoice_ids.mapped("name"))
                     )
                     color = "info"
@@ -274,8 +275,8 @@ class AccountMove(models.Model):
                     # read on project not very intuitive to discuss
                     if not analytic_account:
                         reason = (
-                            """Le compte analytique est obligatoire sur les lignes de """
-                            """cette facture."""
+                            "Le compte analytique est obligatoire sur les lignes de "
+                            "cette facture."
                         )
                         break
                     total_amount = analytic_account.prepaid_total_amount
@@ -297,9 +298,9 @@ class AccountMove(models.Model):
                         == -1
                     ):
                         account_reasons.append(
-                            """Le solde du compte analytique %s n'est pas suffisant : %s. """
-                            """Il est necessaire de facturer le client."""
-                            % (analytic_account.name, total_amount)
+                            f"Le solde du compte analytique {analytic_account.name} "
+                            f"n'est pas suffisant : {total_amount}. "
+                            f"Il est necessaire de facturer le client."
                         )
                         color = "danger"
                     elif inv.state == "draft" and (
@@ -309,10 +310,11 @@ class AccountMove(models.Model):
                         == -1
                     ):
                         account_reasons.append(
-                            """Le solde payé du compte analytique %s est insuffisant %s. """
-                            """La facture sera payable une fois que le client aura reglé """
-                            """ses factures."""
-                            % (analytic_account.name, available_amount)
+                            f"Le solde payé du compte analytique "
+                            f"{analytic_account.name}"
+                            f" est insuffisant {available_amount}. "
+                            f"La facture sera payable une fois que le client aura reglé"
+                            f"ses factures."
                         )
                         if color != "red":
                             color = "info"
@@ -322,9 +324,9 @@ class AccountMove(models.Model):
                         == -1
                     ):
                         account_reasons.append(
-                            """Le solde du compte analytique %s est négatif %s. """
-                            """Il est necessaire de facturer le client."""
-                            % (analytic_account.name, total_amount)
+                            f"Le solde du compte analytique {analytic_account.name} "
+                            f"est négatif {total_amount}. "
+                            f"Il est necessaire de facturer le client."
                         )
                         color = "danger"
                     elif inv.state != "draft" and (
@@ -332,33 +334,34 @@ class AccountMove(models.Model):
                         == -1
                     ):
                         account_reasons.append(
-                            """Le solde payé du compte analytique %s est insuffisant %s. """
-                            """La facture sera payable une fois que le client aura reglé """
-                            """ses factures."""
-                            % (analytic_account.name, available_amount)
+                            f"Le solde payé du compte analytique "
+                            f"{analytic_account.name} est insuffisant "
+                            f"{available_amount}. "
+                            f"La facture sera payable une fois que le client aura reglé"
+                            f" ses factures."
                         )
                         if color != "red":
                             color = "info"
                     else:
                         account_reasons.append(
-                            """Le solde payé du compte analytique %s est suffisant. """
-                            """La facture sera payable une fois qu'elle sera validée et """
-                            """que la tâche planifiée aura tourné."""
-                            % analytic_account.name
+                            f"Le solde payé du compte analytique "
+                            f"{analytic_account.name} est suffisant. "
+                            f"La facture sera payable une fois qu'elle sera validée et "
+                            f"que la tâche planifiée aura tourné."
                         )
                         if not color:
                             color = "success"
                 if other_draft_invoices:
                     account_reasons.append(
-                        """Attention, il existe des factures à l'état 'brouillon' pour """
-                        """ce/ces comptes analytiques, si elles sont validées, elles """
-                        """peuvent influer les montants disponibles."""
+                        "Attention, il existe des factures à l'état 'brouillon' pour "
+                        "ce/ces comptes analytiques, si elles sont validées, elles "
+                        "peuvent influer les montants disponibles."
                     )
                 reason = "\n".join(account_reasons)
             elif inv.invoicing_mode == "supplier":
                 reason = (
-                    """La validation et le paiement de cette facture se font manuellement """
-                    """selon la gestion des budgets."""
+                    "La validation et le paiement de cette facture se font manuellement"
+                    " selon la gestion des budgets."
                 )
             inv.subcontractor_state_message = reason
             inv.subcontractor_state_color = color
@@ -447,11 +450,9 @@ class AccountMove(models.Model):
             revenue_account,
             analytic_account,
         ), amount in account_amounts.items():
+            customer_name = self.customer_id.name
             # prepaid line
-            name = "prepaid transfer from invoice %s - %s" % (
-                self.name,
-                self.customer_id.name,
-            )
+            name = f"prepaid transfer from invoice {self.name} - {customer_name}"
             line_vals = {
                 "name": name,
                 "account_id": prepaid_revenue_account.id,
@@ -630,13 +631,14 @@ class AccountMove(models.Model):
         "enough_analytic_amount",
     )
     def _compute_to_pay(self):
-        super()._compute_to_pay()
+        res = super()._compute_to_pay()
         for invoice in self:
             if invoice.enough_analytic_amount and invoice.payment_state not in (
                 "reversed",
                 "paid",
             ):
                 invoice.to_pay = True
+        return res
 
     def _is_invoiced_with_parent_task_option(self):
         """
