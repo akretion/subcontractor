@@ -64,6 +64,7 @@
                     <field name="subcontractor_invoice_ids" invisible="1" />
                 </field>
                 <xpath expr="//tree/field[@name='name']" position="after">
+                    <field name="subcontracted" optional="hide" />
                     <field
                     name="subcontractors"
                     attrs="{'column_invisible':[('parent.move_type', 'not in', ('out_invoice', 'out_refund'))]}"
@@ -107,6 +108,7 @@
                     string="Edit Sub."
                     attrs="{'invisible': ['|', ('parent.move_type', 'not in', ['out_invoice', 'out_refund']), ('subcontracted', '=', False)]}"
                 />
+                    <!-- Seems useless, remove it and see what happens
                     <field name="subcontracted" optional="hide" />
                     <field name="subcontractor_work_ids" invisible="1">
                         <tree editable="bottom">
@@ -118,8 +120,9 @@
                             <field name="sale_price" sum="Total Sale Amount" />
                             <field name="cost_price" sum="Total Cost Amount" />
                         </tree>
-                    </field>
+                    </field> -->
                 </xpath>
+                    <!-- Seems useless, remove it and see what happens
                 <xpath
                 expr="//field[@name='line_ids']/tree/field[last()]"
                 position="after"
@@ -136,7 +139,7 @@
                             <field name="cost_price" sum="Total Cost Amount" />
                         </tree>
                     </field>
-                </xpath>
+                    </xpath>-->
             </field>
         </record>
 
@@ -157,7 +160,7 @@
             <field name="model">account.move</field>
             <field name="inherit_id" ref="account.view_account_invoice_filter" />
             <field name="arch" type="xml">
-                <filter name="unpaid" position="after">
+                <filter name="open" position="after">
                     <filter
                     name="to_pay"
                     string="To pay"

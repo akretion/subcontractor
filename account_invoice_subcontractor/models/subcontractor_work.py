@@ -63,7 +63,12 @@ class SubcontractorWork(models.Model):
         string="Supplier Invoice Date",
         store=True,
     )
-    quantity = fields.Float(digits="Product Unit of Measure")
+    quantity = fields.Float(
+        digits="Product Unit of Measure",
+        compute="_compute_quantity",
+        store=True,
+        readonly=False,
+    )
     sale_price_unit = fields.Float(
         compute="_compute_price", digits="Account", store=True
     )
@@ -105,7 +110,9 @@ class SubcontractorWork(models.Model):
         compute="_compute_state", selection=INVOICE_STATE, store=True, compute_sudo=True
     )
     subcontractor_type = fields.Selection(
-        string="Subcontractor Type", selection="_get_subcontractor_type"
+        selection="_get_subcontractor_type",
+        compute="_compute_subcontractor_type",
+        store=True,
     )
     state = fields.Selection(
         compute="_compute_state",
@@ -120,38 +127,6 @@ class SubcontractorWork(models.Model):
         store=True,
         string="Unit",
     )
-    # same_fiscalyear = fields.Boolean()
-    # # We keep the data here
-    # # compute='_check_same_fiscalyear',
-    # # store=True,
-    # # compute_sudo=True)
-    # min_fiscalyear = fields.Char()
-    # # compute='_check_same_fiscalyear',
-    # # store=True,
-    # # compute_sudo=True)
-
-    # #
-    # # @api.depends(
-    # #     'invoice_line_id.invoice_id.date_invoice',
-    # #     'supplier_invoice_line_id.invoice_id.date_invoice')
-    # # def _check_same_fiscalyear(self):
-    # #     fyo = lf.env['account.fiscalyear']
-    # #     for sub in self:
-    # #         invoice_year_id = fyo.find(
-    # #             sub.invoice_line_id.invoice_id.date_invoice)
-    # #         supplier_invoice_year_id = fyo.find(
-    # #             sub.supplier_invoice_line_id.invoice_id.date_invoice)
-    # #         sub.same_fiscalyear = invoice_year_id == supplier_invoice_year_id
-    # #         invoice_year = fyo.browse(invoice_year_id)
-    # #         supplier_invoice_year = fyo.browse(supplier_invoice_year_id)
-    # #         if invoice_year and supplier_invoice_year:
-    # #             sub.min_fiscalyear = min(
-    # #                 invoice_year.name,
-    # #                 supplier_invoice_year.name)
-    # #         else:
-    # #             sub.min_fiscalyear = max(
-    # #                 invoice_year.name,
-    # #                 supplier_invoice_year.name)
 
     def _get_commission_rate(self):
         company = self.invoice_line_id.company_id or self.env.company
@@ -169,7 +144,11 @@ class SubcontractorWork(models.Model):
     def _compute_price(self):
         for work in self:
             line = work.invoice_line_id
-            sale_price_unit = line.price_unit * (1 - line.discount / 100.0)
+            # Better this way to be sure to manage all cases ? For instance if
+            # we got a tax included in price unit, we do not want it and we had it
+            # in previous way. Maybe it will give us worse rounding issue though
+            sale_price_unit = line.price_subtotal / line.quantity
+            # sale_price_unit = line.price_unit * (1 - line.discount / 100.0)
             rate = 1
             if not work.invoice_line_id.product_id.no_commission:
                 rate -= work._get_commission_rate()
@@ -179,14 +158,16 @@ class SubcontractorWork(models.Model):
             work.cost_price = work.quantity * work.cost_price_unit
             work.sale_price = work.quantity * work.sale_price_unit
 
-    @api.onchange("employee_id")
-    def employee_id_onchange(self):
-        self.ensure_one()
-        if self.employee_id:
-            self.subcontractor_type = self.employee_id.subcontractor_type
-            line = self.invoice_line_id
-            # TODO find a good way to get the right qty
-            self.quantity = line.quantity
+    @api.depends("employee_id")
+    def _compute_quantity(self):
+        for rec in self:
+            rec.quantity = self.invoice_line_id.quantity
+
+    @api.depends("employee_id")
+    def _compute_subcontractor_type(self):
+        for rec in self:
+            if rec.employee_id:
+                rec.subcontractor_type = rec.employee_id.subcontractor_type
 
     @api.depends(
         "invoice_line_id",
@@ -301,23 +282,25 @@ class SubcontractorWork(models.Model):
         )
         if not journal:
             raise UserError(
-                _('Please define %s journal for this company: "%s" (id:%d).')
-                % (journal_type, company.name, company.id)
+                _(
+                    "Please define %(journal_type)s journal for this company: "
+                    "'%(company_name)s' (id:%(company_id)d)."
+                )
+                % {
+                    "journal_type": journal_type,
+                    "company_name": company.name,
+                    "company_id": company.id,
+                }
             )
-        invoice_vals = {"partner_id": partner.id, "move_type": invoice_type}
-        invoice_vals = self.env["account.move"].play_onchanges(
-            invoice_vals, ["partner_id"]
-        )
-        invoice_vals.update(
-            {
-                "invoice_date": invoice_date,
-                "partner_id": partner.id,
-                "journal_id": journal.id,
-                "invoice_line_ids": [(6, 0, [])],
-                "currency_id": company.currency_id.id,
-                "user_id": user.id,
-            }
-        )
+        invoice_vals = {
+            "invoice_date": invoice_date,
+            "move_type": invoice_type,
+            "partner_id": partner.id,
+            "journal_id": journal.id,
+            "invoice_line_ids": [(6, 0, [])],
+            "currency_id": company.currency_id.id,
+            "user_id": user.id,
+        }
         if invoice_type in ["out_invoice", "out_refund"]:
             invoice_vals["origin_customer_invoice_id"] = orig_invoice.id
         return invoice_vals
@@ -325,7 +308,6 @@ class SubcontractorWork(models.Model):
     @api.model
     def _prepare_invoice_line(self, invoice):
         self.ensure_one()
-        invoice_line_obj = self.env["account.move.line"]
         line_vals = {
             "product_id": self.sudo().invoice_line_id.product_id.id,
             "quantity": self.quantity,
@@ -344,8 +326,6 @@ class SubcontractorWork(models.Model):
                     "end_date": self.sudo().invoice_line_id.end_date,
                 }
             )
-        onchange_vals = invoice_line_obj.play_onchanges(line_vals, ["product_id"])
-        line_vals.update(onchange_vals)
         return line_vals
 
     def _get_subcontractor_invoicing_group(self):
@@ -432,10 +412,9 @@ class SubcontractorWork(models.Model):
                     ],
                 )
             )
-            _logger.info(
-                "%s lines found for subcontractor %s"
-                % (subcontractor_works.ids, subcontractor.name)
-            )
+            sub_ids = subcontractor_works.ids
+            sub_name = subcontractor.name
+            _logger.info(f"{sub_ids} lines found for subcontractor {sub_name}")
             invoices = subcontractor_works.invoice_from_work()
             for invoice in invoices:
                 invoice.action_post()

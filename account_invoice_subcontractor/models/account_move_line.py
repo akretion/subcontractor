@@ -15,7 +15,7 @@ class AccountMoveLine(models.Model):
         "out_refund": "subcontractor_invoice_line_id",
     }
 
-    subcontracted = fields.Boolean()
+    subcontracted = fields.Boolean(compute="_compute_subcontracted")
     subcontractor_work_ids = fields.One2many(
         "subcontractor.work", "invoice_line_id", string="Subcontractor Work", copy=True
     )
@@ -37,13 +37,6 @@ class AccountMoveLine(models.Model):
                 list({x.employee_id.name[0:4] for x in rec.subcontractor_work_ids})
             )
 
-    @api.onchange("product_id")
-    def _onchange_product_id(self):
-        res = super()._onchange_product_id()
-        for rec in self:
-            rec.subcontracted = rec.product_id.subcontracted
-        return res
-
     @api.depends("move_id", "move_id.move_type")
     def _compute_subcontractor_work_invoiced_id(self):
         for line in self:
@@ -61,6 +54,13 @@ class AccountMoveLine(models.Model):
                 field = self._map_type.get(line.move_id.move_type, False)
                 if field:
                     work.sudo().write({field: line.id})
+
+    @api.depends("company_id")
+    def _compute_subcontracted(self):
+        for aml in self:
+            aml.subcontracted = aml.with_company(
+                aml.company_id
+            ).product_id.subcontracted
 
     @api.depends(
         "move_id",
@@ -108,11 +108,11 @@ class AccountMoveLine(models.Model):
         else:
             subtotal = sum(self.subcontractor_work_ids.mapped("sale_price"))
             # we use a bigger diff to avoid issue with rounding
-            return abs(subtotal - self.price_subtotal) > 5
+            return abs(subtotal - self.price_subtotal) > 0.1
 
     @api.model
-    def _prepare_account_move_line(self, dest_invoice, dest_company, form=False):
-        res = super()._prepare_account_move_line(dest_invoice, dest_company, form=form)
+    def _prepare_account_move_line(self, dest_invoice, dest_company):
+        res = super()._prepare_account_move_line(dest_invoice, dest_company)
         res["subcontractor_work_invoiced_id"] = self.subcontractor_work_invoiced_id.id
         return res
 
