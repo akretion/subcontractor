@@ -20,7 +20,6 @@ class HrEmployee(models.Model):
         "res.company", string="Subcontractor Company"
     )
     subcontractor_type = fields.Selection(
-        string="Subcontractor Type",
         selection="_get_subcontractor_type",
         required=True,
         default="internal",
