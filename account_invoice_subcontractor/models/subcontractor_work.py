@@ -218,8 +218,8 @@ class SubcontractorWork(models.Model):
             if dest_invoice_company not in self.env.companies:
                 raise UserError(
                     _(
-                        "You can't generate an invoice for a company you have no access : %s"
-                        % dest_invoice_company.name
+                        "You can't generate an invoice for a company you have no access"
+                        " : %s" % dest_invoice_company.name
                     )
                 )
             if partner_id != work.customer_id.id:
@@ -259,7 +259,8 @@ class SubcontractorWork(models.Model):
         if orig_invoice.move_type not in ("out_invoice", "out_refund"):
             raise UserError(
                 _(
-                    "You can only invoice the subcontractors on a customer invoice/refund"
+                    "You can only invoice the subcontractors on a customer "
+                    "invoice/refund"
                 )
             )
         company = self._get_dest_invoice_company()
@@ -328,7 +329,7 @@ class SubcontractorWork(models.Model):
         line_vals = {
             "product_id": self.sudo().invoice_line_id.product_id.id,
             "quantity": self.quantity,
-            "name": "Client final {} :{}".format(self.end_customer_id.name, self.name),
+            "name": f"Client final {self.end_customer_id.name} :{self.name}",
             "price_unit": self.cost_price_unit,
             "move_id": invoice.id,
             "subcontractor_work_invoiced_id": self.id,
@@ -421,16 +422,6 @@ class SubcontractorWork(models.Model):
         for subcontractor in subcontractors:
             dest_company = subcontractor.subcontractor_company_id
             user = subcontractor.user_id
-            #            # TOFIX
-            #            old_company = False
-            #            if user.company_id != dest_company:
-            #                if dest_company.id in user.company_ids.ids:
-            #                    old_company = user.company_id
-            #                    user.company_id = subcontractor.subcontractor_company_id
-            #                else:
-            #                    user = self.env["res.users"].search(
-            #                        [("company_id", "=", dest_company.id)], limit=1
-            #                    )
             subcontractor_works = (
                 self.with_user(user)
                 .with_company(dest_company)
