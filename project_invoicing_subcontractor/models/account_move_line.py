@@ -1,7 +1,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl)
 
 
-from odoo import api, fields, models
+from odoo import _, api, exceptions, fields, models
 
 
 class AccountMoveLine(models.Model):
@@ -25,6 +25,9 @@ class AccountMoveLine(models.Model):
         digits="Product Unit of Measure",
         string="Task Days",
         help="Total days of the task, helper to check if you miss some timesheet",
+    )
+    is_prepaid_line = fields.Boolean(
+        related="account_id.is_prepaid_account", store=True
     )
     prepaid_is_paid = fields.Boolean(compute="_compute_prepaid_is_paid", store=True)
     contribution_price_subtotal = fields.Float(
@@ -81,7 +84,7 @@ class AccountMoveLine(models.Model):
 
     @api.depends(
         "move_id",
-        "analytic_account_id.partner_id",
+        "analytic_account_id.project_ids.partner_id",
         "move_id.move_type",
         "product_id.prepaid_revenue_account_id",
         "amount_currency",
@@ -111,13 +114,35 @@ class AccountMoveLine(models.Model):
         )
         return action
 
-    def _get_computed_account(self):
-        if (
-            self.move_id.move_type in ("out_refund", "out_invoice")
-            and self.product_id.prepaid_revenue_account_id
-        ):
-            return self.product_id.product_tmpl_id.get_product_accounts(
-                self.move_id.fiscal_position_id
-            ).get("prepaid")
-        else:
-            return super()._get_computed_account()
+    def _compute_account_id(self):
+        res = super()._compute_account_id()
+        product_lines = self.filtered(
+            lambda line: line.display_type == "product"
+            and line.move_id.is_invoice(True)
+        )
+        for line in product_lines:
+            if (
+                line.move_id.is_sale_document()
+                and line.with_company(
+                    line.company_id
+                ).product_id.prepaid_revenue_account_id
+            ):
+                fiscal_position = line.move_id.fiscal_position_id
+                accounts = line.with_company(
+                    line.company_id
+                ).product_id.product_tmpl_id.get_product_accounts(
+                    fiscal_pos=fiscal_position
+                )
+                line.account_id = accounts["prepaid"] or line.account_id
+        return res
+
+    @api.constrains("account_id", "subcontractor_work_ids")
+    def check_no_subcontractor_prepaid(self):
+        for rec in self:
+            if rec.account_id.is_prepaid_account and rec.subcontractor_work_ids:
+                raise exceptions.UserError(
+                    _(
+                        "You can't have subcontractor on an invoice line with a prepaid"
+                        " account."
+                    )
+                )

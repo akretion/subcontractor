@@ -2,7 +2,7 @@
 
 {
     "name": "project_invoicing_subcontractor",
-    "version": "14.0.1.0.2",
+    "version": "16.0.1.0.0",
     "author": "Akretion",
     "website": "https://github.com/akretion/subcontractor",
     "license": "AGPL-3",
@@ -14,6 +14,7 @@
         "hr_timesheet_sheet",
         "account_invoice_subcontractor",
         "project_time_in_day",
+        "account_analytic_simple",
     ],
     "data": [
         "security/ir.model.access.csv",

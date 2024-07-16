@@ -122,7 +122,7 @@
         <field name="model">account.move.line</field>
         <field name="inherit_id" ref="account.view_account_move_line_filter" />
         <field name="arch" type="xml">
-            <xpath expr="//filter[@name='receivable']" position="after">
+            <xpath expr="//filter[@name='pl_accounts']" position="after">
                 <separator />
                 <filter
                     string="Prepaid is paid"

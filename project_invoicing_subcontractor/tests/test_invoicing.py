@@ -6,6 +6,7 @@
 from datetime import date, timedelta
 
 from odoo.exceptions import UserError
+from odoo.fields import Command
 from odoo.tests.common import Form, tagged
 
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
@@ -158,21 +159,29 @@ class TestInvoicing(AccountTestInvoicingCommon):
         self.assertIn(line2.task_id.name, line2.name)
 
     def _create_prepaid_customer_invoice(self, quantity, analytic_account):
-        invoice = Form(
-            self.env["account.move"].with_context(
-                default_move_type="out_invoice",
+        invoice = (
+            self.env["account.move"]
+            .with_context(default_move_type="out_invoice")
+            .create(
+                {
+                    "partner_id": self.partner.id,
+                    "invoice_date": date.today(),
+                    "invoice_line_ids": [
+                        Command.create(
+                            {
+                                "product_id": self.maintenance_product.id,
+                                "quantity": quantity,
+                                "product_uom_id": self.env.ref(
+                                    "uom.product_uom_hour"
+                                ).id,
+                                "analytic_account_id": analytic_account.id,
+                                "name": self.maintenance_product.name,
+                            }
+                        )
+                    ],
+                }
             )
         )
-        invoice.partner_id = self.partner
-        invoice.invoice_date = date.today()
-
-        with invoice.invoice_line_ids.new() as line_form:
-            line_form.product_id = self.maintenance_product
-            line_form.quantity = quantity
-            line_form.product_uom_id = self.env.ref("uom.product_uom_hour")
-            line_form.analytic_account_id = analytic_account
-            line_form.name = self.maintenance_product.name
-        invoice = invoice.save()
         return invoice
 
     def test_prepaid_invoicing_process_same_project(self):

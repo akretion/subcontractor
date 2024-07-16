@@ -271,11 +271,9 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             "quantity": lines._get_invoiceable_qty_with_project_unit(),
             "timesheet_line_ids": [(6, 0, line_ids)],
         }
-        vals = self.env["subcontractor.work"].play_onchanges(vals, ["employee_id"])
         return vals
 
     def _prepare_invoice_line(self, invoice, task, timesheet_lines):
-        line_obj = self.env["account.move.line"]
         project = self.force_project_id or task.project_id
         product = project.invoicing_typology_id.product_id
 
@@ -334,7 +332,6 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
 
         # I keep the above comment until v16 but we actually really need the onchange
         # anyway now, to get the right account and price.
-        vals = line_obj.play_onchanges(vals, ["product_id", "product_uom_id"])
 
         return vals
 
@@ -399,7 +396,6 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         vals = {"partner_id": partner.id, "move_type": move_type}
         if move_type == "in_invoice":
             vals["invoice_date"] = fields.Date.today()
-        vals = self.env["account.move"].play_onchanges(vals, ["partner_id"])
         return vals
 
     def action_customer_invoice(self):

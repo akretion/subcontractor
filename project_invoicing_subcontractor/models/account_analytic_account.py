@@ -9,9 +9,13 @@ class AccountAnalyticAccount(models.Model):
     available_amount = fields.Monetary(compute="_compute_prepaid_amount")
     prepaid_total_amount = fields.Monetary(compute="_compute_prepaid_amount")
     prepaid_available_amount = fields.Monetary(compute="_compute_prepaid_amount")
-    account_move_line_ids = fields.One2many("account.move.line", "analytic_account_id")
+    prepaid_move_line_ids = fields.One2many(
+        "account.move.line",
+        "analytic_account_id",
+        domain=[("is_prepaid_line", "=", True)],
+    )
 
-    @api.depends("account_move_line_ids.prepaid_is_paid")
+    @api.depends("prepaid_move_line_ids.prepaid_is_paid")
     def _compute_prepaid_amount(self):
         for account in self:
             move_lines, paid_lines = account._prepaid_move_lines()
@@ -46,13 +50,13 @@ class AccountAnalyticAccount(models.Model):
             ],
         )
         paid_lines = move_lines.filtered(
-            lambda m: m.prepaid_is_paid
+            lambda line: line.prepaid_is_paid
             or (
-                m.move_id.supplier_invoice_ids
+                line.move_id.supplier_invoice_ids
                 and all(
                     [
                         x.to_pay and x.payment_state != "paid"
-                        for x in m.move_id.supplier_invoice_ids
+                        for x in line.move_id.supplier_invoice_ids
                     ]
                 )
             )

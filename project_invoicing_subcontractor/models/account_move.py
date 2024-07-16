@@ -166,7 +166,11 @@ class AccountMove(models.Model):
                         other_draft_invoices = self.env["account.move.line"].search(
                             [
                                 ("parent_state", "=", "draft"),
-                                ("analytic_account_id", "=", analytic_account.id),
+                                (
+                                    "analytic_account_id",
+                                    "=",
+                                    analytic_account.id,
+                                ),
                                 ("move_id", "!=", inv.id),
                                 ("move_id.move_type", "=", ["in_invoice", "in_refund"]),
                             ]
@@ -279,24 +283,8 @@ class AccountMove(models.Model):
             action["domain"] = [("id", "=", lines.ids)]
         return action
 
-    def _move_autocomplete_invoice_lines_values(self):
-        # Following code is in this method :
-        #   if line.product_id and not line._cache.get('name'):
-        #        line.name = line._get_computed_name()
-        # it reset invoice_line name to defaut in case it is not in cache.
-        # The reason to do this would be
-        # "Furthermore, the product's label was missing on all invoice lines."
-        # https://github.com/OCA/OCB/commit/7965c890c4e6f6562d265e1605fef3384b00316e
-        # So to avoid issues I read the name before the supper to ensure it is in cache
-        # That is really depressing...
-        # TODO a PR to fix this should be done I guess, but I have not the motivation
-        # right now...
-        self.invoice_line_ids.mapped("name")
-        return super()._move_autocomplete_invoice_lines_values()
-
     def _create_prepare_prepaid_move_vals(self):
         self.ensure_one()
-        # TODO configure dedicated journal on company?
         vals = {
             "ref": _("prepaid countdown for %s") % self.name,
             "date": self.date,
@@ -342,9 +330,6 @@ class AccountMove(models.Model):
                 "partner_id": self.customer_id.id,
                 "analytic_account_id": analytic_account.id,
             }
-            line_vals = self.env["account.move.line"].play_onchanges(
-                line_vals, ["account_id", "amount_currency"]
-            )
             line_vals_list.append(line_vals)
             # revenue line
             line_vals = {
@@ -354,9 +339,6 @@ class AccountMove(models.Model):
                 "move_id": prepaid_move.id,
                 "analytic_account_id": analytic_account.id,
             }
-            line_vals = self.env["account.move.line"].play_onchanges(
-                line_vals, ["account_id", "amount_currency"]
-            )
             line_vals_list.append(line_vals)
         prepaid_move.write({"line_ids": [(0, 0, vals) for vals in line_vals_list]})
         prepaid_move.action_post()

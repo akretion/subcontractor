@@ -131,7 +131,7 @@
             >
                 <attribute name="invisible">1</attribute>
             </xpath>
-            <xpath expr="//div/strong/field[@name='name']/../.." position="after">
+            <xpath expr="//div[hasclass('o_kanban_record_headings')]" position="after">
                 <t t-set="badge" t-value="" />
                 <t
                     t-set="badge"

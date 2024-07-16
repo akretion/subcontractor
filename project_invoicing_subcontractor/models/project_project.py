@@ -68,7 +68,7 @@ class ProjectProject(models.Model):
     @api.depends(
         "invoicing_mode",
         "analytic_account_id",
-        "analytic_account_id.account_move_line_ids.prepaid_is_paid",
+        "analytic_account_id.prepaid_move_line_ids.prepaid_is_paid",
     )
     def _compute_prepaid_amount(self):
         for project in self:
@@ -109,11 +109,11 @@ class ProjectProject(models.Model):
         self.ensure_one()
         product = self._get_project_invoicing_product()
         partner = self.partner_id
-        price = product.with_context(
-            pricelist=partner.property_product_pricelist.id,
-            partner=partner.id,
-            uom=self.uom_id.id,
-        ).price
+        pricelist = partner.property_product_pricelist
+        if pricelist:
+            price = pricelist._get_product_price(product, 1, uom=self.uom_id)
+        else:
+            price = product.list_price
         return price
 
     @api.constrains("invoicing_mode", "analytic_account_id")
