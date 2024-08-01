@@ -400,13 +400,14 @@ class AccountMove(models.Model):
                     "same partner"
                 )
             )
-        modes = self.invoice_line_ids.analytic_account_id.project_ids.mapped(
-            "invoicing_mode"
-        )
-        if modes and not all(x == modes[0] for x in modes):
-            raise exceptions.ValidationError(
-                _("All invoice lines should have the same invoicing mode.")
+        if self.move_type in ("in_invoice", "in_refund"):
+            modes = self.invoice_line_ids.analytic_account_id.project_ids.mapped(
+                "invoicing_mode"
             )
+            if modes and not all(x == modes[0] for x in modes):
+                raise exceptions.ValidationError(
+                    _("All invoice lines should have the same invoicing mode.")
+                )
 
     def _post(self, soft=True):
         for move in self:
