@@ -18,8 +18,10 @@ class TestSubcontractorInvoice(TestAccountInvoiceInterCompanyBase):
         cls.invoice_obj = cls.env["account.move"]
 
         # configure subcontracted product
-        cls.product_consultant_multi_company.write({"subcontracted": True})
-        cls.product_consultant_multi_company.sudo(cls.user_company_b.id).write(
+        cls.product_consultant_multi_company.with_user(cls.user_company_a.id).write(
+            {"subcontracted": True}
+        )
+        cls.product_consultant_multi_company.with_user(cls.user_company_b.id).write(
             {"property_account_income_id": cls.a_sale_company_b.id}
         )
 
@@ -75,6 +77,9 @@ class TestSubcontractorInvoice(TestAccountInvoiceInterCompanyBase):
         """Company A sell stuff to customer B but subcontract it to company B"""
         # ensure our user is in company A
         self.env.user.company_id = self.company_a.id
+        self.env.user.write(
+            {"groups_id": [(4, self.env.ref("account.group_account_user").id)]}
+        )
 
         invoice = Form(
             self.account_move_obj.with_company(self.company_a.id).with_context(
@@ -101,9 +106,6 @@ class TestSubcontractorInvoice(TestAccountInvoiceInterCompanyBase):
             "employee_id": self.employee_b.id,
             "invoice_line_id": invoice_line.id,
         }
-        sub_work_vals = self.env["subcontractor.work"].play_onchanges(
-            sub_work_vals, ["employee_id"]
-        )
         subwork = self.env["subcontractor.work"].create(sub_work_vals)
         self.assertEqual(subwork.quantity, 2)
         self.assertEqual(subwork.sale_price_unit, 200)
