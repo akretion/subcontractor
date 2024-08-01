@@ -17,7 +17,7 @@
 
     <!-- Tasks -->
     <record id="project_task_1" model="project.task">
-        <field name="user_id" ref="base.user_demo" />
+        <field name="user_ids" eval="[(4, ref('base.user_demo'))]" />
         <field name="priority">0</field>
         <field name="project_id" ref="project_project_1" />
         <field name="name">Task 1</field>
@@ -26,7 +26,7 @@
     </record>
 
     <record id="project_task_2" model="project.task">
-        <field name="user_id" ref="base.user_demo" />
+        <field name="user_ids" eval="[(4, ref('base.user_demo'))]" />
         <field name="priority">0</field>
         <field name="project_id" ref="project_project_1" />
         <field name="name">Task 2</field>
@@ -35,7 +35,7 @@
     </record>
 
     <record id="project_task_3" model="project.task">
-        <field name="user_id" ref="base.user_demo" />
+        <field name="user_ids" eval="[(4, ref('base.user_demo'))]" />
         <field name="priority">0</field>
         <field name="project_id" ref="project_project_1" />
         <field name="name">Task 3</field>
@@ -44,7 +44,7 @@
     </record>
 
     <record id="project_task_4" model="project.task">
-        <field name="user_id" ref="base.user_demo" />
+        <field name="user_ids" eval="[(4, ref('base.user_demo'))]" />
         <field name="priority">0</field>
         <field name="project_id" ref="project_project_1" />
         <field name="name">Task 4</field>
@@ -152,7 +152,7 @@
 
     <!-- Tasks -->
     <record id="project_2_task_1" model="project.task">
-        <field name="user_id" ref="base.user_demo" />
+        <field name="user_ids" eval="[(4, ref('base.user_demo'))]" />
         <field name="priority">0</field>
         <field name="project_id" ref="project_project_2" />
         <field name="name">Task 1</field>
@@ -161,7 +161,7 @@
     </record>
 
     <record id="project_2_task_2" model="project.task">
-        <field name="user_id" ref="base.user_demo" />
+        <field name="user_ids" eval="[(4, ref('base.user_demo'))]" />
         <field name="priority">0</field>
         <field name="project_id" ref="project_project_2" />
         <field name="name">Task 2</field>
@@ -170,7 +170,7 @@
     </record>
 
     <record id="project_2_task_3" model="project.task">
-        <field name="user_id" ref="base.user_demo" />
+        <field name="user_ids" eval="[(4, ref('base.user_demo'))]" />
         <field name="priority">0</field>
         <field name="project_id" ref="project_project_2" />
         <field name="name">Task 3</field>
@@ -179,7 +179,7 @@
     </record>
 
     <record id="project_2_task_4" model="project.task">
-        <field name="user_id" ref="base.user_demo" />
+        <field name="user_ids" eval="[(4, ref('base.user_demo'))]" />
         <field name="priority">0</field>
         <field name="project_id" ref="project_project_2" />
         <field name="name">Task 4</field>
@@ -287,7 +287,7 @@
 
     <!-- Tasks -->
     <record id="project_task_1_proj3" model="project.task">
-        <field name="user_id" ref="base.user_demo" />
+        <field name="user_ids" eval="[(4, ref('base.user_demo'))]" />
         <field name="priority">0</field>
         <field name="project_id" ref="project_project_3" />
         <field name="name">Task 1</field>
@@ -324,7 +324,7 @@
 
     <!-- Tasks -->
     <record id="project_task_1_proj4" model="project.task">
-        <field name="user_id" ref="base.user_demo" />
+        <field name="user_ids" eval="[(4, ref('base.user_demo'))]" />
         <field name="priority">0</field>
         <field name="project_id" ref="project_project_4" />
         <field name="name">Task 1</field>
@@ -333,7 +333,7 @@
     </record>
 
     <record id="project_task_2_proj4" model="project.task">
-        <field name="user_id" ref="base.user_demo" />
+        <field name="user_ids" eval="[(4, ref('base.user_demo'))]" />
         <field name="priority">0</field>
         <field name="project_id" ref="project_project_4" />
         <field name="name">Task 2</field>

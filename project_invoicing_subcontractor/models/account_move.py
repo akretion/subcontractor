@@ -7,125 +7,6 @@ from odoo.fields import first
 from odoo.tools import float_compare
 
 
-class AccountMoveLine(models.Model):
-    _inherit = "account.move.line"
-
-    task_id = fields.Many2one("project.task")
-    task_stage_id = fields.Many2one(
-        "project.task.type", related="task_id.stage_id", store=True
-    )
-    timesheet_line_ids = fields.One2many(
-        "account.analytic.line", "invoice_line_id", "Timesheet Line"
-    )
-    timesheet_error = fields.Char(compute="_compute_timesheet_qty", store=True)
-    timesheet_qty = fields.Float(
-        digits="Product Unit of Measure",
-        compute="_compute_timesheet_qty",
-        store=True,
-    )
-    task_invoiceable_days = fields.Float(
-        related="task_id.invoiceable_days",
-        digits="Product Unit of Measure",
-        string="Task Days",
-        help="Total days of the task, helper to check if you miss some timesheet",
-    )
-    prepaid_is_paid = fields.Boolean(compute="_compute_prepaid_is_paid", store=True)
-    contribution_price_subtotal = fields.Float(
-        compute="_compute_contribution_subtotal", store=True
-    )
-
-    @api.depends(
-        "account_id",
-        "move_id.payment_state",
-        "move_id.supplier_invoice_ids.payment_state",
-        "move_id.move_type",
-        "move_id.state",
-    )
-    def _compute_prepaid_is_paid(self):
-        for line in self:
-            if not line.account_id.is_prepaid_account:
-                continue
-            move = line.move_id
-            if move.state in ("draft", "cancel"):
-                line.prepaid_is_paid = False
-            elif move.move_type == "out_refund":
-                line.prepaid_is_paid = True
-            elif move.move_type == "out_invoice":
-                if move.payment_state in ("paid", "reversed"):
-                    line.prepaid_is_paid = True
-                else:
-                    line.prepaid_is_paid = False
-            elif move.supplier_invoice_ids:
-                if all(
-                    [
-                        x.payment_state in ("paid", "reversed")
-                        for x in move.supplier_invoice_ids
-                    ]
-                ):
-                    line.prepaid_is_paid = True
-                else:
-                    line.prepaid_is_paid = False
-            # OD to manage migration toward this system?
-            else:
-                line.prepaid_is_paid = True
-
-    @api.depends(
-        "timesheet_line_ids.discount", "timesheet_line_ids.unit_amount", "quantity"
-    )
-    def _compute_timesheet_qty(self):
-        for record in self:
-            record.timesheet_qty = (
-                record.timesheet_line_ids._get_invoiceable_qty_with_unit(
-                    record.product_uom_id
-                )
-            )
-            if abs(record.timesheet_qty - record.quantity) > 0.001:
-                record.timesheet_error = "⏰ %s" % record.timesheet_qty
-
-    @api.depends(
-        "move_id",
-        "analytic_account_id.partner_id",
-        "move_id.move_type",
-        "product_id.prepaid_revenue_account_id",
-        "amount_currency",
-    )
-    def _compute_contribution_subtotal(self):
-        for line in self:
-            contribution_price = 0
-            if (
-                line.move_id.move_type in ["in_invoice", "in_refund"]
-                and line.product_id.prepaid_revenue_account_id
-                and line.analytic_account_id
-            ):
-                contribution = line.company_id.with_context(
-                    partner=line.analytic_account_id.partner_id
-                )._get_commission_rate()
-                contribution_price = line.amount_currency / (1 - contribution)
-            line.contribution_price_subtotal = contribution_price
-
-    def open_task(self):
-        self.ensure_one()
-        action = self.env.ref("project.action_view_task").sudo().read()[0]
-        action.update(
-            {
-                "res_id": self.task_id.id,
-                "views": [x for x in action["views"] if x[1] == "form"],
-            }
-        )
-        return action
-
-    def _get_computed_account(self):
-        if (
-            self.move_id.move_type in ("out_refund", "out_invoice")
-            and self.product_id.prepaid_revenue_account_id
-        ):
-            return self.product_id.product_tmpl_id.get_product_accounts(
-                self.move_id.fiscal_position_id
-            ).get("prepaid")
-        else:
-            return super()._get_computed_account()
-
-
 class AccountMove(models.Model):
     _inherit = "account.move"
 
@@ -223,15 +104,16 @@ class AccountMove(models.Model):
             if inv.to_pay:
                 if inv.line_ids.payment_line_ids:
                     reason = (
-                        """La facture a été ajoutée au prochain ordre de paiement qui """
-                        """est à l'état '%s'.\nElle devrait être payée dans les prochains """
-                        """jours""" % inv.line_ids.payment_line_ids.mapped("state")[0]
+                        "La facture a été ajoutée au prochain ordre de paiement qui "
+                        "est à l'état '%s'.\nElle devrait être payée dans les prochains"
+                        " jours"
+                        "" % inv.line_ids.payment_line_ids.mapped("state")[0]
                     )
                     color = "success"
                 else:
                     reason = (
-                        """La facture est à payer, elle sera incluse dans le prochain """
-                        """ordre de paiement."""
+                        "La facture est à payer, elle sera incluse dans le prochain "
+                        "ordre de paiement."
                     )
                     color = "success"
             elif inv.customer_invoice_ids:
@@ -245,20 +127,20 @@ class AccountMove(models.Model):
                     )
                 ):
                     reason = (
-                        """La facture est en brouillon car le montant de la facture ne """
-                        """correspond pas à celui de la facture inter société."""
+                        "La facture est en brouillon car le montant de la facture ne "
+                        "correspond pas à celui de la facture inter société."
                     )
                     color = "danger"
                 if inv.invalid_work_amount:
                     reason = (
-                        """Le montant des lignes de factures n'est pas cohérent avec le """
-                        """montant des lignes de sous-traitance."""
+                        "Le montant des lignes de factures n'est pas cohérent avec le "
+                        "montant des lignes de sous-traitance."
                     )
                     color = "danger"
                 if any([x.payment_state != "paid" for x in inv.customer_invoice_ids]):
                     reason = (
-                        """Les factures clients Akretion %s ne sont pas encore payées ou """
-                        """leur paiement n'a pas encore été importé dans l'erp."""
+                        "Les factures clients Akretion %s ne sont pas encore payées ou"
+                        " leur paiement n'a pas encore été importé dans l'erp."
                         % ", ".join(inv.customer_invoice_ids.mapped("name"))
                     )
                     color = "info"
@@ -274,8 +156,8 @@ class AccountMove(models.Model):
                     # read on project not very intuitive to discuss
                     if not analytic_account:
                         reason = (
-                            """Le compte analytique est obligatoire sur les lignes de """
-                            """cette facture."""
+                            "Le compte analytique est obligatoire sur les lignes de "
+                            "cette facture."
                         )
                         break
                     total_amount = analytic_account.prepaid_total_amount
@@ -284,7 +166,11 @@ class AccountMove(models.Model):
                         other_draft_invoices = self.env["account.move.line"].search(
                             [
                                 ("parent_state", "=", "draft"),
-                                ("analytic_account_id", "=", analytic_account.id),
+                                (
+                                    "analytic_account_id",
+                                    "=",
+                                    analytic_account.id,
+                                ),
                                 ("move_id", "!=", inv.id),
                                 ("move_id.move_type", "=", ["in_invoice", "in_refund"]),
                             ]
@@ -297,9 +183,9 @@ class AccountMove(models.Model):
                         == -1
                     ):
                         account_reasons.append(
-                            """Le solde du compte analytique %s n'est pas suffisant : %s. """
-                            """Il est necessaire de facturer le client."""
-                            % (analytic_account.name, total_amount)
+                            f"Le solde du compte analytique {analytic_account.name} "
+                            f"n'est pas suffisant : {total_amount}. "
+                            f"Il est necessaire de facturer le client."
                         )
                         color = "danger"
                     elif inv.state == "draft" and (
@@ -309,10 +195,11 @@ class AccountMove(models.Model):
                         == -1
                     ):
                         account_reasons.append(
-                            """Le solde payé du compte analytique %s est insuffisant %s. """
-                            """La facture sera payable une fois que le client aura reglé """
-                            """ses factures."""
-                            % (analytic_account.name, available_amount)
+                            f"Le solde payé du compte analytique "
+                            f"{analytic_account.name}"
+                            f" est insuffisant {available_amount}. "
+                            f"La facture sera payable une fois que le client aura reglé"
+                            f"ses factures."
                         )
                         if color != "red":
                             color = "info"
@@ -322,9 +209,9 @@ class AccountMove(models.Model):
                         == -1
                     ):
                         account_reasons.append(
-                            """Le solde du compte analytique %s est négatif %s. """
-                            """Il est necessaire de facturer le client."""
-                            % (analytic_account.name, total_amount)
+                            f"Le solde du compte analytique {analytic_account.name} "
+                            f"est négatif {total_amount}. "
+                            f"Il est necessaire de facturer le client."
                         )
                         color = "danger"
                     elif inv.state != "draft" and (
@@ -332,33 +219,34 @@ class AccountMove(models.Model):
                         == -1
                     ):
                         account_reasons.append(
-                            """Le solde payé du compte analytique %s est insuffisant %s. """
-                            """La facture sera payable une fois que le client aura reglé """
-                            """ses factures."""
-                            % (analytic_account.name, available_amount)
+                            f"Le solde payé du compte analytique "
+                            f"{analytic_account.name} est insuffisant "
+                            f"{available_amount}. "
+                            f"La facture sera payable une fois que le client aura reglé"
+                            f" ses factures."
                         )
                         if color != "red":
                             color = "info"
                     else:
                         account_reasons.append(
-                            """Le solde payé du compte analytique %s est suffisant. """
-                            """La facture sera payable une fois qu'elle sera validée et """
-                            """que la tâche planifiée aura tourné."""
-                            % analytic_account.name
+                            f"Le solde payé du compte analytique "
+                            f"{analytic_account.name} est suffisant. "
+                            f"La facture sera payable une fois qu'elle sera validée et "
+                            f"que la tâche planifiée aura tourné."
                         )
                         if not color:
                             color = "success"
                 if other_draft_invoices:
                     account_reasons.append(
-                        """Attention, il existe des factures à l'état 'brouillon' pour """
-                        """ce/ces comptes analytiques, si elles sont validées, elles """
-                        """peuvent influer les montants disponibles."""
+                        "Attention, il existe des factures à l'état 'brouillon' pour "
+                        "ce/ces comptes analytiques, si elles sont validées, elles "
+                        "peuvent influer les montants disponibles."
                     )
                 reason = "\n".join(account_reasons)
             elif inv.invoicing_mode == "supplier":
                 reason = (
-                    """La validation et le paiement de cette facture se font manuellement """
-                    """selon la gestion des budgets."""
+                    "La validation et le paiement de cette facture se font manuellement"
+                    " selon la gestion des budgets."
                 )
             inv.subcontractor_state_message = reason
             inv.subcontractor_state_color = color
@@ -395,24 +283,8 @@ class AccountMove(models.Model):
             action["domain"] = [("id", "=", lines.ids)]
         return action
 
-    def _move_autocomplete_invoice_lines_values(self):
-        # Following code is in this method :
-        #   if line.product_id and not line._cache.get('name'):
-        #        line.name = line._get_computed_name()
-        # it reset invoice_line name to defaut in case it is not in cache.
-        # The reason to do this would be
-        # "Furthermore, the product's label was missing on all invoice lines."
-        # https://github.com/OCA/OCB/commit/7965c890c4e6f6562d265e1605fef3384b00316e
-        # So to avoid issues I read the name before the supper to ensure it is in cache
-        # That is really depressing...
-        # TODO a PR to fix this should be done I guess, but I have not the motivation
-        # right now...
-        self.invoice_line_ids.mapped("name")
-        return super()._move_autocomplete_invoice_lines_values()
-
     def _create_prepare_prepaid_move_vals(self):
         self.ensure_one()
-        # TODO configure dedicated journal on company?
         vals = {
             "ref": _("prepaid countdown for %s") % self.name,
             "date": self.date,
@@ -447,11 +319,9 @@ class AccountMove(models.Model):
             revenue_account,
             analytic_account,
         ), amount in account_amounts.items():
+            customer_name = self.customer_id.name
             # prepaid line
-            name = "prepaid transfer from invoice %s - %s" % (
-                self.name,
-                self.customer_id.name,
-            )
+            name = f"prepaid transfer from invoice {self.name} - {customer_name}"
             line_vals = {
                 "name": name,
                 "account_id": prepaid_revenue_account.id,
@@ -460,9 +330,6 @@ class AccountMove(models.Model):
                 "partner_id": self.customer_id.id,
                 "analytic_account_id": analytic_account.id,
             }
-            line_vals = self.env["account.move.line"].play_onchanges(
-                line_vals, ["account_id", "amount_currency"]
-            )
             line_vals_list.append(line_vals)
             # revenue line
             line_vals = {
@@ -472,9 +339,6 @@ class AccountMove(models.Model):
                 "move_id": prepaid_move.id,
                 "analytic_account_id": analytic_account.id,
             }
-            line_vals = self.env["account.move.line"].play_onchanges(
-                line_vals, ["account_id", "amount_currency"]
-            )
             line_vals_list.append(line_vals)
         prepaid_move.write({"line_ids": [(0, 0, vals) for vals in line_vals_list]})
         prepaid_move.action_post()
@@ -630,13 +494,14 @@ class AccountMove(models.Model):
         "enough_analytic_amount",
     )
     def _compute_to_pay(self):
-        super()._compute_to_pay()
+        res = super()._compute_to_pay()
         for invoice in self:
             if invoice.enough_analytic_amount and invoice.payment_state not in (
                 "reversed",
                 "paid",
             ):
                 invoice.to_pay = True
+        return res
 
     def _is_invoiced_with_parent_task_option(self):
         """

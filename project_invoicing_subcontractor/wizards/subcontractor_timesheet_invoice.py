@@ -134,28 +134,25 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         for rec in self:
             explanation = ""
             if rec.invoicing_mode == "customer_postpaid" and rec.create_invoice:
-                explanation = "Une facture client va être créée pour %s" % (
-                    rec.partner_id.name,
-                )
+                cus_name = rec.partner_id.name
+                explanation = f"Une facture client va être créée pour {cus_name}"
             elif rec.invoicing_mode == "customer_postpaid" and rec.invoice_id:
                 explanation = (
-                    "Les temps vont être facturés dans la facture client existante %s "
-                    "pour %s"
-                    % (
-                        rec.invoice_id.display_name,
-                        rec.partner_id.name,
-                    )
+                    f"Les temps vont être facturés dans la facture client existante "
+                    f"{rec.invoice_id.display_name} pour {rec.partner_id.name}"
                 )
             elif rec.invoicing_mode == "customer_prepaid" and rec.create_invoice:
                 explanation = (
-                    "Des factures fournisseurs vont être créées pour les sous traitants"
-                    " et décomptées des budget du client %s" % (rec.partner_id.name,)
+                    f"Des factures fournisseurs vont être créées pour les sous "
+                    f"traitants et décomptées des budget du client "
+                    f"{rec.partner_id.name}"
                 )
             elif rec.invoicing_mode == "customer_prepaid" and rec.invoice_id:
                 explanation = (
-                    "Les temps vont être facturée dans la facture "
-                    "fournisseur existante %s et décomptés des budgets du client %s"
-                ) % (rec.invoice_id.display_name, rec.partner_id.name)
+                    f"Les temps vont être facturée dans la facture fournisseur "
+                    f"existante {rec.invoice_id.display_name} et décomptés des budgets "
+                    f"du client {rec.partner_id.name}"
+                )
             rec.explanation = explanation
 
     def _get_default_timesheet_lines(self):
@@ -274,11 +271,9 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             "quantity": lines._get_invoiceable_qty_with_project_unit(),
             "timesheet_line_ids": [(6, 0, line_ids)],
         }
-        vals = self.env["subcontractor.work"].play_onchanges(vals, ["employee_id"])
         return vals
 
     def _prepare_invoice_line(self, invoice, task, timesheet_lines):
-        line_obj = self.env["account.move.line"]
         project = self.force_project_id or task.project_id
         product = project.invoicing_typology_id.product_id
 
@@ -290,7 +285,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             "task_id": task.id,
             "move_id": invoice.id,
             "product_id": product.id,
-            "name": "[{}] {}".format(task.id, task.name),
+            "name": f"[{task.id}] {task.name}",
             "product_uom_id": task.project_id.uom_id.id,
             "quantity": quantity,
         }
@@ -337,7 +332,6 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
 
         # I keep the above comment until v16 but we actually really need the onchange
         # anyway now, to get the right account and price.
-        vals = line_obj.play_onchanges(vals, ["product_id", "product_uom_id"])
 
         return vals
 
@@ -402,7 +396,6 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         vals = {"partner_id": partner.id, "move_type": move_type}
         if move_type == "in_invoice":
             vals["invoice_date"] = fields.Date.today()
-        vals = self.env["account.move"].play_onchanges(vals, ["partner_id"])
         return vals
 
     def action_customer_invoice(self):

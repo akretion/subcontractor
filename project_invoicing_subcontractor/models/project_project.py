@@ -68,7 +68,7 @@ class ProjectProject(models.Model):
     @api.depends(
         "invoicing_mode",
         "analytic_account_id",
-        "analytic_account_id.account_move_line_ids.prepaid_is_paid",
+        "analytic_account_id.prepaid_move_line_ids.prepaid_is_paid",
     )
     def _compute_prepaid_amount(self):
         for project in self:
@@ -109,11 +109,11 @@ class ProjectProject(models.Model):
         self.ensure_one()
         product = self._get_project_invoicing_product()
         partner = self.partner_id
-        price = product.with_context(
-            pricelist=partner.property_product_pricelist.id,
-            partner=partner.id,
-            uom=self.uom_id.id,
-        ).price
+        pricelist = partner.property_product_pricelist
+        if pricelist:
+            price = pricelist._get_product_price(product, 1, uom=self.uom_id)
+        else:
+            price = product.list_price
         return price
 
     @api.constrains("invoicing_mode", "analytic_account_id")
@@ -125,8 +125,8 @@ class ProjectProject(models.Model):
             ):
                 raise UserError(
                     _(
-                        "The analytic account is mandatory on project [%s] %s configured with "
-                        "prepaid invoicing" % (project.id, project.name)
+                        f"The analytic account is mandatory on project [{project.id}] "
+                        f"{project.name} configured with prepaid invoicing"
                     )
                 )
 
@@ -139,8 +139,8 @@ class ProjectProject(models.Model):
             ):
                 raise UserError(
                     _(
-                        "All projects linked to a same analytic account has to have the "
-                        "same customer."
+                        "All projects linked to a same analytic account has to have the"
+                        " same customer."
                     )
                 )
             if project.analytic_account_id and not all(
@@ -151,8 +151,8 @@ class ProjectProject(models.Model):
             ):
                 raise UserError(
                     _(
-                        "All projects linked to a same analytic account has to have the "
-                        "same invoicing mode."
+                        "All projects linked to a same analytic account has to have the"
+                        " same invoicing mode."
                     )
                 )
 
@@ -170,42 +170,3 @@ class ProjectProject(models.Model):
             "delete": False,
         }
         return action
-
-
-class ProjectTask(models.Model):
-    _inherit = "project.task"
-
-    invoiceable_hours = fields.Float(compute="_compute_invoiceable", store=True)
-    invoiceable_days = fields.Float(compute="_compute_invoiceable", store=True)
-    invoice_line_ids = fields.One2many("account.move.line", "task_id", "Invoice Line")
-
-    @api.depends("timesheet_ids.discount", "timesheet_ids.unit_amount")
-    def _compute_invoiceable(self):
-        for record in self:
-            total = 0
-            for line in record.timesheet_ids:
-                total += line.unit_amount * (1 - line.discount / 100.0)
-            record.invoiceable_hours = total
-            record.invoiceable_days = record.project_id.convert_hours_to_days(total)
-
-    # TODO we should move this in a generic module
-    # changing the project on the task should be propagated
-    # on the analytic line to avoid issue during invoicing
-    def write(self, vals):
-        res = super().write(vals)
-        if "project_id" in vals:
-            if not vals["project_id"]:
-                raise UserError(
-                    _(
-                        "The project can not be removed, "
-                        "please remove the timesheet first"
-                    )
-                )
-            else:
-                project = self.env["project.project"].browse(vals["project_id"])
-                vals = {
-                    "project_id": project.id,
-                    "account_id": project.analytic_account_id.id,
-                }
-            self.mapped("timesheet_ids").write(vals)
-        return res

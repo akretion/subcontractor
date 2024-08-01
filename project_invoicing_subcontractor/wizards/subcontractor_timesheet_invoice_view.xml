@@ -7,6 +7,7 @@
         <form string="Invoice">
             <div
                     class="alert alert-danger"
+                    role="alert"
                     attrs="{'invisible': [('error', '=', False)]}"
                 >
                 <field name='error' />
