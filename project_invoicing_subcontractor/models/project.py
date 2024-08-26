@@ -88,7 +88,8 @@ class ProjectProject(models.Model):
     def _compute_uom_id(self):
         for project in self:
             # Force day if not customer postpaid it makes no sense to use other uom
-            if project.invoicing_mode != "customer_postpaid":
+            # Edit 26-08-2024 I add supplier, maybe we can do it for all invoicing mode
+            if project.invoicing_mode not in ["customer_postpaid", "supplier"]:
                 uom_id = self.env.ref("uom.product_uom_day").id
             elif project.force_uom_id:
                 uom_id = project.force_uom_id.id
