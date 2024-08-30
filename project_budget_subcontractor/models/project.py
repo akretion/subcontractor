@@ -15,28 +15,28 @@ class ProjectProject(models.Model):
         "project.budget", compute="_compute_current_budget_id"
     )
     current_budget_amount = fields.Float(
-        related="current_budget_id.budget_amount", readonly=True
+        readonly=True
     )
     current_invoiced_amount = fields.Float(
-        related="current_budget_id.invoiced_amount", readonly=True
+        readonly=True
     )
     current_to_invoice_amount = fields.Float(
-        related="current_budget_id.to_invoice_amount", readonly=True
+        readonly=True
     )
     current_remaining_amount = fields.Float(
-        related="current_budget_id.remaining_amount", readonly=True
+        readonly=True
     )
     current_remaining_budget = fields.Float(
-        related="current_budget_id.remaining_budget", readonly=True
+        readonly=True
     )
     current_budget_amount_prorata = fields.Float(
-        related="current_budget_id.budget_amount_prorata", readonly=True
+        readonly=True
     )
     current_budget_progress = fields.Float(
-        related="current_budget_id.budget_progress", readonly=True
+        readonly=True
     )
     current_time_progress = fields.Float(
-        related="current_budget_id.time_progress", readonly=True
+        readonly=True
     )
 
     @api.depends("budget_ids.start_date", "budget_ids.end_date")

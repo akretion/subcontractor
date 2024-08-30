@@ -17,10 +17,10 @@
     ],
     "data": [
         "security/ir.model.access.csv",
-        "views/account_move_view.xml",
-        "views/res_partner_view.xml",
-        "views/project_project_view.xml",
-        "views/project_budget_view.xml",
+#        "views/account_move_view.xml",
+#        "views/res_partner_view.xml",
+#        "views/project_project_view.xml",
+#        "views/project_budget_view.xml",
     ],
     "auto_install": True,
 }
