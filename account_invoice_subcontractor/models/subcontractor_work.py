@@ -400,8 +400,8 @@ class SubcontractorWork(models.Model):
             )
         return invoices
 
-    def _scheduler_action_subcontractor_invoice_create(self):
-        date_filter = date.today() - timedelta(days=7)
+    def _scheduler_action_subcontractor_invoice_create(self, days=7):
+        date_filter = date.today() - timedelta(days=days)
         subcontractors = self.env["hr.employee"].search(
             [
                 ("subcontractor_type", "=", "internal"),
