@@ -116,7 +116,7 @@ class ProjectBudget(models.Model):
                     and t.date_end
                     and t.date_start.date() >= budget.start_date
                     and t.date_end.date() <= budget.end_date
-                    and not t.stage_id.is_closed
+                    and not t.is_closed
                 ).mapped("remaining_days")
             )
             budget.remaining_amount = remaining_days * budget.project_id.price_unit

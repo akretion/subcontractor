@@ -39,7 +39,6 @@ class ProjectProject(models.Model):
         related="current_budget_id.time_progress", readonly=True
     )
 
-    @api.depends("budget_ids.start_date", "budget_ids.end_date")
     def _compute_current_budget_id(self):
         for project in self:
             project.current_budget_id = project.budget_ids.filtered(
