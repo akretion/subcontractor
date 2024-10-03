@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+
+    <record id="external_subcontractor_invoice_email_template" model="mail.template">
+        <field name="name">External subcontractor invoice template</field>
+        <field name="email_from">{{ (object.user_id.email or '') }}</field>
+        <field name="subject">Nouvelle facture sous traitance Akretion</field>
+        <field name="partner_to">{{ object.partner_id.id }}</field>
+        <field name="model_id" ref="account.model_account_move" />
+        <field name="auto_delete" eval="False" />
+        <field name="lang">{{ object.partner_id.lang }}</field>
+        <field name="report_template" ref="account.account_invoices" />
+        <field
+            name="body_html"
+        ><![CDATA[
+Une facture de sous traitance a été créée pour Akretion.
+Vous trouverez ci-joint le montant.
+Veuillez transmettre votre facture correspondante à l'adresse 'supplier@akretion.com' afin que nous puissions la valider et la payer une fois le paiement client effectué.
+Merci.
+
+Cordialement,
+        ]]></field>
+    </record>
+
+</odoo>

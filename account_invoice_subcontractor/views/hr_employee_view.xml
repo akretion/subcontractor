@@ -14,6 +14,10 @@
                         name="subcontractor_company_id"
                         attrs="{'required': [('subcontractor_type', '=', 'internal'), ('active', '=', True)], 'invisible': [('subcontractor_type','!=', 'internal')]}"
                     />
+                    <field
+                        name="auto_generate_invoice"
+                        attrs="{'invisible': [('subcontractor_type','!=', 'external')]}"
+                    />
                 </group>
             </xpath>
         </field>
