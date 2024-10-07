@@ -15,32 +15,51 @@ class ProjectProject(models.Model):
         "project.budget", compute="_compute_current_budget_id"
     )
     current_budget_amount = fields.Float(
-        related="current_budget_id.budget_amount", readonly=True
+        string="Budget Amount", compute="_compute_current_budget_id"
     )
     current_invoiced_amount = fields.Float(
-        related="current_budget_id.invoiced_amount", readonly=True
+        string="Invoiced Amount", compute="_compute_current_budget_id"
     )
     current_to_invoice_amount = fields.Float(
-        related="current_budget_id.to_invoice_amount", readonly=True
+        string="To Invoice Amount", compute="_compute_current_budget_id"
     )
     current_remaining_amount = fields.Float(
-        related="current_budget_id.remaining_amount", readonly=True
+        string="Remaining Amount", compute="_compute_current_budget_id"
     )
     current_remaining_budget = fields.Float(
-        related="current_budget_id.remaining_budget", readonly=True
+        string="Remaining Budget", compute="_compute_current_budget_id"
     )
     current_budget_amount_prorata = fields.Float(
-        related="current_budget_id.budget_amount_prorata", readonly=True
+        string="Budget Amount Prorata", compute="_compute_current_budget_id"
     )
     current_budget_progress = fields.Float(
-        related="current_budget_id.budget_progress", readonly=True
+        string="Budget Progress", compute="_compute_current_budget_id"
     )
     current_time_progress = fields.Float(
-        related="current_budget_id.time_progress", readonly=True
+        string="Time Progress", compute="_compute_current_budget_id"
     )
 
     def _compute_current_budget_id(self):
         for project in self:
-            project.current_budget_id = project.budget_ids.filtered(
+            current = project.current_budget_id = project.budget_ids.filtered(
                 lambda b: b.start_date <= fields.Date.today() <= b.end_date
             )
+
+            if current:
+                project.current_budget_amount = current.budget_amount
+                project.current_invoiced_amount = current.invoiced_amount
+                project.current_to_invoice_amount = current.to_invoice_amount
+                project.current_remaining_amount = current.remaining_amount
+                project.current_remaining_budget = current.remaining_budget
+                project.current_budget_amount_prorata = current.budget_amount_prorata
+                project.current_budget_progress = current.budget_progress
+                project.current_time_progress = current.time_progress
+            else:
+                project.current_budget_amount = False
+                project.current_invoiced_amount = False
+                project.current_to_invoice_amount = False
+                project.current_remaining_amount = False
+                project.current_remaining_budget = False
+                project.current_budget_amount_prorata = False
+                project.current_budget_progress = False
+                project.current_time_progress = False
