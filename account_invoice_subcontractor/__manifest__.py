@@ -16,6 +16,7 @@
     ],
     "data": [
         "data/cron_data.xml",
+        "data/mail_data.xml",
         "security/security.xml",
         "security/ir.model.access.csv",
         "views/hr_employee_view.xml",

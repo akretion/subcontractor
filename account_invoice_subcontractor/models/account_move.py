@@ -36,6 +36,7 @@ class AccountMove(models.Model):
         readonly=True,
         prefetch=False,
     )
+    subcontractor_sent = fields.Boolean()
 
     @api.depends(
         "invoice_line_ids",

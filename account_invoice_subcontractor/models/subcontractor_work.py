@@ -331,7 +331,9 @@ class SubcontractorWork(models.Model):
     def _get_subcontractor_invoicing_group(self):
         groups = OrderedDict()
         for sub in self.sorted("invoice_date"):
-            if sub.subcontractor_type == "internal":
+            if sub.subcontractor_type == "internal" or self.env.context.get(
+                "invoice_create_cron"
+            ):
                 key = (sub.employee_id.id, sub.invoice_id.id)
             elif sub.subcontractor_type == "external":
                 key = (sub.employee_id.id, False)
@@ -383,11 +385,19 @@ class SubcontractorWork(models.Model):
 
     def _scheduler_action_subcontractor_invoice_create(self, days=7):
         date_filter = date.today() - timedelta(days=days)
+        # The order is used to start cron by external subcontractor because the user
+        # and company changes for internal subcontractors
         subcontractors = self.env["hr.employee"].search(
             [
+                "|",
+                "&",
                 ("subcontractor_type", "=", "internal"),
                 ("subcontractor_company_id", "!=", False),
-            ]
+                "&",
+                ("subcontractor_type", "=", "external"),
+                ("auto_generate_invoice", "=", True),
+            ],
+            order="subcontractor_type",
         )
         # Need to search on all subcontractor work
         # because of the filter on date invoice
@@ -395,29 +405,53 @@ class SubcontractorWork(models.Model):
             [
                 ("invoice_id.invoice_date", "<=", date_filter),
                 ("subcontractor_invoice_line_id", "=", False),
+                "|",
                 ("subcontractor_type", "=", "internal"),
+                "&",
+                ("subcontractor_type", "=", "external"),
+                ("employee_id.auto_generate_invoice", "=", True),
                 ("state", "in", ["posted", "paid"]),
             ],
         )
+        template = self.env.ref(
+            "account_invoice_subcontractor.external_subcontractor_invoice_email_template"
+        )
+        # Send validation email to old draft external subcontractor invoices
+        invoices = self.env["account.move"].search(
+            [
+                ("subcontractor_sent", "=", False),
+                ("partner_id", "in", subcontractors.user_id.partner_id.ids),
+                ("state", "=", "draft"),
+                ("create_date", "<=", date_filter),
+            ]
+        )
+        for draft_invoice in invoices:
+            template.send_mail(draft_invoice.id)
+            draft_invoice.subcontractor_sent = True
         for subcontractor in subcontractors:
-            dest_company = subcontractor.subcontractor_company_id
-            user = subcontractor.user_id
-            subcontractor_works = (
-                self.with_user(user)
-                .with_company(dest_company)
-                .search(
-                    [
-                        ("id", "in", all_works.ids),
-                        ("employee_id", "=", subcontractor.id),
-                    ],
-                )
+            if subcontractor.subcontractor_type == "internal":
+                dest_company = subcontractor.subcontractor_company_id
+                user = subcontractor.user_id
+                self = self.with_user(user).with_company(dest_company)
+            else:
+                # Used to group by invoice also for external in case of the cron
+                self = self.with_context(invoice_create_cron=True)
+            subcontractor_works = self.search(
+                [
+                    ("id", "in", all_works.ids),
+                    ("employee_id", "=", subcontractor.id),
+                ],
             )
             sub_ids = subcontractor_works.ids
             sub_name = subcontractor.name
             _logger.info(f"{sub_ids} lines found for subcontractor {sub_name}")
             invoices = subcontractor_works.invoice_from_work()
             for invoice in invoices:
-                invoice.action_post()
+                if subcontractor.subcontractor_type == "internal":
+                    invoice.action_post()
+                else:
+                    template.send_mail(invoice.id)
+                    invoice.subcontractor_sent = True
         #            if old_company:
         #                user.company_id = old_company.id
         return True

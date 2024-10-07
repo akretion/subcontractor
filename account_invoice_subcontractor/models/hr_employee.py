@@ -24,6 +24,7 @@ class HrEmployee(models.Model):
         required=True,
         default="internal",
     )
+    auto_generate_invoice = fields.Boolean(string="Création facture automatique")
 
     def _get_employee_invoice_partner(self):
         self.ensure_one()
