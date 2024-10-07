@@ -18,43 +18,43 @@ License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
                         <field name="current_budget_id" invisible="1" />
                         <field name="currency_id" invisible="1" />
                         <field
-                                name="current_budget_amount"
-                                widget="monetary"
-                                options="{'currency_field': 'currency_id'}"
-                            />
+                            name="current_budget_amount"
+                            widget="monetary"
+                            options="{'currency_field': 'currency_id'}"
+                        />
                         <field
-                                name="current_invoiced_amount"
-                                widget="monetary"
-                                options="{'currency_field': 'currency_id'}"
-                            />
+                            name="current_invoiced_amount"
+                            widget="monetary"
+                            options="{'currency_field': 'currency_id'}"
+                        />
                         <field
-                                name="current_to_invoice_amount"
-                                widget="monetary"
-                                options="{'currency_field': 'currency_id'}"
-                            />
+                            name="current_to_invoice_amount"
+                            widget="monetary"
+                            options="{'currency_field': 'currency_id'}"
+                        />
                         <field
-                                name="current_remaining_amount"
-                                widget="monetary"
-                                options="{'currency_field': 'currency_id'}"
-                            />
+                            name="current_remaining_amount"
+                            widget="monetary"
+                            options="{'currency_field': 'currency_id'}"
+                        />
                     </group>
                     <group>
                         <field
-                                name="current_remaining_budget"
-                                widget="monetary"
-                                options="{'currency_field': 'currency_id'}"
-                            />
+                            name="current_remaining_budget"
+                            widget="monetary"
+                            options="{'currency_field': 'currency_id'}"
+                        />
                         <field
-                                name="current_budget_amount_prorata"
-                                widget="monetary"
-                                options="{'currency_field': 'currency_id'}"
-                            />
+                            name="current_budget_amount_prorata"
+                            widget="monetary"
+                            options="{'currency_field': 'currency_id'}"
+                        />
                         <field
-                                name="current_budget_progress"
-                                widget="percentage"
-                                decoration-danger="current_budget_progress >= 100"
-                                decoration-warning="current_budget_progress > current_time_progress and current_budget_progress &lt; 100"
-                            />
+                            name="current_budget_progress"
+                            widget="percentage"
+                            decoration-danger="current_budget_progress >= 100"
+                            decoration-warning="current_budget_progress > current_time_progress and current_budget_progress &lt; 100"
+                        />
                         <field name="current_time_progress" widget="percentage" />
                     </group>
                 </group>
