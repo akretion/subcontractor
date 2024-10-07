@@ -9,6 +9,5 @@ class ResPartner(models.Model):
     _inherit = "res.partner"
 
     use_budget = fields.Boolean(
-        string="Use Budget",
         help="If checked, this partner's projects will use budgets",
     )

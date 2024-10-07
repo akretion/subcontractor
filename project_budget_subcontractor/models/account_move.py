@@ -10,7 +10,6 @@ class AccountMove(models.Model):
     _inherit = "account.move"
 
     budget_date = fields.Date(
-        string="Budget Date",
         compute="_compute_budget_date",
         store=True,
         readonly=False,
