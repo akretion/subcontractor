@@ -70,7 +70,7 @@ class ProjectBudget(models.Model):
                 continue
             move_lines = (
                 budget.project_id.analytic_account_id.invoice_line_ids.filtered(
-                    lambda ml: ml.parent_state == "posted"
+                    lambda ml, budget=budget: ml.parent_state == "posted"
                     and ml.move_id.budget_date >= budget.start_date
                     and ml.move_id.budget_date <= budget.end_date
                 )
@@ -110,12 +110,13 @@ class ProjectBudget(models.Model):
             if not budget.start_date or not budget.end_date:
                 budget.remaining_amount = 0.0
                 continue
+
             remaining_days = sum(
                 budget.project_id.task_ids.filtered(
-                    lambda t: t.date_start
-                    and t.date_end
-                    and t.date_start.date() >= budget.start_date
-                    and t.date_end.date() <= budget.end_date
+                    lambda t, budget=budget: t.planned_date_start
+                    and t.planned_date_end
+                    and t.planned_date_start.date() >= budget.start_date
+                    and t.planned_date_end.date() <= budget.end_date
                     and not t.is_closed
                 ).mapped("remaining_days")
             )
