@@ -71,6 +71,7 @@ class ProjectBudget(models.Model):
             move_lines = (
                 budget.project_id.analytic_account_id.invoice_line_ids.filtered(
                     lambda ml, budget=budget: ml.parent_state == "posted"
+                    and ml.move_id.budget_date
                     and ml.move_id.budget_date >= budget.start_date
                     and ml.move_id.budget_date <= budget.end_date
                 )
