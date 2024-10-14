@@ -15,9 +15,9 @@ class AccountMove(models.Model):
     is_supplier_prepaid = fields.Boolean(
         compute="_compute_is_supplier_prepaid", store=True
     )
-    enough_analytic_amount = fields.Boolean(
+    enough_project_amount = fields.Boolean(
         help="This field indicates that the invoice can be paid because there is "
-        "enough money in the linked analytic account."
+        "enough money in the linked project."
     )
     customer_id = fields.Many2one(
         "res.partner", compute="_compute_customer_id", store=True
@@ -30,14 +30,12 @@ class AccountMove(models.Model):
     )
     invoicing_mode = fields.Char(compute="_compute_invoicing_mode", store=True)
 
-    @api.depends("invoice_line_ids.analytic_account_id")
+    @api.depends("invoice_line_ids.project_id")
     def _compute_invoicing_mode(self):
         for move in self:
             if move.move_type not in ("in_invoice", "in_refund"):
                 continue
-            modes = move.invoice_line_ids.analytic_account_id.project_ids.mapped(
-                "invoicing_mode"
-            )
+            modes = move.invoice_line_ids.project_id.mapped("invoicing_mode")
             move.invoicing_mode = (
                 modes and all(x == modes[0] for x in modes) and modes[0] or False
             )
@@ -60,19 +58,17 @@ class AccountMove(models.Model):
                 (
                     prepaid_account,
                     revenue_account,
-                    prepaid_line.analytic_account_id,
+                    prepaid_line.project_id,
                 )
             ] += prepaid_line.contribution_price_subtotal
         return account_amounts
 
-    @api.depends("invoice_line_ids.analytic_account_id")
+    @api.depends("invoice_line_ids.project_id")
     def _compute_customer_id(self):
         for move in self:
             if move.move_type not in ("in_invoice", "in_refund"):
                 continue
-            partner = first(
-                move.invoice_line_ids.analytic_account_id.project_ids
-            ).partner_id
+            partner = first(move.invoice_line_ids.project_id).partner_id
             move.customer_id = len(partner) == 1 and partner.id or False
 
     @api.depends("move_type", "invoice_line_ids.product_id")
@@ -151,25 +147,25 @@ class AccountMove(models.Model):
                 for (
                     _prepaid_revenue_account,
                     _revenue_account,
-                    analytic_account,
+                    project,
                 ), amount in account_amounts.items():
                     # read on project not very intuitive to discuss
-                    if not analytic_account:
+                    if not project:
                         reason = (
-                            "Le compte analytique est obligatoire sur les lignes de "
+                            "Le Project est obligatoire sur les lignes de "
                             "cette facture."
                         )
                         break
-                    total_amount = analytic_account.prepaid_total_amount
-                    available_amount = analytic_account.prepaid_available_amount
+                    total_amount = project.prepaid_total_amount
+                    available_amount = project.prepaid_available_amount
                     if inv.state == "draft":
                         other_draft_invoices = self.env["account.move.line"].search(
                             [
                                 ("parent_state", "=", "draft"),
                                 (
-                                    "analytic_account_id",
+                                    "project_id",
                                     "=",
-                                    analytic_account.id,
+                                    project.id,
                                 ),
                                 ("move_id", "!=", inv.id),
                                 ("move_id.move_type", "=", ["in_invoice", "in_refund"]),
@@ -183,7 +179,7 @@ class AccountMove(models.Model):
                         == -1
                     ):
                         account_reasons.append(
-                            f"Le solde du compte analytique {analytic_account.name} "
+                            f"Le solde du projet {project.name} "
                             f"n'est pas suffisant : {total_amount}. "
                             f"Il est necessaire de facturer le client."
                         )
@@ -195,8 +191,8 @@ class AccountMove(models.Model):
                         == -1
                     ):
                         account_reasons.append(
-                            f"Le solde payé du compte analytique "
-                            f"{analytic_account.name}"
+                            f"Le solde payé du projet "
+                            f"{project.name}"
                             f" est insuffisant {available_amount}. "
                             f"La facture sera payable une fois que le client aura reglé"
                             f"ses factures."
@@ -209,7 +205,7 @@ class AccountMove(models.Model):
                         == -1
                     ):
                         account_reasons.append(
-                            f"Le solde du compte analytique {analytic_account.name} "
+                            f"Le solde du projet {project.name} "
                             f"est négatif {total_amount}. "
                             f"Il est necessaire de facturer le client."
                         )
@@ -219,8 +215,8 @@ class AccountMove(models.Model):
                         == -1
                     ):
                         account_reasons.append(
-                            f"Le solde payé du compte analytique "
-                            f"{analytic_account.name} est insuffisant "
+                            f"Le solde payé du compte projet "
+                            f"{project.name} est insuffisant "
                             f"{available_amount}. "
                             f"La facture sera payable une fois que le client aura reglé"
                             f" ses factures."
@@ -229,8 +225,8 @@ class AccountMove(models.Model):
                             color = "info"
                     else:
                         account_reasons.append(
-                            f"Le solde payé du compte analytique "
-                            f"{analytic_account.name} est suffisant. "
+                            f"Le solde payé du projet "
+                            f"{project.name} est suffisant. "
                             f"La facture sera payable une fois qu'elle sera validée et "
                             f"que la tâche planifiée aura tourné."
                         )
@@ -239,7 +235,7 @@ class AccountMove(models.Model):
                 if other_draft_invoices:
                     account_reasons.append(
                         "Attention, il existe des factures à l'état 'brouillon' pour "
-                        "ce/ces comptes analytiques, si elles sont validées, elles "
+                        "ce/ces projets, si elles sont validées, elles "
                         "peuvent influer les montants disponibles."
                     )
                 reason = "\n".join(account_reasons)
@@ -317,7 +313,7 @@ class AccountMove(models.Model):
         for (
             prepaid_revenue_account,
             revenue_account,
-            analytic_account,
+            project,
         ), amount in account_amounts.items():
             customer_name = self.customer_id.name
             # prepaid line
@@ -328,7 +324,7 @@ class AccountMove(models.Model):
                 "amount_currency": amount,
                 "move_id": prepaid_move.id,
                 "partner_id": self.customer_id.id,
-                "analytic_account_id": analytic_account.id,
+                "project_id": project.id,
             }
             line_vals_list.append(line_vals)
             # revenue line
@@ -337,7 +333,7 @@ class AccountMove(models.Model):
                 "account_id": revenue_account.id,
                 "amount_currency": -amount,
                 "move_id": prepaid_move.id,
-                "analytic_account_id": analytic_account.id,
+                "project_id": project.id,
             }
             line_vals_list.append(line_vals)
         prepaid_move.write({"line_ids": [(0, 0, vals) for vals in line_vals_list]})
@@ -347,35 +343,27 @@ class AccountMove(models.Model):
     def _check_invoice_mode_validity(self):
         self.ensure_one()
         for line in self.invoice_line_ids:
-            if (
-                line.product_id.prepaid_revenue_account_id
-                and not line.analytic_account_id
-            ):
+            if line.product_id.prepaid_revenue_account_id and not line.project_id:
                 raise exceptions.ValidationError(
-                    _(
-                        "Line %s is not valid, the analytic_account is mandatory."
-                        % line.name
-                    )
+                    _("Line %s is not valid, the project is mandatory." % line.name)
                 )
             if (
                 line.product_id.prepaid_revenue_account_id
                 and line.move_id.move_type in ("out_invoice", "out_refund")
             ):
-                project_typology = first(
-                    line.analytic_account_id.project_ids
-                ).invoicing_typology_id
+                project_typology = line.project_id.invoicing_typology_id
                 if project_typology.product_id != line.product_id:
                     raise exceptions.ValidationError(
                         _(
-                            "Line %s is not valid, the analytic_account is not "
+                            "Line %s is not valid, the project is not "
                             "consistent with the chosen product" % line.name
                         )
                     )
-                project_partner = first(line.analytic_account_id.project_ids).partner_id
+                project_partner = line.project_id.partner_id
                 if project_partner != line.move_id.partner_id.commercial_partner_id:
                     raise exceptions.ValidationError(
                         _(
-                            "Line %s is not valid, the analytic_account is not "
+                            "Line %s is not valid, the project is not "
                             "consistent with the chosen customer" % line.name
                         )
                     )
@@ -396,14 +384,12 @@ class AccountMove(models.Model):
             raise exceptions.ValidationError(
                 _(
                     "You can't have a supplier invoice related to multiple end-customer"
-                    "Check that all the analytic accounts of the line belong to the "
+                    "Check that all the projects of the lines belong to the "
                     "same partner"
                 )
             )
         if self.move_type in ("in_invoice", "in_refund"):
-            modes = self.invoice_line_ids.analytic_account_id.project_ids.mapped(
-                "invoicing_mode"
-            )
+            modes = self.invoice_line_ids.project_id.mapped("invoicing_mode")
             if modes and not all(x == modes[0] for x in modes):
                 raise exceptions.ValidationError(
                     _("All invoice lines should have the same invoicing mode.")
@@ -418,7 +404,7 @@ class AccountMove(models.Model):
         for move in self:
             if move.is_supplier_prepaid:
                 move._manage_prepaid_lines()
-                move.compute_enought_analytic_amount(partner_id=move.customer_id.id)
+                move.compute_enought_project_amount(partner_id=move.customer_id.id)
         return res
 
     def _check_reset_allowed(self):
@@ -451,7 +437,7 @@ class AccountMove(models.Model):
 
     # also called by cron
     @api.model
-    def compute_enought_analytic_amount(self, partner_id=False):
+    def compute_enought_project_amount(self, partner_id=False):
         # it concerns only subcontractor partner
         domain = [
             ("move_type", "=", "in_invoice"),
@@ -462,9 +448,9 @@ class AccountMove(models.Model):
         if partner_id:
             domain.append(("customer_id", "=", partner_id))
         invoices_to_check = self.search(domain, order="invoice_date")
-        # We only need invoices with analytic account and all lines should have
-        # analytic accounts we should avoid invoices generated from subcontract work.
-        available_analytic_amount = {}
+        # We only need invoices with project and all lines should have
+        # projects we should avoid invoices generated from subcontract work.
+        available_project_amount = {}
         to_pay_invoices = self.env["account.move"]
         for invoice in invoices_to_check:
             to_pay = True
@@ -472,32 +458,29 @@ class AccountMove(models.Model):
             if not prepaid_move:
                 continue
             for line in prepaid_move.line_ids:
-                if (
-                    not line.account_id.is_prepaid_account
-                    or not line.analytic_account_id
-                ):
+                if not line.account_id.is_prepaid_account or not line.project_id:
                     continue
-                account = line.analytic_account_id
-                if account not in available_analytic_amount:
-                    available_analytic_amount[account] = account.available_amount
-                if abs(line.amount_currency) > available_analytic_amount[account]:
-                    available_analytic_amount[account] = 0.0
+                project = line.project_id
+                if project not in available_project_amount:
+                    available_project_amount[project] = project.available_amount
+                if abs(line.amount_currency) > available_project_amount[project]:
+                    available_project_amount[project] = 0.0
                     to_pay = False
                     break
                 else:
-                    available_analytic_amount[account] -= abs(line.amount_currency)
+                    available_project_amount[project] -= abs(line.amount_currency)
             if to_pay:
                 to_pay_invoices |= invoice
-        to_pay_invoices.write({"enough_analytic_amount": True})
-        (invoices_to_check - to_pay_invoices).write({"enough_analytic_amount": False})
+        to_pay_invoices.write({"enough_project_amount": True})
+        (invoices_to_check - to_pay_invoices).write({"enough_project_amount": False})
 
     @api.depends(
-        "enough_analytic_amount",
+        "enough_project_amount",
     )
     def _compute_to_pay(self):
         res = super()._compute_to_pay()
         for invoice in self:
-            if invoice.enough_analytic_amount and invoice.payment_state not in (
+            if invoice.enough_project_amount and invoice.payment_state not in (
                 "reversed",
                 "paid",
             ):

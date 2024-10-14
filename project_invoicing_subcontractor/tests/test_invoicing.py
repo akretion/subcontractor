@@ -158,7 +158,7 @@ class TestInvoicing(AccountTestInvoicingCommon):
         self.assertIn(line_1.task_id.name, line_1.name)
         self.assertIn(line2.task_id.name, line2.name)
 
-    def _create_prepaid_customer_invoice(self, quantity, analytic_account):
+    def _create_prepaid_customer_invoice(self, quantity, project):
         invoice = (
             self.env["account.move"]
             .with_context(default_move_type="out_invoice")
@@ -174,7 +174,7 @@ class TestInvoicing(AccountTestInvoicingCommon):
                                 "product_uom_id": self.env.ref(
                                     "uom.product_uom_hour"
                                 ).id,
-                                "analytic_account_id": analytic_account.id,
+                                "project_id": project.id,
                                 "name": self.maintenance_product.name,
                             }
                         )
@@ -185,9 +185,7 @@ class TestInvoicing(AccountTestInvoicingCommon):
         return invoice
 
     def test_prepaid_invoicing_process_same_project(self):
-        invoice = self._create_prepaid_customer_invoice(
-            10, self.line_5_2.project_id.analytic_account_id
-        )
+        invoice = self._create_prepaid_customer_invoice(10, self.line_5_2.project_id)
         self.assertTrue(invoice.invoice_line_ids.tax_ids)
         invoice.action_post()
         self.assertEqual(invoice.invoice_line_ids.account_id.code, "418101")
@@ -216,40 +214,40 @@ class TestInvoicing(AccountTestInvoicingCommon):
 
         # demo invoice of 10H is validated, admin not, so it won't be taken into account
         # by the to pay cron
-        self.env["account.move"].compute_enought_analytic_amount()
+        self.env["account.move"].compute_enought_project_amount()
         self.assertFalse(demo_invoice.to_pay)
         self.env["account.payment.register"].with_context(
             active_ids=invoice.ids, active_model="account.move"
         ).create({})._create_payments()
-        self.env["account.move"].compute_enought_analytic_amount()
+        self.env["account.move"].compute_enought_project_amount()
         self.assertTrue(demo_invoice.to_pay)
 
         # set admin invoice one day later to be sure demo invoice has priority
         # Add customer invoice so there is enough amount to validate the admin invoice
         # but it is not paid
         customer_invoice2 = self._create_prepaid_customer_invoice(
-            1.99, self.line_5_2.project_id.analytic_account_id
+            1.99, self.line_5_2.project_id
         )
         customer_invoice2.action_post()
         customer_invoice3 = self._create_prepaid_customer_invoice(
-            0.01, self.line_5_2.project_id.analytic_account_id
+            0.01, self.line_5_2.project_id
         )
         customer_invoice3.action_post()
         admin_invoice.write({"invoice_date": date.today() + timedelta(days=1)})
         admin_invoice.action_post()
-        self.env["account.move"].compute_enought_analytic_amount()
+        self.env["account.move"].compute_enought_project_amount()
         self.assertFalse(admin_invoice.to_pay)
         self.assertTrue(demo_invoice.to_pay)
 
         self.env["account.payment.register"].with_context(
             active_ids=customer_invoice2.ids, active_model="account.move"
         ).create({})._create_payments()
-        self.env["account.move"].compute_enought_analytic_amount()
+        self.env["account.move"].compute_enought_project_amount()
         self.assertFalse(admin_invoice.to_pay)
         self.env["account.payment.register"].with_context(
             active_ids=customer_invoice3.ids, active_model="account.move"
         ).create({})._create_payments()
-        self.env["account.move"].compute_enought_analytic_amount()
+        self.env["account.move"].compute_enought_project_amount()
         self.assertTrue(admin_invoice.to_pay)
         self.assertTrue(demo_invoice.to_pay)
 
@@ -276,7 +274,7 @@ class TestInvoicing(AccountTestInvoicingCommon):
         # check the to pay is done at invoice validation if amount available is
         # enough (without the need of the cron)
         customer_invoice = self._create_prepaid_customer_invoice(
-            15, self.line_5_2.project_id.analytic_account_id
+            15, self.line_5_2.project_id
         )
         customer_invoice.action_post()
         self.env["account.payment.register"].with_context(

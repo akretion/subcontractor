@@ -288,6 +288,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             "name": f"[{task.id}] {task.name}",
             "product_uom_id": task.project_id.uom_id.id,
             "quantity": quantity,
+            "project_id": project.id,
         }
         if hasattr(self.env["account.move.line"], "start_date") and hasattr(
             self.env["account.move.line"], "end_date"
@@ -301,7 +302,6 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
                 }
             )
         if project.invoicing_typology_id.invoicing_mode != "customer_postpaid":
-            vals["analytic_account_id"] = project.analytic_account_id.id
             vals["price_unit"] = project.price_unit
             if project.invoicing_typology_id.invoicing_mode == "customer_prepaid":
                 contribution = invoice.company_id._get_commission_rate()
