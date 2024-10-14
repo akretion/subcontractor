@@ -31,7 +31,9 @@ class AccountMoveLine(models.Model):
     )
     prepaid_is_paid = fields.Boolean(compute="_compute_prepaid_is_paid", store=True)
     contribution_price_subtotal = fields.Float(
-        compute="_compute_contribution_subtotal", store=True
+        compute="_compute_contribution_subtotal",
+        store=True,
+        help="Amount with contribution included",
     )
 
     @api.depends(
@@ -84,7 +86,7 @@ class AccountMoveLine(models.Model):
 
     @api.depends(
         "move_id",
-        "analytic_account_id.project_ids.partner_id",
+        "project_id.partner_id",
         "move_id.move_type",
         "product_id.prepaid_revenue_account_id",
         "amount_currency",
@@ -95,10 +97,10 @@ class AccountMoveLine(models.Model):
             if (
                 line.move_id.move_type in ["in_invoice", "in_refund"]
                 and line.product_id.prepaid_revenue_account_id
-                and line.analytic_account_id
+                and line.project_id
             ):
                 contribution = line.company_id.with_context(
-                    partner=line.analytic_account_id.partner_id
+                    partner=line.project_id.partner_id
                 )._get_commission_rate()
                 contribution_price = line.amount_currency / (1 - contribution)
             line.contribution_price_subtotal = contribution_price
