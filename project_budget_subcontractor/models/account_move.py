@@ -25,13 +25,11 @@ class AccountMove(models.Model):
     def _post(self, soft=True):
         for move in self:
             if move.use_budget:
-                if move.invoice_line_ids.filtered(
-                    lambda line: not line.analytic_account_id
-                ):
+                if move.invoice_line_ids.filtered(lambda line: not line.project_id):
                     raise UserError(
                         _(
-                            "You can't post a move containing lines without analytic "
-                            "account for a customer with budget enabled."
+                            "You can't post a move containing lines without project "
+                            "for a customer with budget enabled."
                         )
                     )
         return super()._post(soft=soft)

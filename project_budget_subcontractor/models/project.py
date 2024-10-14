@@ -38,6 +38,9 @@ class ProjectProject(models.Model):
     current_time_progress = fields.Float(
         string="Time Progress", compute="_compute_current_budget_id"
     )
+    invoice_line_ids = fields.One2many(
+        "account.move.line", inverse_name="project_id", string="Invoice Lines"
+    )
 
     def _compute_current_budget_id(self):
         for project in self:

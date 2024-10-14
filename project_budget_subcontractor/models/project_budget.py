@@ -68,13 +68,11 @@ class ProjectBudget(models.Model):
             if not budget.start_date or not budget.end_date:
                 budget.invoiced_amount = 0.0
                 continue
-            move_lines = (
-                budget.project_id.analytic_account_id.invoice_line_ids.filtered(
-                    lambda ml, budget=budget: ml.parent_state == "posted"
-                    and ml.move_id.budget_date
-                    and ml.move_id.budget_date >= budget.start_date
-                    and ml.move_id.budget_date <= budget.end_date
-                )
+            move_lines = budget.project_id.invoice_line_ids.filtered(
+                lambda ml, budget=budget: ml.parent_state == "posted"
+                and ml.move_id.budget_date
+                and ml.move_id.budget_date >= budget.start_date
+                and ml.move_id.budget_date <= budget.end_date
             )
             budget.invoiced_amount = sum(move_lines.mapped("price_subtotal"))
 
