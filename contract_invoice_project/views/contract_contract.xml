@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="contract_contract_form_view" model="ir.ui.view">
+        <field name="model">contract.contract</field>
+        <field name="inherit_id" ref="contract.contract_contract_form_view" />
+        <field name="arch" type="xml">
+            <xpath
+                expr="//field[@name='contract_line_fixed_ids']//field[@name='analytic_distribution']"
+                position="before"
+            >
+                <field
+                    name="project_id"
+                    groups="project.group_project_user"
+                    optional="show"
+                />
+            </xpath>
+            <xpath
+                expr="//field[@name='contract_line_ids']//field[@name='analytic_distribution']"
+                position="before"
+            >
+                <field
+                    name="project_id"
+                    groups="project.group_project_user"
+                    optional="show"
+                />
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
