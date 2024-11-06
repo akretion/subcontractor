@@ -16,11 +16,11 @@ class AccountMove(models.Model):
     )
     use_budget = fields.Boolean(related="partner_id.use_budget")
 
-    @api.depends("invoice_date")
+    @api.depends("date")
     def _compute_budget_date(self):
         for move in self:
             if not move.budget_date:
-                move.budget_date = move.invoice_date
+                move.budget_date = move.date
 
     def _post(self, soft=True):
         for move in self:
