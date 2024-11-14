@@ -95,7 +95,7 @@ class AccountMove(models.Model):
             color = ""
             if (
                 inv.move_type != "in_invoice"
-                or inv.payment_state == "paid"
+                or inv.payment_state in ["paid", "in_payment"]
                 or inv.state == "cancel"
             ):
                 inv.subcontractor_state_message = reason
