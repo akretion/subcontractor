@@ -47,7 +47,10 @@ class AccountMove(models.Model):
     def _compute_to_pay(self):
         for invoice in self:
             if invoice.move_type in ["in_invoice", "in_refund"]:
-                if invoice.payment_state == "paid" or invoice.state == "cancel":
+                if (
+                    invoice.payment_state in ["paid", "in_payment"]
+                    or invoice.state == "cancel"
+                ):
                     invoice.to_pay = False
                 else:
                     invoice.to_pay = all(
