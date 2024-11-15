@@ -423,6 +423,7 @@ class SubcontractorWork(models.Model):
                 ("partner_id", "in", subcontractors.user_id.partner_id.ids),
                 ("state", "=", "draft"),
                 ("create_date", "<=", date_filter),
+                ("move_type", "=", "in_invoice"),
             ]
         )
         for draft_invoice in invoices:
