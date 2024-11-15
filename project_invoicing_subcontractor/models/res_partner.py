@@ -36,7 +36,7 @@ class ResPartner(models.Model):
             (
                 project_move_lines,
                 project_paid_lines,
-            ) = project.analytic_account_id._prepaid_move_lines()
+            ) = project._prepaid_move_lines()
             move_lines |= project_move_lines
             paid_lines |= project_paid_lines
         if self.env.context.get("prepaid_is_paid"):

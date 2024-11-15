@@ -1,11 +1,32 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-from odoo import _, api, fields, models
-from odoo.exceptions import UserError
+from odoo import api, fields, models
 
 
 class ProjectProject(models.Model):
     _inherit = "project.project"
+
+    def _prepaid_move_lines(self):
+        self.ensure_one()
+        move_lines = self.env["account.move.line"].search(
+            [
+                ("project_id", "=", self.id),
+                ("account_id.is_prepaid_account", "=", True),
+            ],
+        )
+        paid_lines = move_lines.filtered(
+            lambda line: line.prepaid_is_paid
+            or (
+                line.move_id.supplier_invoice_ids
+                and all(
+                    [
+                        x.to_pay and x.payment_state != "paid"
+                        for x in line.move_id.supplier_invoice_ids
+                    ]
+                )
+            )
+        )
+        return move_lines, paid_lines
 
     def _get_allowed_uom_ids(self):
         return [
@@ -45,9 +66,42 @@ class ProjectProject(models.Model):
         "If this is an akretion project, the price is mandatory, and is also "
         "net of the akretion contribution",
     )
-    prepaid_available_amount = fields.Monetary(compute="_compute_prepaid_amount")
-    prepaid_total_amount = fields.Monetary(compute="_compute_prepaid_amount")
     price_unit = fields.Float(compute="_compute_price_unit")
+    prepaid_move_line_ids = fields.One2many(
+        "account.move.line",
+        "project_id",
+        domain=[("is_prepaid_line", "=", True)],
+    )
+
+    available_amount = fields.Monetary(compute="_compute_prepaid_amount")
+    prepaid_total_amount = fields.Monetary(compute="_compute_prepaid_amount")
+    prepaid_available_amount = fields.Monetary(compute="_compute_prepaid_amount")
+
+    @api.depends("prepaid_move_line_ids.prepaid_is_paid")
+    def _compute_prepaid_amount(self):
+        for project in self:
+            move_lines, paid_lines = project._prepaid_move_lines()
+            total_amount = -sum(move_lines.mapped("amount_currency")) or 0.0
+            available_amount = -sum(paid_lines.mapped("amount_currency")) or 0.0
+            not_paid_lines = move_lines - paid_lines
+            supplier_not_paid = not_paid_lines.filtered(
+                lambda line: line.amount_currency > 0.0
+            )
+            available_amount -= sum(supplier_not_paid.mapped("amount_currency"))
+            project.prepaid_total_amount = total_amount
+            # this one is used for display/info, so we show what is really available
+            # as if all supplier invoices were paid.
+            project.prepaid_available_amount = available_amount
+            # Keep available_amount without to_pay supplier invoices neither ongoing
+            # supplier invoices because it is used to make them to pay.
+            project.available_amount = (
+                -sum(
+                    move_lines.filtered(lambda m: m.prepaid_is_paid).mapped(
+                        "amount_currency"
+                    )
+                )
+                or 0.0
+            )
 
     @api.depends(
         "partner_id", "invoicing_typology_id", "uom_id", "supplier_invoice_price_unit"
@@ -64,25 +118,6 @@ class ProjectProject(models.Model):
                 project.price_unit = price
             else:
                 project.price_unit = 0.0
-
-    @api.depends(
-        "invoicing_mode",
-        "analytic_account_id",
-        "analytic_account_id.prepaid_move_line_ids.prepaid_is_paid",
-    )
-    def _compute_prepaid_amount(self):
-        for project in self:
-            total_amount = 0
-            available_amount = 0
-            if project.invoicing_mode == "customer_prepaid":
-                (
-                    move_lines,
-                    paid_lines,
-                ) = project.analytic_account_id._prepaid_move_lines()
-                total_amount = project.analytic_account_id.prepaid_total_amount
-                available_amount = project.analytic_account_id.prepaid_available_amount
-            project.prepaid_total_amount = total_amount
-            project.prepaid_available_amount = available_amount
 
     @api.depends("force_uom_id", "invoicing_typology_id")
     def _compute_uom_id(self):
@@ -117,50 +152,10 @@ class ProjectProject(models.Model):
             price = product.list_price
         return price
 
-    @api.constrains("invoicing_mode", "analytic_account_id")
-    def _check_analytic_account(self):
-        for project in self:
-            if (
-                project.invoicing_mode == "customer_prepaid"
-                and not project.analytic_account_id
-            ):
-                raise UserError(
-                    _(
-                        f"The analytic account is mandatory on project [{project.id}] "
-                        f"{project.name} configured with prepaid invoicing"
-                    )
-                )
-
-    @api.constrains("analytic_account_id", "partner_id", "invoicing_mode")
-    def _check_analytic_account_consistency(self):
-        for project in self:
-            if project.analytic_account_id and not all(
-                x == project.analytic_account_id.project_ids.partner_id[0]
-                for x in project.analytic_account_id.project_ids.partner_id
-            ):
-                raise UserError(
-                    _(
-                        "All projects linked to a same analytic account has to have the"
-                        " same customer."
-                    )
-                )
-            if project.analytic_account_id and not all(
-                x == project.analytic_account_id.project_ids.mapped("invoicing_mode")[0]
-                for x in project.analytic_account_id.project_ids.mapped(
-                    "invoicing_mode"
-                )
-            ):
-                raise UserError(
-                    _(
-                        "All projects linked to a same analytic account has to have the"
-                        " same invoicing mode."
-                    )
-                )
-
     def action_project_prepaid_move_line(self):
         self.ensure_one()
         action = self.env.ref("account.action_account_moves_all_tree").sudo().read()[0]
-        move_lines, paid_lines = self.analytic_account_id._prepaid_move_lines()
+        move_lines, paid_lines = self._prepaid_move_lines()
         if self.env.context.get("prepaid_is_paid"):
             move_lines = paid_lines
         action["domain"] = [("id", "in", move_lines.ids)]
