@@ -433,11 +433,11 @@ class SubcontractorWork(models.Model):
             if subcontractor.subcontractor_type == "internal":
                 dest_company = subcontractor.subcontractor_company_id
                 user = subcontractor.user_id
-                self = self.with_user(user).with_company(dest_company)
+                new_self = self.with_user(user).with_company(dest_company)
             else:
                 # Used to group by invoice also for external in case of the cron
-                self = self.with_context(invoice_create_cron=True)
-            subcontractor_works = self.search(
+                new_self = self.with_context(invoice_create_cron=True)
+            subcontractor_works = new_self.search(
                 [
                     ("id", "in", all_works.ids),
                     ("employee_id", "=", subcontractor.id),
