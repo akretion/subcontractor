@@ -365,12 +365,22 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         line_vals = self._prepare_invoice_line(invoice, task, timesheet_lines)
         # add subcontractors vals
         subcontractor_vals = []
+        total_subcontractor_quantity = 0.0
         for employee_id, line_ids in task_data.items():
             val = self._prepare_subcontractor_work(employee_id, line_ids)
             subcontractor_vals.append((0, 0, val))
+            total_subcontractor_quantity += val["quantity"]
         if subcontractor_vals:
             line_vals["subcontractor_work_ids"] = subcontractor_vals
             line_vals["subcontracted"] = True
+            # To avoid rounding issues between invoice qty and subcontractor line
+            # quantities, we set the sum of subcontract on invoice line.
+            # As a security, we still check the difference is small...
+            if (
+                abs(line_vals.get("quantity", 0.0) - total_subcontractor_quantity)
+                < 0.005
+            ):
+                line_vals["quantity"] = total_subcontractor_quantity
 
         if not inv_line:
             invoice_line_vals_list = [(0, 0, line_vals)]
