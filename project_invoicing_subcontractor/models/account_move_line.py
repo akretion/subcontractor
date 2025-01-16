@@ -81,7 +81,7 @@ class AccountMoveLine(models.Model):
                     record.product_uom_id
                 )
             )
-            if abs(record.timesheet_qty - record.quantity) > 0.001:
+            if abs(record.timesheet_qty - record.quantity) > 0.002:
                 record.timesheet_error = "⏰ %s" % record.timesheet_qty
 
     @api.depends(
