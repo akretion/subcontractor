@@ -21,8 +21,9 @@ Available addons
 ----------------
 addon | version | maintainers | summary
 --- | --- | --- | ---
-[account_invoice_subcontractor](account_invoice_subcontractor/) | 14.0.0.0.2 |  | Account Invoice Subcontractor
-[project_invoicing_subcontractor](project_invoicing_subcontractor/) | 14.0.1.0.2 |  | Generate the subcontractor work automatically when creating an invoice from the project invoicing menu
+[account_invoice_subcontractor](account_invoice_subcontractor/) | 16.0.1.0.0 |  | Account Invoice Subcontractor
+[account_move_line_project](account_move_line_project/) | 16.0.1.0.0 |  | Add project on account move line
+[project_invoicing_subcontractor](project_invoicing_subcontractor/) | 16.0.2.0.0 |  | Generate the subcontractor work automatically when creating an invoice from the project invoicing menu
 
 [//]: # (end addons)
 
