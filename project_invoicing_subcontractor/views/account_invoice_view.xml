@@ -71,6 +71,9 @@
             </div>
             <field name="subcontractor_state_color" invisible="1" />
         </xpath>
+        <group name="accounting_info_group" position="inside">
+            <field name="prepaid_countdown_move_id" attrs="{'invisible': [('prepaid_countdown_move_id', '=', False)], 'readonly': [('prepaid_countdown_move_id', '!=', False)]}"/>
+        </group>
     </field>
 </record>
 

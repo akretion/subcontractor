@@ -303,7 +303,7 @@ class AccountMove(models.Model):
                     _("The linked prepaid entry should be canceled.")
                 )
             prepaid_move.with_context(prepaid_reset=True).button_draft()
-            prepaid_move.line_ids.unlink()
+            prepaid_move.line_ids.with_context(dynamic_unlink=True).unlink()
         else:
             vals = self._create_prepare_prepaid_move_vals()
             prepaid_move = self.create(vals)
@@ -325,6 +325,7 @@ class AccountMove(models.Model):
                 "move_id": prepaid_move.id,
                 "partner_id": self.customer_id.id,
                 "project_id": project.id,
+                "tax_ids": [], # ensure no taxes on line to avoid unwanted tax line creation with sync_dynamic_line
             }
             line_vals_list.append(line_vals)
             # revenue line
@@ -334,6 +335,7 @@ class AccountMove(models.Model):
                 "amount_currency": -amount,
                 "move_id": prepaid_move.id,
                 "project_id": project.id,
+                "tax_ids": [], # ensure no taxes on line to avoid unwanted tax line creation with sync_dynamic_line
             }
             line_vals_list.append(line_vals)
         prepaid_move.write({"line_ids": [(0, 0, vals) for vals in line_vals_list]})
