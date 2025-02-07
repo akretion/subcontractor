@@ -404,12 +404,15 @@ class SubcontractorWork(models.Model):
         all_works = self.search(
             [
                 ("invoice_id.invoice_date", "<=", date_filter),
-                ("subcontractor_invoice_line_id", "=", False),
                 "|",
+                "&",
                 ("subcontractor_type", "=", "internal"),
+                ("subcontractor_invoice_line_id", "=", False),
+                "&",
                 "&",
                 ("subcontractor_type", "=", "external"),
                 ("employee_id.auto_generate_invoice", "=", True),
+                ("supplier_invoice_line_id", "=", False),
                 ("state", "in", ["posted", "paid"]),
             ],
         )
