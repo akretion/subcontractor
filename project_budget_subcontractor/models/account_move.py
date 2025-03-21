@@ -24,7 +24,7 @@ class AccountMove(models.Model):
 
     def _post(self, soft=True):
         for move in self:
-            if move.use_budget:
+            if move.use_budget and move.move_type in ["out_invoice", "out_refund"]:
                 if move.invoice_line_ids.filtered(lambda line: not line.project_id):
                     raise UserError(
                         _(
