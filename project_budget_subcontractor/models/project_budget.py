@@ -100,7 +100,8 @@ class ProjectBudget(models.Model):
             if isinstance(project.id, models.NewId):
                 project = project._origin
             budget.to_invoice_amount = (
-                project.convert_hours_to_days(p2hours[project.id]) * project.price_unit
+                project.convert_hours_to_days(p2hours.get(project.id, 0))
+                * project.price_unit
             )
 
     @api.depends(
