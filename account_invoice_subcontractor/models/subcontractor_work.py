@@ -331,9 +331,7 @@ class SubcontractorWork(models.Model):
     def _get_subcontractor_invoicing_group(self):
         groups = OrderedDict()
         for sub in self.sorted("invoice_date"):
-            if sub.subcontractor_type == "internal" or self.env.context.get(
-                "invoice_create_cron"
-            ):
+            if sub.subcontractor_type == "internal":
                 key = (sub.employee_id.id, sub.invoice_id.id)
             elif sub.subcontractor_type == "external":
                 key = (sub.employee_id.id, False)
@@ -406,14 +404,17 @@ class SubcontractorWork(models.Model):
                 ("invoice_id.invoice_date", "<=", date_filter),
                 "|",
                 "&",
+                "&",
                 ("subcontractor_type", "=", "internal"),
                 ("subcontractor_invoice_line_id", "=", False),
+                ("state", "in", ["posted", "paid"]),
+                "&",
                 "&",
                 "&",
                 ("subcontractor_type", "=", "external"),
                 ("employee_id.auto_generate_invoice", "=", True),
                 ("supplier_invoice_line_id", "=", False),
-                ("state", "in", ["posted", "paid"]),
+                ("state", "=", "paid"),
             ],
         )
         template = self.env.ref(
@@ -438,8 +439,7 @@ class SubcontractorWork(models.Model):
                 user = subcontractor.user_id
                 new_self = self.with_user(user).with_company(dest_company)
             else:
-                # Used to group by invoice also for external in case of the cron
-                new_self = self.with_context(invoice_create_cron=True)
+                new_self = self
             subcontractor_works = new_self.search(
                 [
                     ("id", "in", all_works.ids),
