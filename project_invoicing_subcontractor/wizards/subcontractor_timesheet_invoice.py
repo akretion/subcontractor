@@ -290,8 +290,17 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             "quantity": quantity,
             "project_id": project.id,
         }
-        if hasattr(self.env["account.move.line"], "start_date") and hasattr(
-            self.env["account.move.line"], "end_date"
+        # we do not add start/end date on prepaid invoices because it won't be
+        # propagated to the prepaid misc move and it would create inconsistencies
+        # for the cut-off.
+        # We we wanted to propagate it, we would need to stop grouping the invoice
+        # lines in the prepaid misc move + find a way to be sure to take the misc
+        # journal when generating the cut-off (which take only sales journals
+        # by default
+        if (
+            project.invoicing_typology_id.invoicing_mode != "customer_prepaid"
+            and hasattr(self.env["account.move.line"], "start_date")
+            and hasattr(self.env["account.move.line"], "end_date")
         ):
             start_date = min(timesheet_lines.mapped("date"))
             end_date = max(timesheet_lines.mapped("date"))
