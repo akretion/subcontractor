@@ -303,11 +303,10 @@ class AccountMove(models.Model):
                     _("The linked prepaid entry should be canceled.")
                 )
             prepaid_move.with_context(prepaid_reset=True).button_draft()
-            prepaid_move.line_ids.with_context(dynamic_unlink=True).unlink()
-        else:
-            vals = self._create_prepare_prepaid_move_vals()
-            prepaid_move = self.create(vals)
-            self.write({"prepaid_countdown_move_id": prepaid_move.id})
+            prepaid_move.with_context(dynamic_unlink=True).unlink()
+        vals = self._create_prepare_prepaid_move_vals()
+        prepaid_move = self.create(vals)
+        self.write({"prepaid_countdown_move_id": prepaid_move.id})
         line_vals_list = []
         account_amounts = self._prepaid_account_amounts()
         for (
