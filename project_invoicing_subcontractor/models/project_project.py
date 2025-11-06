@@ -12,6 +12,7 @@ class ProjectProject(models.Model):
             [
                 ("project_id", "=", self.id),
                 ("account_id.is_prepaid_account", "=", True),
+                ("parent_state", "=", "posted"),
             ],
         )
         paid_lines = move_lines.filtered(
@@ -85,7 +86,10 @@ class ProjectProject(models.Model):
             available_amount = -sum(paid_lines.mapped("amount_currency")) or 0.0
             not_paid_lines = move_lines - paid_lines
             supplier_not_paid = not_paid_lines.filtered(
+                # ignore customer invoice with negative line when deducting what has
+                # not been paid
                 lambda line: line.amount_currency > 0.0
+                and line.move_id.move_type != "out_invoice"
             )
             available_amount -= sum(supplier_not_paid.mapped("amount_currency"))
             project.prepaid_total_amount = total_amount
