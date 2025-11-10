@@ -77,6 +77,8 @@ class ProjectProject(models.Model):
     available_amount = fields.Monetary(compute="_compute_prepaid_amount")
     prepaid_total_amount = fields.Monetary(compute="_compute_prepaid_amount")
     prepaid_available_amount = fields.Monetary(compute="_compute_prepaid_amount")
+    not_invoiced_timesheet_amount = fields.Monetary(compute="_compute_prepaid_amount")
+    prepaid_is_positive = fields.Boolean(compute="_compute_prepaid_amount")
 
     @api.depends("prepaid_move_line_ids.prepaid_is_paid")
     def _compute_prepaid_amount(self):
@@ -106,6 +108,23 @@ class ProjectProject(models.Model):
                 )
                 or 0.0
             )
+            # timesheet amount
+            ts_amount = 0.0
+            to_invoice_timesheets = self.env["account.analytic.line"].search(
+                [
+                    ("invoiceable_amount", ">", 0.0),
+                    ("invoice_id", "=", False),
+                    ("project_id", "=", project.id),
+                    ("project_id.invoicing_typology_id", "!=", False),
+                ]
+            )
+            if to_invoice_timesheets:
+                invoiceable_time = (
+                    to_invoice_timesheets._get_invoiceable_qty_with_project_unit()
+                )
+                ts_amount = invoiceable_time * project.price_unit
+            project.not_invoiced_timesheet_amount = ts_amount
+            project.prepaid_is_positive = (total_amount - ts_amount) >= 0.0 or False
 
     @api.depends(
         "partner_id", "invoicing_typology_id", "uom_id", "supplier_invoice_price_unit"
@@ -165,6 +184,26 @@ class ProjectProject(models.Model):
         action["domain"] = [("id", "in", move_lines.ids)]
         action["context"] = {
             "search_default_group_by_account": 1,
+            "create": False,
+            "edit": False,
+            "delete": False,
+        }
+        return action
+
+    def action_project_timesheet_lines(self):
+        self.ensure_one()
+        action = self.env.ref("hr_timesheet.timesheet_action_all").sudo().read()[0]
+        to_invoice_timesheets = self.env["account.analytic.line"].search(
+            [
+                ("invoiceable_amount", ">", 0.0),
+                ("invoice_id", "=", False),
+                ("project_id", "=", self.id),
+                ("project_id.invoicing_typology_id", "!=", False),
+            ]
+        )
+        action["domain"] = [("id", "in", to_invoice_timesheets.ids)]
+        action["context"] = {
+            "search_default_to_invoice": 1,
             "create": False,
             "edit": False,
             "delete": False,
