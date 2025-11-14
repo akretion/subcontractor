@@ -77,13 +77,41 @@ class ProjectProject(models.Model):
     available_amount = fields.Monetary(compute="_compute_prepaid_amount")
     prepaid_total_amount = fields.Monetary(compute="_compute_prepaid_amount")
     prepaid_available_amount = fields.Monetary(compute="_compute_prepaid_amount")
+    not_invoiced_timesheet_amount = fields.Monetary(compute="_compute_prepaid_amount")
+    # technical field used for display
+    project_health_state = fields.Selection(
+        [("high", "High"), ("medium", "Medium"), ("low", "Low")],
+        compute="_compute_prepaid_amount",
+    )
+
+    def _get_supplier_draft_invoice_amount(self):
+        self.ensure_one()
+        amount = 0.0
+        if self.invoicing_mode != "customer_prepaid":
+            return amount
+        draft_inv_lines = self.env["account.move.line"].search(
+            [
+                ("move_id.move_type", "=", "in_invoice"),
+                ("move_id.state", "=", "draft"),
+                ("project_id", "=", self.id),
+            ]
+        )
+        if draft_inv_lines:
+            amount = sum(draft_inv_lines.mapped("contribution_price_subtotal"))
+        return amount
 
     @api.depends("prepaid_move_line_ids.prepaid_is_paid")
     def _compute_prepaid_amount(self):
         for project in self:
+            # draft supplier invoiced not validated yet, we want to deduce it form the
+            # available amounts we show...
+            supplier_draft_invoice_amount = project._get_supplier_draft_invoice_amount()
             move_lines, paid_lines = project._prepaid_move_lines()
-            total_amount = -sum(move_lines.mapped("amount_currency")) or 0.0
-            available_amount = -sum(paid_lines.mapped("amount_currency")) or 0.0
+            available_if_paid = -sum(move_lines.mapped("amount_currency")) or 0.0
+            available_if_paid -= supplier_draft_invoice_amount
+            immediatly_available_amount = (
+                -sum(paid_lines.mapped("amount_currency")) or 0.0
+            )
             not_paid_lines = move_lines - paid_lines
             supplier_not_paid = not_paid_lines.filtered(
                 # ignore customer invoice with negative line when deducting what has
@@ -91,11 +119,14 @@ class ProjectProject(models.Model):
                 lambda line: line.amount_currency > 0.0
                 and line.move_id.move_type != "out_invoice"
             )
-            available_amount -= sum(supplier_not_paid.mapped("amount_currency"))
-            project.prepaid_total_amount = total_amount
+            immediatly_available_amount -= sum(
+                supplier_not_paid.mapped("amount_currency")
+            )
+            immediatly_available_amount -= supplier_draft_invoice_amount
+            project.prepaid_total_amount = available_if_paid
             # this one is used for display/info, so we show what is really available
             # as if all supplier invoices were paid.
-            project.prepaid_available_amount = available_amount
+            project.prepaid_available_amount = immediatly_available_amount
             # Keep available_amount without to_pay supplier invoices neither ongoing
             # supplier invoices because it is used to make them to pay.
             project.available_amount = (
@@ -106,6 +137,29 @@ class ProjectProject(models.Model):
                 )
                 or 0.0
             )
+            # timesheet amount
+            ts_amount = 0.0
+            to_invoice_timesheets = self.env["account.analytic.line"].search(
+                [
+                    ("invoiceable_amount", ">", 0.0),
+                    ("invoice_id", "=", False),
+                    ("project_id", "=", project.id),
+                    ("project_id.invoicing_typology_id", "!=", False),
+                ]
+            )
+            if to_invoice_timesheets:
+                invoiceable_time = (
+                    to_invoice_timesheets._get_invoiceable_qty_with_project_unit()
+                )
+                ts_amount = invoiceable_time * project.price_unit
+            project.not_invoiced_timesheet_amount = ts_amount
+            if available_if_paid < ts_amount:
+                health = "low"
+            elif immediatly_available_amount < ts_amount:
+                health = "medium"
+            else:
+                health = "high"
+            project.project_health_state = health
 
     @api.depends(
         "partner_id", "invoicing_typology_id", "uom_id", "supplier_invoice_price_unit"
@@ -165,6 +219,26 @@ class ProjectProject(models.Model):
         action["domain"] = [("id", "in", move_lines.ids)]
         action["context"] = {
             "search_default_group_by_account": 1,
+            "create": False,
+            "edit": False,
+            "delete": False,
+        }
+        return action
+
+    def action_project_timesheet_lines(self):
+        self.ensure_one()
+        action = self.env.ref("hr_timesheet.timesheet_action_all").sudo().read()[0]
+        to_invoice_timesheets = self.env["account.analytic.line"].search(
+            [
+                ("invoiceable_amount", ">", 0.0),
+                ("invoice_id", "=", False),
+                ("project_id", "=", self.id),
+                ("project_id.invoicing_typology_id", "!=", False),
+            ]
+        )
+        action["domain"] = [("id", "in", to_invoice_timesheets.ids)]
+        action["context"] = {
+            "search_default_to_invoice": 1,
             "create": False,
             "edit": False,
             "delete": False,
