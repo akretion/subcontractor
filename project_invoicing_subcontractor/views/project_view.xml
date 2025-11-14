@@ -6,30 +6,37 @@
         <field name="inherit_id" ref="project.edit_project" />
         <field name="arch" type="xml">
             <div name="button_box" position="inside">
-                <field name="prepaid_is_positive" invisible="1" />
+                <field name="project_health_state" invisible="1" />
                 <button
                     class="oe_stat_button"
                     name="action_project_prepaid_move_line"
                     type="object"
                     icon="fa-usd"
                     attrs="{'invisible': [('invoicing_mode', '!=', 'customer_prepaid')]}"
+                    help="The amount available on this project IF the customer pay all its invoice. It does not take into account the timesheet not invoiced yet."
                 >
                     <div class="o_field_widget o_stat_info">
                         <div class="oe_inline">
                             <span
                                 class="text-success"
-                                attrs="{'invisible': [('prepaid_is_positive', '=', False)]}"
+                                attrs="{'invisible': [('project_health_state', '!=', 'high')]}"
+                            >
+                                <field name="prepaid_total_amount" nolabel="1" />
+                            </span>
+                            <span
+                                class="text-warning"
+                                attrs="{'invisible': [('project_health_state', '!=', 'medium')]}"
                             >
                                 <field name="prepaid_total_amount" nolabel="1" />
                             </span>
                             <span
                                 class="text-danger"
-                                attrs="{'invisible': [('prepaid_is_positive', '=', True)]}"
+                                attrs="{'invisible': [('project_health_state', '!=', 'low')]}"
                             >
                                 <field name="prepaid_total_amount" nolabel="1" />
                             </span>
                         </div>
-                        <span class="o_stat_text">Total</span>
+                        <span class="o_stat_text">Available if paid</span>
                     </div>
                 </button>
                 <button
@@ -39,23 +46,30 @@
                     icon="fa-usd"
                     attrs="{'invisible': [('invoicing_mode', '!=', 'customer_prepaid')]}"
                     context="{'prepaid_is_paid': True}"
+                    help="The amount currently available on this project. If you invoice timesheet for a lesser amount, the invoices will be paid soon."
                 >
                     <div class="o_field_widget o_stat_info">
                         <div class="oe_inline">
                             <span
                                 class="text-success"
-                                attrs="{'invisible': [('prepaid_is_positive', '=', False)]}"
+                                attrs="{'invisible': [('project_health_state', '!=', 'high')]}"
+                            >
+                                <field name="prepaid_available_amount" nolabel="1" />
+                            </span>
+                            <span
+                                class="text-warning"
+                                attrs="{'invisible': [('project_health_state', '!=', 'medium')]}"
                             >
                                 <field name="prepaid_available_amount" nolabel="1" />
                             </span>
                             <span
                                 class="text-danger"
-                                attrs="{'invisible': [('prepaid_is_positive', '=', True)]}"
+                                attrs="{'invisible': [('project_health_state', '!=', 'low')]}"
                             >
                                 <field name="prepaid_available_amount" nolabel="1" />
                             </span>
                         </div>
-                        <span class="o_stat_text">Available Immediatly</span>
+                        <span class="o_stat_text">Available Immediately</span>
                     </div>
                 </button>
                 <button
@@ -63,12 +77,22 @@
                     name="action_project_timesheet_lines"
                     type="object"
                     icon="fa-calendar"
+                    help="The amount of the timesheet not invoiced yet."
                 >
                     <div class="o_stat_info">
                         <div class="oe_inline">
                             <span
                                 class="text-success"
-                                attrs="{'invisible': [('prepaid_is_positive', '=', False)]}"
+                                attrs="{'invisible': [('project_health_state', '!=', 'high')]}"
+                            >
+                                <field
+                                    name="not_invoiced_timesheet_amount"
+                                    nolabel="1"
+                                />
+                            </span>
+                            <span
+                                class="text-warning"
+                                attrs="{'invisible': [('project_health_state', '!=', 'medium')]}"
                             >
                                 <field
                                     name="not_invoiced_timesheet_amount"
@@ -77,7 +101,7 @@
                             </span>
                             <span
                                 class="text-danger"
-                                attrs="{'invisible': [('prepaid_is_positive', '=', True)]}"
+                                attrs="{'invisible': [('project_health_state', '!=', 'low')]}"
                             >
                                 <field
                                     name="not_invoiced_timesheet_amount"
