@@ -55,6 +55,16 @@
                     sum="Total invoiceable"
                     optional="show"
                 />
+                <field
+                    name="invoiceable_price"
+                    optional="hide"
+                    sum="Total invoiceable price"
+                />
+                <field
+                    name="invoiceable_price_no_commission"
+                    optional="hide"
+                    sum="Total invoiceable price no commission"
+                />
                 <field name="invoiceable" optional="hide" />
                 <field name="invoice_id" optional="show" />
             </field>
