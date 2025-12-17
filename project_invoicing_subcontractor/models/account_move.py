@@ -148,7 +148,7 @@ class AccountMove(models.Model):
                     _prepaid_revenue_account,
                     _revenue_account,
                     project,
-                ), amount in account_amounts.items():
+                ) in account_amounts.keys():
                     # read on project not very intuitive to discuss
                     if not project:
                         reason = (
@@ -173,9 +173,7 @@ class AccountMove(models.Model):
                         )
                     if (
                         inv.state == "draft"
-                        and float_compare(
-                            total_amount, amount, precision_digits=precision
-                        )
+                        and float_compare(total_amount, 0, precision_digits=precision)
                         == -1
                     ):
                         account_reasons.append(
@@ -185,9 +183,7 @@ class AccountMove(models.Model):
                         )
                         color = "danger"
                     elif inv.state == "draft" and (
-                        float_compare(
-                            available_amount, amount, precision_digits=precision
-                        )
+                        float_compare(available_amount, 0, precision_digits=precision)
                         == -1
                     ):
                         account_reasons.append(
@@ -196,30 +192,6 @@ class AccountMove(models.Model):
                             f" est insuffisant {available_amount}. "
                             f"La facture sera payable une fois que le client aura reglé"
                             f"ses factures."
-                        )
-                        if color != "red":
-                            color = "info"
-                    elif (
-                        inv.state != "draft"
-                        and float_compare(total_amount, 0, precision_digits=precision)
-                        == -1
-                    ):
-                        account_reasons.append(
-                            f"Le solde du projet {project.name} "
-                            f"est négatif {total_amount}. "
-                            f"Il est necessaire de facturer le client."
-                        )
-                        color = "danger"
-                    elif inv.state != "draft" and (
-                        float_compare(available_amount, 0, precision_digits=precision)
-                        == -1
-                    ):
-                        account_reasons.append(
-                            f"Le solde payé du compte projet "
-                            f"{project.name} est insuffisant "
-                            f"{available_amount}. "
-                            f"La facture sera payable une fois que le client aura reglé"
-                            f" ses factures."
                         )
                         if color != "red":
                             color = "info"
