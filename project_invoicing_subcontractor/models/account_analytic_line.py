@@ -26,6 +26,18 @@ class AccountAnalyticLine(models.Model):
     discount = fields.Float(digits="Discount", default=0)
     invoiceable_amount = fields.Float(compute="_compute_invoiceable_amount", store=True)
     parent_task_id = fields.Many2one(related="task_id.parent_id", store=True)
+    invoiceable_price = fields.Float(
+        compute="_compute_prices",
+        store=True,
+        help="Field used only for information in UX, the value is computed at invoice "
+        "creation so a difference may occur.",
+    )
+    invoiceable_price_no_commission = fields.Float(
+        compute="_compute_prices",
+        store=True,
+        help="Field used only for information in UX, the value is computed at invoice "
+        "creation so a difference may occur.",
+    )
 
     @api.depends("subcontractor_work_id", "supplier_invoice_line_id")
     def _compute_invoice_line(self):
@@ -69,6 +81,25 @@ class AccountAnalyticLine(models.Model):
     def _compute_invoiceable(self):
         for record in self:
             record.invoiceable = record.is_invoiceable()
+
+    @api.depends(
+        "invoiceable_amount",
+        "company_id",
+        "project_id",
+        "project_id.price_unit",
+        "project_id.uom_id",
+        "company_id.commission_rate",
+    )
+    def _compute_prices(self):
+        for record in self:
+            # only compute for uninvoiced lines to avoid recompute old lines
+            if not record.invoice_id and record.project_id:
+                invoiceable = record._get_invoiceable_qty_with_project_unit()
+                price = invoiceable * record.project_id.price_unit
+                record.invoiceable_price = price
+                contribution = record.company_id._get_commission_rate()
+                price = (1 - contribution) * price
+                record.invoiceable_price_no_commission = price
 
     def _get_invoiceable_qty_with_project_unit(self, project=False):
         project = project or self.mapped("project_id")
