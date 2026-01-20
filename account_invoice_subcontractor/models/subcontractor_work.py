@@ -298,7 +298,8 @@ class SubcontractorWork(models.Model):
             "partner_id": partner.id,
             "journal_id": journal.id,
             "invoice_line_ids": [(6, 0, [])],
-            "currency_id": company.currency_id.id,
+            "currency_id": partner.property_product_pricelist.currency_id.id
+            or company.currency_id.id,
             "user_id": user.id,
         }
         if invoice_type in ["out_invoice", "out_refund"]:
