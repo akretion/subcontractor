@@ -12,7 +12,7 @@
         "account_move_line_project",
         "contract",
     ],
-    "data": ["views/contract_contract.xml"],
+    "data": ["views/contract_contract.xml", "views/contract_line.xml"],
     "license": "AGPL-3",
     "installable": True,
     "auto_install": True,
