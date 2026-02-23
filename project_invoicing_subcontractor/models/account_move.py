@@ -337,7 +337,10 @@ class AccountMove(models.Model):
                         )
                     )
                 project_partner = line.project_id.partner_id
-                if project_partner != line.move_id.partner_id.commercial_partner_id:
+                if (
+                    project_partner.commercial_partner_id
+                    != line.move_id.partner_id.commercial_partner_id
+                ):
                     raise exceptions.ValidationError(
                         _(
                             "Line %s is not valid, the project is not "
