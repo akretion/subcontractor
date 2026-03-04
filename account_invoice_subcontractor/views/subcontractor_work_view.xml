@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
-
     <record id="view_subcontractor_work_view_search" model="ir.ui.view">
         <field name="model">subcontractor.work</field>
         <field name="arch" type="xml">
@@ -36,7 +35,6 @@
                         context="{'group_by':'employee_id'}"
                     />
                 </group>
-
             </search>
         </field>
     </record>
@@ -83,7 +81,7 @@
     <record id="view_subcontractor_work_view_tree" model="ir.ui.view">
         <field name="model">subcontractor.work</field>
         <field name="arch" type="xml">
-            <tree delete="false">
+            <list delete="false">
                 <field name="id" />
                 <field name="end_customer_id" string="Custo -mer (end)" />
                 <field name="invoice_id" />
@@ -108,16 +106,14 @@
                     string="Subcon- tractor company"
                 />
                 <field name="date_supplier_invoice" />
-           </tree>
+            </list>
         </field>
     </record>
 
-    <!-- TODO Insufficient fields for Calendar View!  -->
-    <!-- <field name="view_mode">tree,form,calendar,graph</field> -->
     <record id="action_subcontractor_work" model="ir.actions.act_window">
         <field name="name">Subcontractor Work</field>
         <field name="res_model">subcontractor.work</field>
-        <field name="view_mode">tree,form,graph</field>
+        <field name="view_mode">list,form</field>
         <field name="context">{"search_default_to_invoice":1}</field>
     </record>
 
@@ -127,5 +123,4 @@
         parent="account.menu_finance_receivables"
         sequence="100"
     />
-
 </odoo>

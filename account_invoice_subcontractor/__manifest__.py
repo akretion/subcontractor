@@ -4,7 +4,7 @@
 
 {
     "name": "Account Invoice Subcontractor",
-    "version": "16.0.1.0.0",
+    "version": "18.0.1.0.0",
     "category": "Generic Modules/Others",
     "license": "AGPL-3",
     "author": "Akretion",
@@ -30,5 +30,5 @@
     "demo": [
         "demo/demo.xml",
     ],
-    "installable": False,
+    "installable": True,
 }

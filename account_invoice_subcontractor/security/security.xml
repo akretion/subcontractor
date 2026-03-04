@@ -5,7 +5,6 @@
   The licence is in the file __openerp__.py
 -->
 <odoo>
-
     <record model="res.groups" id="group_have_subcontractor">
         <field name="name">Have Subcontractor</field>
         <field name="category_id" ref="base.module_category_accounting_and_finance" />
@@ -27,7 +26,6 @@
         <field name="global" eval="True" />
         <field
             name="domain_force"
-        >['|',('subcontractor_company_id','in', company_ids), '|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        >['|',('subcontractor_company_id','in', company_ids), ('company_id', 'in', company_ids + [False])]</field>
     </record>
-
 </odoo>
