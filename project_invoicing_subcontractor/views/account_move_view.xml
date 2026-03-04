@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_move_form" model="ir.ui.view">
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//list/field[@name='quantity']" position="after">
+                <field name="task_invoiceable_days" optional="hidden" />
+            </xpath>
+            <div name="button_box" position="inside">
+                <button
+                    name="action_view_subcontractor"
+                    type="object"
+                    string="Subcontractor Work"
+                    class="oe_stat_button"
+                    icon="fa-users"
+                />
+                <button
+                    name="action_view_analytic_line"
+                    type="object"
+                    string="Timesheet"
+                    class="oe_stat_button"
+                    icon="fa-calendar"
+                />
+            </div>
+            <field name="partner_id" position="after">
+                <field name="customer_id" readonly="1" invisible="not customer_id" />
+            </field>
+            <xpath expr="//list/field[@name='name']" position="after">
+                <field name="task_stage_id" optional="hide" />
+            </xpath>
+            <xpath expr="//list/field[@name='quantity']" position="after">
+                <field
+                    name="timesheet_error"
+                    string=""
+                    column_invisible="parent.move_type not in ('out_invoice', 'out_refund')"
+                />
+            </xpath>
+            <xpath expr="//field[@name='state']/.." position="after">
+                <div
+                    groups="account.group_account_invoice,account.group_account_readonly"
+                    class="alert alert-danger"
+                    role="alert"
+                    style="margin-bottom:0px;"
+                    invisible="not subcontractor_state_message or subcontractor_state_color != 'danger'"
+                >
+                    <field name="subcontractor_state_message" nolabel="1" />
+                </div>
+                <div
+                    groups="account.group_account_invoice,account.group_account_readonly"
+                    class="alert alert-info"
+                    role="alert"
+                    style="margin-bottom:0px;"
+                    invisible="not subcontractor_state_message or subcontractor_state_color != 'info'"
+                >
+                    <field name="subcontractor_state_message" nolabel="1" />
+                </div>
+                <div
+                    groups="account.group_account_invoice,account.group_account_readonly"
+                    class="alert alert-success"
+                    role="alert"
+                    style="margin-bottom:0px;"
+                    invisible="not subcontractor_state_message or subcontractor_state_color != 'success'"
+                >
+                    <field name="subcontractor_state_message" nolabel="1" />
+                </div>
+                <field name="subcontractor_state_color" invisible="1" />
+            </xpath>
+            <group name="accounting_info_group" position="inside">
+                <field
+                    name="prepaid_countdown_move_id"
+                    invisible="not prepaid_countdown_move_id"
+                    readonly="prepaid_countdown_move_id"
+                />
+            </group>
+        </field>
+    </record>
+
+    <record id="view_account_invoice_filter" model="ir.ui.view">
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_account_invoice_filter" />
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="customer_id" operator="child_of" />
+            </field>
+        </field>
+    </record>
+</odoo>

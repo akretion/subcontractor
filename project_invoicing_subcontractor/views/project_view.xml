@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
-
     <record id="project_project_view_form" model="ir.ui.view">
         <field name="model">project.project</field>
         <field name="inherit_id" ref="project.edit_project" />
@@ -12,26 +11,26 @@
                     name="action_project_prepaid_move_line"
                     type="object"
                     icon="fa-usd"
-                    attrs="{'invisible': [('invoicing_mode', '!=', 'customer_prepaid')]}"
+                    invisible="invoicing_mode != 'customer_prepaid'"
                     help="The amount available on this project IF the customer pay all its invoice. It does not take into account the timesheet not invoiced yet."
                 >
                     <div class="o_field_widget o_stat_info">
                         <div class="oe_inline">
                             <span
                                 class="text-success"
-                                attrs="{'invisible': [('project_health_state', '!=', 'high')]}"
+                                invisible="project_health_state != 'high'"
                             >
                                 <field name="prepaid_total_amount" nolabel="1" />
                             </span>
                             <span
                                 class="text-warning"
-                                attrs="{'invisible': [('project_health_state', '!=', 'medium')]}"
+                                invisible="project_health_state != 'medium'"
                             >
                                 <field name="prepaid_total_amount" nolabel="1" />
                             </span>
                             <span
                                 class="text-danger"
-                                attrs="{'invisible': [('project_health_state', '!=', 'low')]}"
+                                invisible="project_health_state != 'low'"
                             >
                                 <field name="prepaid_total_amount" nolabel="1" />
                             </span>
@@ -44,7 +43,7 @@
                     name="action_project_prepaid_move_line"
                     type="object"
                     icon="fa-usd"
-                    attrs="{'invisible': [('invoicing_mode', '!=', 'customer_prepaid')]}"
+                    invisible="invoicing_mode != 'customer_prepaid'"
                     context="{'prepaid_is_paid': True}"
                     help="The amount currently available on this project. If you invoice timesheet for a lesser amount, the invoices will be paid soon."
                 >
@@ -52,19 +51,19 @@
                         <div class="oe_inline">
                             <span
                                 class="text-success"
-                                attrs="{'invisible': [('project_health_state', '!=', 'high')]}"
+                                invisible="project_health_state != 'high'"
                             >
                                 <field name="prepaid_available_amount" nolabel="1" />
                             </span>
                             <span
                                 class="text-warning"
-                                attrs="{'invisible': [('project_health_state', '!=', 'medium')]}"
+                                invisible="project_health_state != 'medium'"
                             >
                                 <field name="prepaid_available_amount" nolabel="1" />
                             </span>
                             <span
                                 class="text-danger"
-                                attrs="{'invisible': [('project_health_state', '!=', 'low')]}"
+                                invisible="project_health_state != 'low'"
                             >
                                 <field name="prepaid_available_amount" nolabel="1" />
                             </span>
@@ -83,7 +82,7 @@
                         <div class="oe_inline">
                             <span
                                 class="text-success"
-                                attrs="{'invisible': [('project_health_state', '!=', 'high')]}"
+                                invisible="project_health_state != 'high'"
                             >
                                 <field
                                     name="not_invoiced_timesheet_amount"
@@ -92,7 +91,7 @@
                             </span>
                             <span
                                 class="text-warning"
-                                attrs="{'invisible': [('project_health_state', '!=', 'medium')]}"
+                                invisible="project_health_state != 'medium'"
                             >
                                 <field
                                     name="not_invoiced_timesheet_amount"
@@ -101,7 +100,7 @@
                             </span>
                             <span
                                 class="text-danger"
-                                attrs="{'invisible': [('project_health_state', '!=', 'low')]}"
+                                invisible="project_health_state != 'low'"
                             >
                                 <field
                                     name="not_invoiced_timesheet_amount"
@@ -114,14 +113,12 @@
                 </button>
             </div>
             <field name="partner_id" position="attributes">
-                <attribute
-                    name="attrs"
-                >{'required': [('invoicing_typology_id', '!=', False)]}</attribute>
+                <attribute name="required">invoicing_typology_id</attribute>
             </field>
             <field name="analytic_account_id" position="attributes">
                 <attribute
-                    name="attrs"
-                >{'required': [('invoicing_mode', '=', 'customer_prepaid')]}</attribute>
+                    name="required"
+                >invoicing_mode == 'customer_prepaid'</attribute>
             </field>
             <group name="extra_settings" position="after">
                 <group string="Invoicing" name="invoicing">
@@ -130,23 +127,19 @@
                     <field
                         name="uom_id"
                         string="Default Invoice uom"
-                        attrs="{'invisible': ['|', ('force_uom_id', '!=', False), ('uom_id', '=', False)]}"
+                        invisible="force_uom_id or not uom_id"
                     />
                     <field
                         name="force_uom_id"
                         string="Force Invoice uom"
-                        attrs="{
-                            'invisible': ['|', ('invoicing_typology_id', '=', False), ('invoicing_mode', 'not in', ['customer_postpaid', 'supplier'])],
-                            'required': [('uom_id', '=', False)]
-                        }"
+                        invisible="not invoicing_typology_id or invoicing_mode not in ['customer_postpaid', 'supplier']"
+                        required="not uom_id"
                     />
                     <field name="price_unit" />
                     <field
                         name="supplier_invoice_price_unit"
-                        attrs="{
-                            'invisible': [('invoicing_mode', 'not in', ('customer_prepaid', 'supplier'))],
-                            'required': [('invoicing_mode', '=', 'supplier')]
-                        }"
+                        invisible="invoicing_mode not in ('customer_prepaid', 'supplier')"
+                        required="invoicing_mode == 'supplier'"
                     />
                 </group>
             </group>
@@ -155,8 +148,8 @@
             </field>
             <field name="hour_uom_id" position="attributes">
                 <attribute
-                    name="attrs"
-                >{'invisible': [('uom_id', '!=', %(uom.product_uom_day)d)]}</attribute>
+                    name="invisible"
+                >uom_id != ref('uom.product_uom_day')</attribute>
             </field>
         </field>
     </record>
@@ -165,7 +158,7 @@
         <field name="model">project.task</field>
         <field name="inherit_id" ref="hr_timesheet.view_task_form2_inherited" />
         <field name="arch" type="xml">
-            <xpath expr="//tree/field[@name='unit_amount']" position="after">
+            <xpath expr="//list/field[@name='unit_amount']" position="after">
                 <field name="discount" />
             </xpath>
             <field name="remaining_hours" position="after">
@@ -174,10 +167,10 @@
                     widget="float_time"
                     class="oe_subtotal_footer_separator"
                 />
-             </field>
+            </field>
         </field>
     </record>
-
+    <!--
     <record id="view_task_kanban" model="ir.ui.view">
         <field name="model">project.task</field>
         <field name="inherit_id" ref="project.view_task_kanban" />
@@ -209,6 +202,5 @@
                 </div>
             </xpath>
         </field>
-    </record>
-
+    </record>-->
 </odoo>

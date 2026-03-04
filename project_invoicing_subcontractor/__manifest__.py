@@ -2,7 +2,7 @@
 
 {
     "name": "project_invoicing_subcontractor",
-    "version": "16.0.2.0.0",
+    "version": "18.0.1.0.0",
     "author": "Akretion",
     "website": "https://github.com/akretion/subcontractor",
     "license": "AGPL-3",
@@ -20,7 +20,8 @@
         "security/ir.model.access.csv",
         "wizards/subcontractor_timesheet_invoice_view.xml",
         "views/menu.xml",
-        "views/account_invoice_view.xml",
+        "views/account_move_view.xml",
+        "views/account_move_line_view.xml",
         "views/hr_timesheet_view.xml",
         "views/project_view.xml",
         "views/hr_timesheet_sheet.xml",
@@ -37,5 +38,5 @@
         "demo/project_invoice_typology.xml",
         "demo/project_demo.xml",
     ],
-    "installable": False,
+    "installable": True,
 }

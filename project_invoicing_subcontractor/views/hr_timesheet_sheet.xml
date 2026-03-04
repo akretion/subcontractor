@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
-
     <record id="hr_timesheet_sheet_form" model="ir.ui.view">
         <field name="model">hr_timesheet.sheet</field>
         <field name="inherit_id" ref="hr_timesheet_sheet.hr_timesheet_sheet_form" />
         <field name="arch" type="xml">
             <xpath
-                expr="//field[@name='timesheet_ids']/tree/field[@name='unit_amount']"
+                expr="//field[@name='timesheet_ids']/list/field[@name='unit_amount']"
                 position="after"
             >
                 <field name="discount" />
@@ -17,12 +16,11 @@
                 >{'required': [('add_line_project_id', '!=', False)]}</attribute>
             </field>
             <xpath
-                expr="//field[@name='timesheet_ids']/tree/field[@name='task_id']"
+                expr="//field[@name='timesheet_ids']/list/field[@name='task_id']"
                 position="attributes"
             >
                 <attribute name="required">1</attribute>
             </xpath>
         </field>
     </record>
-
 </odoo>

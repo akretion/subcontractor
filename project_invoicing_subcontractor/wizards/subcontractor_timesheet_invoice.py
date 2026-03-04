@@ -3,7 +3,7 @@
 
 from collections import defaultdict
 
-from odoo import _, api, fields, models
+from odoo import api, fields, models
 from odoo.exceptions import UserError
 from odoo.fields import first
 
@@ -187,14 +187,14 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         error = False
         partner_ids = self._get_partner_ids()
         if False in partner_ids:
-            error = _(
+            error = self.env._(
                 "One or more line is not linked to any partner. Fix this to be able to "
                 "invoice it."
             )
         #        elif not self.force_project_id and len(partner_ids) != 1:
         elif len(partner_ids) != 1:
             partners = self.env["res.partner"].browse(partner_ids)
-            error = _(
+            error = self.env._(
                 "You can only invoice timesheet with the same partner. "
                 "Partner found %s"
             ) % [x.name for x in partners]
@@ -204,7 +204,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         projects = timesheet_lines.project_id
         error = False
         if any([not proj.invoicing_typology_id for proj in projects]):
-            error = _(
+            error = self.env._(
                 "At least one of the chosen project is not  configured to be invoiced."
             )
         invoicing_typology = projects.invoicing_typology_id
@@ -212,7 +212,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             not self.force_project_id
             and len(list(set(invoicing_typology.mapped("invoicing_mode")))) > 1
         ):
-            error = _(
+            error = self.env._(
                 "You try to invoice timesheet from multiple projects that are not "
                 "configured to be invoiced in the same way."
             )
@@ -223,7 +223,9 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         timesheet_lines = self.timesheet_line_ids
         error = self._get_partner_error()
         if not error and timesheet_lines.invoice_line_id:
-            error = _("Some selected timesheet lines have already been invoiced")
+            error = self.env._(
+                "Some selected timesheet lines have already been invoiced"
+            )
 
         if not error:
             error = self._get_invoicing_typology_error(timesheet_lines)
@@ -244,7 +246,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             if task.parent_id and self.invoice_parent_task:
                 if task.project_id != task.parent_id.project_id:
                     raise UserError(
-                        _(
+                        self.env._(
                             "Task '%(task_name)s' do not belong to the same "
                             "project of the parent task '%(parent_task_name)s'"
                         )
@@ -482,7 +484,7 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         # know...
         if len(data) > 1 and not self.create_invoice:
             raise UserError(
-                _(
+                self.env._(
                     "Multiple subcontractor are selected, you can't choose an existing"
                     " invoice to invoice the timesheet lines"
                 )

@@ -1,79 +1,72 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
-
-<record id="subcontractor_timesheet_invoice_view" model="ir.ui.view">
-    <field name="model">subcontractor.timesheet.invoice</field>
-    <field name="arch" type="xml">
-        <form string="Invoice">
-            <div
-                    class="alert alert-danger"
-                    role="alert"
-                    attrs="{'invisible': [('error', '=', False)]}"
-                >
-                <field name='error' />
+    <record id="subcontractor_timesheet_invoice_view" model="ir.ui.view">
+        <field name="model">subcontractor.timesheet.invoice</field>
+        <field name="arch" type="xml">
+            <form string="Invoice">
+                <div class="alert alert-danger" role="alert" invisible="not error">
+                    <field name='error' />
                 </div>
-            <div
-                    class="alert alert-info"
-                    role="alert"
-                    attrs="{'invisible': [('error', '!=', False)]}"
-                >
-                <field name='explanation' />
+                <div class="alert alert-info" role="alert" invisible="error">
+                    <field name='explanation' />
                 </div>
-            <group>
-                <field name='partner_id' />
-                <field name='has_parent_task' invisible="1" />
-                <field
+                <group>
+                    <field name='partner_id' />
+                    <field name='has_parent_task' invisible="1" />
+                    <field
                         name="invoice_parent_task"
-                        attrs="{'invisible': [('has_parent_task', '=', False)], 'readonly': [('invoice_id', '!=', False)]}"
+                        invisible="not has_parent_task"
+                        readonly="invoice_id"
                     />
 
-                <field name="to_invoice_partner_id" invisible="1" />
-                <field name="move_type" invisible="1" />
-                <field name='invoicing_mode' invisible="1" />
-                <field name='timesheet_line_ids' invisible="1" />
-                <field
+                    <field name="to_invoice_partner_id" invisible="1" />
+                    <field name="move_type" invisible="1" />
+                    <field name='invoicing_mode' invisible="1" />
+                    <field name='timesheet_line_ids' invisible="1" />
+                    <field
                         name='create_invoice'
-                        attrs="{'invisible': [('invoice_id', '!=', False), ('to_invoice_partner_id', '=', False)], 'readonly': [('to_invoice_partner_id', '=', False)]}"
+                        invisible="invoice_id and not to_invoice_partner_id"
+                        readonly="not to_invoice_partner_id"
                     />
-                <field
+                    <field
                         name='invoice_id'
                         domain="[('partner_id', '=', to_invoice_partner_id), ('state', '=', 'draft'), ('move_type', '=', move_type)]"
-                        attrs="{'invisible': ['|', ('create_invoice', '=', True), ('to_invoice_partner_id', '=', False)], 'required': [('create_invoice', '!=', True)]}"
+                        invisible="create_invoice or not to_invoice_partner_id"
+                        required="not create_invoice"
                     />
-                <field
+                    <field
                         name='force_project_id'
                         domain="[('partner_id', '=', partner_id)]"
                     />
-            </group>
-            <footer>
+                </group>
+                <footer>
                 <button
-                        name="action_customer_invoice"
-                        type="object"
-                        string="Ok"
-                        class="oe_highlight"
-                        attrs="{'invisible': ['|', ('error', '!=', False), ('invoicing_mode', '!=', 'customer_postpaid')]}"
-                    />
+                    name="action_customer_invoice"
+                    type="object"
+                    string="Ok"
+                    class="oe_highlight"
+                    invisible="error or invoicing_mode != 'customer_postpaid'"
+                />
                 <button
-                        name="action_supplier_invoice"
-                        type="object"
-                        string="Ok"
-                        class="oe_highlight"
-                        attrs="{'invisible': ['|', ('error', '!=', False), ('invoicing_mode', '=', 'customer_postpaid')]}"
-                    />
+                    name="action_supplier_invoice"
+                    type="object"
+                    string="Ok"
+                    class="oe_highlight"
+                    invisible="error or invoicing_mode == 'customer_postpaid'"
+                />
                 or
                 <button special="cancel" string="Cancel" />
             </footer>
-        </form>
-    </field>
-</record>
+            </form>
+        </field>
+    </record>
 
-<record id="subcontractor_timesheet_invoice_action" model="ir.actions.act_window">
-    <field name="name">Invoice TimeSheet</field>
-    <field name="res_model">subcontractor.timesheet.invoice</field>
-    <field name="type">ir.actions.act_window</field>
-    <field name="view_mode">form</field>
-    <field name="target">new</field>
-    <field name="binding_model_id" ref="analytic.model_account_analytic_line" />
-</record>
-
+    <record id="subcontractor_timesheet_invoice_action" model="ir.actions.act_window">
+        <field name="name">Invoice TimeSheet</field>
+        <field name="res_model">subcontractor.timesheet.invoice</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="analytic.model_account_analytic_line" />
+    </record>
 </odoo>
