@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
-
     <record id="typology_customer_postpaid" model="project.invoice.typology">
         <field name="name">Customer (post-paid)</field>
         <field
@@ -24,5 +23,4 @@
             ref="project_invoicing_subcontractor.product_product_3"
         />
     </record>
-
 </odoo>

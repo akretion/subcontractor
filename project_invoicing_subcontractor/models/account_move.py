@@ -178,7 +178,8 @@ class AccountMove(models.Model):
                         == -1
                     ):
                         account_reasons.append(
-                            f"Le solde du projet {project.name} "
+                            f"Le solde du projet (qui prend en compte les factures "
+                            f"fournisseurs en brouillon) {project.name} "
                             f"n'est pas suffisant : {total_amount}. "
                             f"Il est necessaire de facturer le client."
                         )

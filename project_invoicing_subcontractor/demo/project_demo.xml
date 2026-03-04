@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
-
     <record id="project_project_1" model="project.project">
         <field name="date_start" eval="time.strftime('%Y-%m-01 10:00:00')" />
         <field name="partner_id" ref="base.res_partner_4" />
@@ -389,5 +388,4 @@
         <field name="project_id" ref="project_project_4" />
         <field name="task_id" ref="project_task_1_proj4" />
     </record>
-
 </odoo>

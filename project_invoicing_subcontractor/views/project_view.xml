@@ -115,11 +115,6 @@
             <field name="partner_id" position="attributes">
                 <attribute name="required">invoicing_typology_id</attribute>
             </field>
-            <field name="analytic_account_id" position="attributes">
-                <attribute
-                    name="required"
-                >invoicing_mode == 'customer_prepaid'</attribute>
-            </field>
             <group name="extra_settings" position="after">
                 <group string="Invoicing" name="invoicing">
                     <field name="invoicing_typology_id" />
@@ -147,60 +142,8 @@
                 <field name="hour_uom_id" position="move" />
             </field>
             <field name="hour_uom_id" position="attributes">
-                <attribute
-                    name="invisible"
-                >uom_id != ref('uom.product_uom_day')</attribute>
+                <attribute name="invisible">not is_hour_uom_visible</attribute>
             </field>
         </field>
     </record>
-
-    <record id="project_task_view_form" model="ir.ui.view">
-        <field name="model">project.task</field>
-        <field name="inherit_id" ref="hr_timesheet.view_task_form2_inherited" />
-        <field name="arch" type="xml">
-            <xpath expr="//list/field[@name='unit_amount']" position="after">
-                <field name="discount" />
-            </xpath>
-            <field name="remaining_hours" position="after">
-                <field
-                    name="invoiceable_hours"
-                    widget="float_time"
-                    class="oe_subtotal_footer_separator"
-                />
-            </field>
-        </field>
-    </record>
-    <!--
-    <record id="view_task_kanban" model="ir.ui.view">
-        <field name="model">project.task</field>
-        <field name="inherit_id" ref="project.view_task_kanban" />
-        <field name="arch" type="xml">
-            <xpath expr="//kanban/field[@name='color']" position="after">
-                <field name="invoiceable_hours" />
-            </xpath>
-            <field name="commercial_partner_id" position="attributes">
-                <attribute name="invisible">1</attribute>
-            </field>
-            <xpath
-                expr="//div[hasclass('oe_kanban_content')]//field[@name='partner_id']"
-                position="attributes"
-            >
-                <attribute name="invisible">1</attribute>
-            </xpath>
-            <xpath expr="//div[hasclass('o_kanban_record_headings')]" position="after">
-                <t t-set="badge" t-value="" />
-                <t
-                    t-set="badge"
-                    t-value="'badge-danger'"
-                    t-if="record.remaining_hours.raw_value &lt; 0 and record.planned_hours.raw_value &gt; 0"
-                />
-                <div
-                    t-attf-class="oe_kanban_align badge {{ badge }}"
-                    title="Invoiceable Hours"
-                >
-                <field name="invoiceable_hours" sum="Total" widget="timesheet_uom" />
-                </div>
-            </xpath>
-        </field>
-    </record>-->
 </odoo>

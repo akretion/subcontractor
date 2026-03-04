@@ -2,7 +2,10 @@
 <odoo>
     <record id="view_ecotaxe_res_config_settings_inherit" model="ir.ui.view">
         <field name="model">res.config.settings</field>
-        <field name="inherit_id" ref="ton_module.view_ecotaxe_res_config_settings" />
+        <field
+            name="inherit_id"
+            ref="account_invoice_subcontractor.view_ecotaxe_res_config_settings"
+        />
         <field name="arch" type="xml">
             <xpath expr="//setting[@id='subcontractor-settings']" position="inside">
                 <div class="content-group">

@@ -24,6 +24,7 @@
         "views/account_move_line_view.xml",
         "views/hr_timesheet_view.xml",
         "views/project_view.xml",
+        "views/project_task_view.xml",
         "views/hr_timesheet_sheet.xml",
         "views/project_invoice_typology.xml",
         "views/product_template.xml",

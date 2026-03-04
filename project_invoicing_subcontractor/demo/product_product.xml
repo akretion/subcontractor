@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
-
     <record id="product_product_1" model="product.product">
         <field name="name">consulting</field>
         <field name="categ_id" ref="product.product_category_3" />
@@ -37,5 +36,4 @@
         <field name="uom_po_id" ref="uom.product_uom_day" />
         <field name="property_account_expense_id" ref="account_expense_internal" />
     </record>
-
 </odoo>

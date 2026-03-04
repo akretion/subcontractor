@@ -317,33 +317,6 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             if project.invoicing_typology_id.invoicing_mode == "customer_prepaid":
                 contribution = invoice.company_id._get_commission_rate()
                 vals["price_unit"] = (1 - contribution) * vals["price_unit"]
-        # TODO test price unit for prepaid, postpaid et supplier avec le force
-
-        # onchange_product_id call the product_uom_id on change but with default
-        # product_uom (like in UI) So, the uom we give is erased and the price unit
-        # is wrong. But AFAIK playonchanges does not erase a given value on original
-        # dict. So the call to product_uom_id on change will keep the uom we gave
-        # but we need to play both onchanges...
-
-        # it is important to play the onchanges here because of a (very) obscure bug.
-        # if we do not play onchange, when we write the invoice_line_ids on the invoice
-        # odoo will unlink all existing lines and create new one, so we loose the link
-        # between the timesheet lines and the invoice line.
-        # when we play the onchange, I don't know why but odoo's behavior is different
-        # it will keep the existing invoice lines and so keep the link.
-        # As far as I saw, during the write of invoice_line_ids, odoo goes there :
-        # _move_autocomplete_invoice_lines_write and invoice_new.line_ids are
-        # NewId without origin if we did not play the onchange and with origin if
-        # onchange helper was used.
-        # Then when it goes in _move_autocomplete_invoice_lines_values and if
-        # convert the record to write, if the NewId invoice lines have no origin
-        # Odoo will unlink old lines and create new one. If NewId origin is set
-        # it will keep the old lines.
-        # the test catch the bug anyway...
-
-        # I keep the above comment until v16 but we actually really need the onchange
-        # anyway now, to get the right account and price.
-
         return vals
 
     def _get_invoice_line_vals_list(self, invoice, task_id, all_data):
@@ -397,6 +370,8 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             invoice_line_vals_list = [(0, 0, line_vals)]
         else:
             inv_line.subcontractor_work_ids.unlink()
+            # TODO test this again if needed... the bug was at least in v16, but maybe
+            # not anymore.
             # we can't just do a [(1, id, vals)] here because the invoicing
             # creation/update outside the UI is totally fucked up...
             # so the workaround is to create a new one and delete the old one in the
@@ -420,9 +395,6 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
         return vals
 
     def action_customer_invoice(self):
-        # TODO
-        # récupérer des données structuré
-        # {tak_id: ('employee_id', time, timesheet_ids)}
         timesheet_lines = self.timesheet_line_ids
         res = self._extract_timesheet(timesheet_lines)
         if self.create_invoice:
@@ -430,13 +402,6 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             invoice = self.env["account.move"].create(invoice_vals)
         else:
             invoice = self.invoice_id
-            # self.invoice_id = invoice.id
-        # In case that you no account define on the product
-        # Odoo will use default value from journal
-        # we need to set this value to avoid empty account
-        # on invoice line
-        # TODO check if still usefull
-        #        self = self.with_context(journal_id=self.invoice_id.journal_id.id)
         invoice_line_vals_list = []
         for task_id, _data in res.items():
             invoice_line_vals_list += self._get_invoice_line_vals_list(
@@ -496,7 +461,6 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
                 invoice = self.env["account.move"].create(invoice_vals)
             else:
                 invoice = self.invoice_id
-            # self = self.with_context(journal_id=self.invoice_id.journal_id.id)
             for task, tlines in task2tlines.items():
                 self._add_update_invoice_line(invoice, task, tlines)
             invoices |= invoice

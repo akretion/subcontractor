@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
-
     <record id="account_revenue_consulting" model="account.account">
         <field name="name">Service Consulting</field>
         <field name="code">706140</field>
@@ -38,5 +37,4 @@
         <field name="is_prepaid_account" eval="True" />
         <field name="account_type">liability_current</field>
     </record>
-
 </odoo>
