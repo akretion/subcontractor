@@ -37,5 +37,5 @@
         "demo/project_invoice_typology.xml",
         "demo/project_demo.xml",
     ],
-    "installable": True,
+    "installable": False,
 }

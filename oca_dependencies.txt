@@ -16,4 +16,4 @@
 multi-company
 server-tools
 hr-timesheet
-ak-odoo-incubator https://github.com/akretion/ak-odoo-incubator 16.0
+ak-odoo-incubator https://github.com/akretion/ak-odoo-incubator 18.0
