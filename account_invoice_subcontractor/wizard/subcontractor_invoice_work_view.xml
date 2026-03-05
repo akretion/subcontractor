@@ -1,44 +1,42 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
-
-        <!-- VIEW FOR THE OBJECT : subcontractor_invoice_work -->
-        <record id="view_subcontract_work_form" model="ir.ui.view">
-            <field name="name">subcontractor.invoice.work.form</field>
-            <field name="model">subcontractor.invoice.work</field>
-            <!-- <field name="priority" eval="8"/> -->
-            <field name="arch" type="xml">
-                <form string="Generate Invoice">
-                    <separator string="Generate Invoice" />
-                    <p
+    <!-- VIEW FOR THE OBJECT : subcontractor_invoice_work -->
+    <record id="view_subcontract_work_form" model="ir.ui.view">
+        <field name="name">subcontractor.invoice.work.form</field>
+        <field name="model">subcontractor.invoice.work</field>
+        <!-- <field name="priority" eval="8"/> -->
+        <field name="arch" type="xml">
+            <form string="Generate Invoice">
+                <separator string="Generate Invoice" />
+                <p
                 >For internal Subcontractors one customer invoice will be created in the subcontracted company, for each couple employee/end customer invoice</p>
-                    <p
+                <p
                 >For external Subcontractors, one supplier invoice will be created for each employee. (even if the work concerns multiple end customer invoice.)</p>
-                    <footer>
+                <footer>
                         <button
-                        name="generate_invoice"
-                        string="Generate Invoice"
-                        type="object"
-                        class="oe_highlight"
-                    />
+                    name="generate_invoice"
+                    string="Generate Invoice"
+                    type="object"
+                    class="oe_highlight"
+                />
                         or
                         <button string="Cancel" class="oe_link" special="cancel" />
                     </footer>
-                </form>
-            </field>
-        </record>
+            </form>
+        </field>
+    </record>
 
-        <record model="ir.actions.act_window" id="action_subcontract_work_view">
-            <field name="name">Generate Invoice</field>
-            <field name="type">ir.actions.act_window</field>
-            <field name="res_model">subcontractor.invoice.work</field>
-            <field name="view_mode">form</field>
-            <field name="domain">[]</field>
-            <field name="context">{}</field>
-            <field name="target">new</field>
-            <field
+    <record model="ir.actions.act_window" id="action_subcontract_work_view">
+        <field name="name">Generate Invoice</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">subcontractor.invoice.work</field>
+        <field name="view_mode">form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="target">new</field>
+        <field
             name="binding_model_id"
             ref="account_invoice_subcontractor.model_subcontractor_work"
         />
-        </record>
-
+    </record>
 </odoo>

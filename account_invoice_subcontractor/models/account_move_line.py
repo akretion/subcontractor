@@ -116,20 +116,21 @@ class AccountMoveLine(models.Model):
         res["subcontractor_work_invoiced_id"] = self.subcontractor_work_invoiced_id.id
         return res
 
-    def edit_subcontractor(self):
-        view = {
-            "name": ("Details"),
-            "view_type": "form",
-            "view_mode": "form",
-            "res_model": "account.move.line",
-            "view_id": self.env.ref(
-                "account_invoice_subcontractor.view_move_line_subcontractor_form"
-            ).id,
-            "type": "ir.actions.act_window",
-            "target": "new",
-            "res_id": self.id,
-        }
-        return view
+    # use native view button
+    #    def edit_subcontractor(self):
+    #        view = {
+    #            "name": ("Details"),
+    #            "view_type": "form",
+    #            "view_mode": "form",
+    #            "res_model": "account.move.line",
+    #            "view_id": self.env.ref(
+    #                "account_invoice_subcontractor.view_move_line_subcontractor_form"
+    #            ).id,
+    #            "type": "ir.actions.act_window",
+    #            "target": "new",
+    #            "res_id": self.id,
+    #        }
+    #        return view
 
     @api.onchange("quantity")
     def _onchange_quantity(self):

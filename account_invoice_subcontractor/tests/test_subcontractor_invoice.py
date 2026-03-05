@@ -19,7 +19,10 @@ class TestSubcontractorInvoice(TestAccountInvoiceInterCompanyBase):
 
         # configure subcontracted product
         cls.product_consultant_multi_company.with_user(cls.user_company_a.id).write(
-            {"subcontracted": True}
+            {
+                "subcontracted": True,
+                "property_account_expense_id": cls.a_expense_company_a.id,
+            }
         )
         cls.product_consultant_multi_company.with_user(cls.user_company_b.id).write(
             {"property_account_income_id": cls.a_sale_company_b.id}
@@ -89,7 +92,6 @@ class TestSubcontractorInvoice(TestAccountInvoiceInterCompanyBase):
         invoice.partner_id = self.partner_company_b
         invoice.invoice_date = date.today() - timedelta(days=20)
         invoice.journal_id = self.sales_journal_company_a
-        invoice.currency_id = self.env.ref("base.EUR")
 
         with invoice.invoice_line_ids.new() as line_form:
             line_form.product_id = self.product_consultant_multi_company

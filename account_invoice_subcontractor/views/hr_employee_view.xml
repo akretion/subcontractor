@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
-
-    <!-- VIEW FOR THE OBJECT : hr_employee -->
     <record id="view_employee_form" model="ir.ui.view">
         <field name="model">hr.employee</field>
-        <field name="type">form</field>
         <field name="inherit_id" ref="hr.view_employee_form" />
         <field name="arch" type="xml">
             <xpath expr="//page[@name='hr_settings']" position="inside">
@@ -12,15 +9,15 @@
                     <field name="subcontractor_type" />
                     <field
                         name="subcontractor_company_id"
-                        attrs="{'required': [('subcontractor_type', '=', 'internal'), ('active', '=', True)], 'invisible': [('subcontractor_type','!=', 'internal')]}"
+                        required="subcontractor_type == 'internal'"
+                        invisible="subcontractor_type != 'internal'"
                     />
                     <field
                         name="auto_generate_invoice"
-                        attrs="{'invisible': [('subcontractor_type','!=', 'external')]}"
+                        invisible="subcontractor_type != 'external'"
                     />
                 </group>
             </xpath>
         </field>
     </record>
-
 </odoo>

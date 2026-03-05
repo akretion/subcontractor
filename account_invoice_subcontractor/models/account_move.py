@@ -2,7 +2,7 @@
 # @author Sébastien BEAU <sebastien.beau@akretion.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from odoo import _, api, fields, models
+from odoo import api, fields, models
 from odoo.exceptions import UserError
 from odoo.tools import float_compare
 
@@ -100,14 +100,19 @@ class AccountMove(models.Model):
     def button_draft(self):
         if self.already_subcontracted():
             raise UserError(
-                _("You can't set to draft an invoice already invoiced by subcontractor")
+                self.env._(
+                    "You can't set to draft an invoice already invoiced by "
+                    "subcontractor"
+                )
             )
         return super().button_draft()
 
     def button_cancel(self):
         if self.already_subcontracted():
             raise UserError(
-                _("You can't cancel an invoice already invoiced by subcontractor")
+                self.env._(
+                    "You can't cancel an invoice already invoiced by subcontractor"
+                )
             )
         return super().button_cancel()
 
@@ -115,7 +120,7 @@ class AccountMove(models.Model):
         invalid_invoice = self.filtered(lambda m: m.invalid_work_amount)
         if invalid_invoice:
             raise UserError(
-                _("You can't validate an invoice with invalid work amount!")
+                self.env._("You can't validate an invoice with invalid work amount!")
             )
         precision = self.env["decimal.precision"].precision_get("Account")
         invalid_invoice = self.sudo().filtered(
@@ -128,7 +133,7 @@ class AccountMove(models.Model):
         )
         if invalid_invoice:
             raise UserError(
-                _(
+                self.env._(
                     "You can't validate an invoice that is not consistent with its "
                     "intercompany invoice."
                 )

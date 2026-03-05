@@ -5,7 +5,7 @@ import logging
 from collections import OrderedDict
 from datetime import date, timedelta
 
-from odoo import _, api, fields, models
+from odoo import api, fields, models
 from odoo.exceptions import UserError
 from odoo.fields import first
 
@@ -198,30 +198,36 @@ class SubcontractorWork(models.Model):
             dest_invoice_company = work._get_dest_invoice_company()
             if dest_invoice_company not in self.env.companies:
                 raise UserError(
-                    _(
+                    self.env._(
                         "You can't generate an invoice for a company you have no access"
-                        " : %s" % dest_invoice_company.name
-                    )
+                        " : {company_name}"
+                    ).format(company_name=dest_invoice_company.name)
                 )
             if partner_id != work.customer_id.id:
-                raise UserError(_("All the work should belong to the same supplier"))
+                raise UserError(
+                    self.env._("All the work should belong to the same supplier")
+                )
             elif work.supplier_invoice_line_id:
-                raise UserError(_("This work has been already invoiced!"))
+                raise UserError(self.env._("This work has been already invoiced!"))
             elif work.state not in ("posted", "paid"):
                 raise UserError(
-                    _("Only works with the state 'posted' or 'paid' can be invoiced")
+                    self.env._(
+                        "Only works with the state 'posted' or 'paid' can be invoiced"
+                    )
                 )
             elif worktype != work.subcontractor_type:
                 raise UserError(
-                    _("All the work should have the same subcontractor type")
+                    self.env._("All the work should have the same subcontractor type")
                 )
             elif work_type and work.subcontractor_type != work_type:
                 raise UserError(
-                    _("You can invoice on only the %s subcontractors" % work_type)
+                    self.env._(
+                        "You can invoice on only the {work_type} subcontractors"
+                    ).format(work_type=work_type)
                 )
             elif invoice_type != work.invoice_id.move_type:
                 raise UserError(
-                    _(
+                    self.env._(
                         "You can't invoice refund and invoice together, you should do "
                         "it separately"
                     )
@@ -239,7 +245,7 @@ class SubcontractorWork(models.Model):
         orig_invoice = self.sudo().invoice_id
         if orig_invoice.move_type not in ("out_invoice", "out_refund"):
             raise UserError(
-                _(
+                self.env._(
                     "You can only invoice the subcontractors on a customer "
                     "invoice/refund"
                 )
@@ -276,13 +282,12 @@ class SubcontractorWork(models.Model):
             )
         elif invoice_type in ["in_invoice", "in_refund"]:
             user = self.employee_id.user_id
-        #        self = self.with_company(dest_invoice_company)
         journal = self.env["account.journal"].search(
             [("company_id", "=", company.id), ("type", "=", journal_type)], limit=1
         )
         if not journal:
             raise UserError(
-                _(
+                self.env._(
                     "Please define %(journal_type)s journal for this company: "
                     "'%(company_name)s' (id:%(company_id)d)."
                 )
@@ -473,10 +478,9 @@ class SubcontractorWork(models.Model):
             )
         if already_invoiced:
             raise UserError(
-                _(
-                    "You can't edit a subcontractor already invoiced %s"
-                    % already_invoiced.ids
-                )
+                self.env._(
+                    "You can't edit a subcontractor already invoiced {ids}"
+                ).format(ids=already_invoiced.ids)
             )
         return super().write(vals)
 
@@ -486,9 +490,8 @@ class SubcontractorWork(models.Model):
         )
         if already_invoiced:
             raise UserError(
-                _(
-                    "You can't delete a subcontractor already invoiced %s"
-                    % already_invoiced.ids
-                )
+                self.env._(
+                    "You can't delete a subcontractor already invoiced {ids}"
+                ).format(ids=already_invoiced.ids)
             )
         return super().unlink()
