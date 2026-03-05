@@ -1,6 +1,6 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from odoo import _, api, exceptions, fields, models
+from odoo import api, exceptions, fields, models
 
 
 class AccountMoveLine(models.Model):
@@ -15,7 +15,7 @@ class AccountMoveLine(models.Model):
             return None
         project_policy = self.account_id._get_project_policy()
         if project_policy == "always" and not self.project_id:
-            return _(
+            return self.env._(
                 "Project policy is set to 'Always' with account "
                 "'%(account)s' but the project is missing in "
                 "the account move line with label '%(move)s'."
@@ -25,7 +25,7 @@ class AccountMoveLine(models.Model):
             }
         elif project_policy == "never" and (self.project_id):
             project = self.project_id
-            return _(
+            return self.env._(
                 "Project policy is set to 'Never' with account "
                 "'%(account)s' but the account move line with label '%(move)s' "
                 "has an project '%(project_account)s'."
@@ -39,7 +39,7 @@ class AccountMoveLine(models.Model):
             and not self.project_id
             and self.move_id.state == "posted"
         ):
-            return _(
+            return self.env._(
                 "Project policy is set to 'Posted moves' with "
                 "account '%(account)s' but the project is missing "
                 "in the account move line with label '%(move)s'."
