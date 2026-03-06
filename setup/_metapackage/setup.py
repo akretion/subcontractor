@@ -10,6 +10,7 @@ setuptools.setup(
     install_requires=[
         'odoo-addon-account_invoice_subcontractor>=16.0dev,<16.1dev',
         'odoo-addon-account_move_line_project>=16.0dev,<16.1dev',
+        'odoo-addon-project_budget_subcontractor>=16.0dev,<16.1dev',
         'odoo-addon-project_invoicing_subcontractor>=16.0dev,<16.1dev',
     ],
     classifiers=[
