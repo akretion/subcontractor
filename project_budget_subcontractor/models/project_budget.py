@@ -23,19 +23,29 @@ class ProjectBudget(models.Model):
     budget_amount = fields.Float(required=True, tracking=True)
 
     invoiced_amount = fields.Float(
-        compute="_compute_invoiced_amount", string="Montant Facturé"
+        compute="_compute_invoiced_amount",
+        string="Montant Facturé",
+        compute_sudo=True,
     )
     to_invoice_amount = fields.Float(
-        compute="_compute_to_invoice_amount", string="Montant à Facturer"
+        compute="_compute_to_invoice_amount",
+        string="Montant à Facturer",
+        compute_sudo=True,
     )
     remaining_amount = fields.Float(
-        compute="_compute_remaining_amount", string="Montant Restant Estimé"
+        compute="_compute_remaining_amount",
+        string="Montant Restant Estimé",
+        compute_sudo=True,
     )
     remaining_budget = fields.Float(
-        compute="_compute_remaining_budget", string="Budget Restant"
+        compute="_compute_remaining_budget",
+        string="Budget Restant",
+        compute_sudo=True,
     )
     budget_amount_prorata = fields.Float(
-        compute="_compute_budget_amount_prorata", string="Time Prorata"
+        compute="_compute_budget_amount_prorata",
+        string="Time Prorata",
+        compute_sudo=True,
     )
     budget_progress = fields.Float(compute="_compute_budget_progress")
     time_progress = fields.Float(compute="_compute_time_progress")
@@ -68,13 +78,11 @@ class ProjectBudget(models.Model):
             if not budget.start_date or not budget.end_date:
                 budget.invoiced_amount = 0.0
                 continue
-            move_lines = (
-                budget.project_id.analytic_account_id.invoice_line_ids.filtered(
-                    lambda ml, budget=budget: ml.parent_state == "posted"
-                    and ml.move_id.budget_date
-                    and ml.move_id.budget_date >= budget.start_date
-                    and ml.move_id.budget_date <= budget.end_date
-                )
+            move_lines = budget.project_id.invoice_line_ids.filtered(
+                lambda ml, budget=budget: ml.parent_state == "posted"
+                and ml.move_id.budget_date
+                and ml.move_id.budget_date >= budget.start_date
+                and ml.move_id.budget_date <= budget.end_date
             )
             budget.invoiced_amount = sum(move_lines.mapped("price_subtotal"))
 
