@@ -15,11 +15,11 @@ from odoo.addons.account.tests.common import AccountTestInvoicingCommon
 @tagged("post_install", "-at_install")
 class TestInvoicing(AccountTestInvoicingCommon):
     def mref(self, xml):
-        return self.env.ref("project_invoicing_subcontractor.%s" % xml)
+        return self.env.ref(f"project_invoicing_subcontractor.{xml}")
 
     @classmethod
-    def setUpClass(cls, chart_template_ref=None):
-        super().setUpClass(chart_template_ref=chart_template_ref)
+    def setUpClass(cls):
+        super().setUpClass()
         # we use AccountTestInvoicingCommon to initialte other companies but still
         # want to work in main company
         cls.admin_user = cls.env.ref("base.user_admin")
@@ -185,12 +185,13 @@ class TestInvoicing(AccountTestInvoicingCommon):
         return invoice
 
     def test_prepaid_invoicing_process_same_project(self):
+        # invoice 10 hours to customer
         invoice = self._create_prepaid_customer_invoice(10, self.line_5_2.project_id)
         self.assertTrue(invoice.invoice_line_ids.tax_ids)
         invoice.action_post()
         self.assertEqual(invoice.invoice_line_ids.account_id.code, "418101")
 
-        #
+        # supplier invoice 12 hours (10 demo / 2  admin)
         line_ids = [self.line_5_2.id, self.line_6_2.id, self.line_7_2.id]
         sup_invoices = self._create_supplier_invoice(line_ids=line_ids)
         demo_invoice = sup_invoices.filtered(
@@ -200,6 +201,10 @@ class TestInvoicing(AccountTestInvoicingCommon):
             lambda i: i.partner_id == self.admin_company_partner
         )
         self.assertEqual(demo_invoice.customer_id.id, self.project2.partner_id.id)
+        # system block because it takes into account all draft invoices
+        with self.assertRaises(UserError):
+            demo_invoice.action_post()
+        admin_invoice.unlink()
         demo_invoice.action_post()
         self.assertEqual(len(demo_invoice.invoice_line_ids), 1)
         self.assertEqual(demo_invoice.invoice_line_ids[0].account_id.code, "611150")
@@ -222,6 +227,7 @@ class TestInvoicing(AccountTestInvoicingCommon):
         self.env["account.move"].compute_enought_project_amount()
         self.assertTrue(demo_invoice.to_pay)
 
+        admin_invoice = self._create_supplier_invoice(line_ids=[self.line_6_2.id])
         # set admin invoice one day later to be sure demo invoice has priority
         # Add customer invoice so there is enough amount to validate the admin invoice
         # but it is not paid
@@ -229,6 +235,8 @@ class TestInvoicing(AccountTestInvoicingCommon):
             1.99, self.line_5_2.project_id
         )
         customer_invoice2.action_post()
+        with self.assertRaises(UserError):
+            admin_invoice.action_post()
         customer_invoice3 = self._create_prepaid_customer_invoice(
             0.01, self.line_5_2.project_id
         )
@@ -287,7 +295,6 @@ class TestInvoicing(AccountTestInvoicingCommon):
         project = self.env.ref("project.project_project_1")
         self.line_1.task_id.project_id = project
         self.assertEqual(self.line_1.project_id, project)
-        self.assertEqual(self.line_1.account_id, project.analytic_account_id)
 
     def test_remove_task_project(self):
         with self.assertRaises(UserError):

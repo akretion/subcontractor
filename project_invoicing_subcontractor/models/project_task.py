@@ -37,7 +37,6 @@ class ProjectTask(models.Model):
                 project = self.env["project.project"].browse(vals["project_id"])
                 vals = {
                     "project_id": project.id,
-                    "account_id": project.analytic_account_id.id,
                 }
             self.mapped("timesheet_ids").write(vals)
         return res

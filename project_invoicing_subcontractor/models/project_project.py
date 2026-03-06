@@ -55,6 +55,7 @@ class ProjectProject(models.Model):
         "conversion, like 7h/day. \n Odoo will use this to convert the work "
         "amount in hour to a number of day in the invoice."
     )
+    is_hour_uom_visible = fields.Boolean(compute="_compute_is_hour_uom_visible")
     invoicing_mode = fields.Selection(
         related="invoicing_typology_id.invoicing_mode", store=True
     )
@@ -83,6 +84,15 @@ class ProjectProject(models.Model):
         [("high", "High"), ("medium", "Medium"), ("low", "Low")],
         compute="_compute_prepaid_amount",
     )
+
+    @api.depends("uom_id")
+    def _compute_is_hour_uom_visible(self):
+        day_uom = self.env.ref("uom.product_uom_day")
+        for project in self:
+            if project.uom_id == day_uom:
+                project.is_hour_uom_visible = True
+            else:
+                project.is_hour_uom_visible = False
 
     def _get_supplier_draft_invoice_amount(self):
         self.ensure_one()

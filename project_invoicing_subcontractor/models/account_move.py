@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 
-from odoo import _, api, exceptions, fields, models
+from odoo import api, exceptions, fields, models
 from odoo.fields import first
 from odoo.tools import float_compare
 
@@ -100,10 +100,10 @@ class AccountMove(models.Model):
             if inv.to_pay:
                 if inv.line_ids.payment_line_ids:
                     reason = (
-                        "La facture a été ajoutée au prochain ordre de paiement qui "
-                        "est à l'état '%s'.\nElle devrait être payée dans les prochains"
-                        " jours"
-                        "" % inv.line_ids.payment_line_ids.mapped("state")[0]
+                        f"La facture a été ajoutée au prochain ordre de paiement qui "
+                        f"est à l'état "
+                        f"'{inv.line_ids.payment_line_ids.mapped('state')[0]}'.\nElle"
+                        f" devrait être payée dans les prochains jours"
                     )
                     color = "success"
                 else:
@@ -135,9 +135,10 @@ class AccountMove(models.Model):
                     color = "danger"
                 if any([x.payment_state != "paid" for x in inv.customer_invoice_ids]):
                     reason = (
-                        "Les factures clients Akretion %s ne sont pas encore payées ou"
-                        " leur paiement n'a pas encore été importé dans l'erp."
-                        % ", ".join(inv.customer_invoice_ids.mapped("name"))
+                        f"Les factures clients Akretion "
+                        f"{', '.join(inv.customer_invoice_ids.mapped('name'))} ne sont"
+                        f" pas encore payées ou"
+                        f" leur paiement n'a pas encore été importé dans l'erp."
                     )
                     color = "info"
             elif inv.is_supplier_prepaid:
@@ -177,7 +178,8 @@ class AccountMove(models.Model):
                         == -1
                     ):
                         account_reasons.append(
-                            f"Le solde du projet {project.name} "
+                            f"Le solde du projet (qui prend en compte les factures "
+                            f"fournisseurs en brouillon) {project.name} "
                             f"n'est pas suffisant : {total_amount}. "
                             f"Il est necessaire de facturer le client."
                         )
@@ -254,7 +256,7 @@ class AccountMove(models.Model):
     def _create_prepare_prepaid_move_vals(self):
         self.ensure_one()
         vals = {
-            "ref": _("prepaid countdown for %s") % self.name,
+            "ref": self.env._("prepaid countdown for %s") % self.name,
             "date": self.date,
             "currency_id": self.currency_id.id,
             "company_id": self.company_id.id,
@@ -272,7 +274,7 @@ class AccountMove(models.Model):
         if prepaid_move:
             if prepaid_move.state != "cancel":
                 raise exceptions.ValidationError(
-                    _("The linked prepaid entry should be canceled.")
+                    self.env._("The linked prepaid entry should be canceled.")
                 )
             prepaid_move.with_context(prepaid_reset=True).button_draft()
             prepaid_move.with_context(dynamic_unlink=True).unlink()
@@ -322,7 +324,9 @@ class AccountMove(models.Model):
         for line in self.invoice_line_ids:
             if line.product_id.prepaid_revenue_account_id and not line.project_id:
                 raise exceptions.ValidationError(
-                    _("Line %s is not valid, the project is mandatory." % line.name)
+                    self.env._(
+                        "Line {line_name} is not valid, the project is mandatory."
+                    ).format(line_name=line.name)
                 )
             if (
                 line.product_id.prepaid_revenue_account_id
@@ -331,10 +335,10 @@ class AccountMove(models.Model):
                 project_typology = line.project_id.invoicing_typology_id
                 if project_typology.product_id != line.product_id:
                     raise exceptions.ValidationError(
-                        _(
-                            "Line %s is not valid, the project is not "
-                            "consistent with the chosen product" % line.name
-                        )
+                        self.env._(
+                            "Line {line_name} is not valid, the project is not "
+                            "consistent with the chosen product"
+                        ).format(line_name=line.name)
                     )
                 project_partner = line.project_id.partner_id
                 if (
@@ -342,10 +346,10 @@ class AccountMove(models.Model):
                     != line.move_id.partner_id.commercial_partner_id
                 ):
                     raise exceptions.ValidationError(
-                        _(
-                            "Line %s is not valid, the project is not "
-                            "consistent with the chosen customer" % line.name
-                        )
+                        self.env._(
+                            "Line {line_name} is not valid, the project is not "
+                            "consistent with the chosen customer"
+                        ).format(line_name=line.name)
                     )
 
         if self.is_supplier_prepaid and not all(
@@ -355,14 +359,14 @@ class AccountMove(models.Model):
             ]
         ):
             raise exceptions.ValidationError(
-                _(
+                self.env._(
                     "All invoice lines of a supplier invoice with prepaid product "
                     "should be consistent."
                 )
             )
         if self.is_supplier_prepaid and not self.customer_id:
             raise exceptions.ValidationError(
-                _(
+                self.env._(
                     "You can't have a supplier invoice related to multiple end-customer"
                     "Check that all the projects of the lines belong to the "
                     "same partner"
@@ -372,7 +376,7 @@ class AccountMove(models.Model):
             modes = self.invoice_line_ids.project_id.mapped("invoicing_mode")
             if modes and not all(x == modes[0] for x in modes):
                 raise exceptions.ValidationError(
-                    _("All invoice lines should have the same invoicing mode.")
+                    self.env._("All invoice lines should have the same invoicing mode.")
                 )
 
     def _post(self, soft=True):
@@ -391,7 +395,7 @@ class AccountMove(models.Model):
         prepaid_move = self.filtered(lambda m: m.supplier_invoice_ids)
         if prepaid_move and not self.env.context.get("prepaid_reset"):
             raise exceptions.ValidationError(
-                _(
+                self.env._(
                     "You can't reset a prepaid acconting entry as it is synchronized "
                     "automatically with its linked supplier invoice"
                 )

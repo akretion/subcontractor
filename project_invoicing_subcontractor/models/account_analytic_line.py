@@ -1,6 +1,6 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl)
 
-from odoo import _, api, fields, models
+from odoo import api, fields, models
 from odoo.exceptions import UserError
 
 
@@ -63,10 +63,9 @@ class AccountAnalyticLine(models.Model):
             )
             if already_invoiced:
                 raise UserError(
-                    _(
-                        "You can't edit timesheets %s, it has already been invoiced"
-                        % already_invoiced.ids
-                    )
+                    self.env._(
+                        "You can't edit timesheets {ids}, it has already been invoiced"
+                    ).format(ids=already_invoiced.ids)
                 )
         return super().write(vals)
 
@@ -134,9 +133,8 @@ class AccountAnalyticLine(models.Model):
         )
         if already_invoiced:
             raise UserError(
-                _(
-                    "You can't delete timesheets %s, it has already been invoiced"
-                    % already_invoiced.ids
-                )
+                self.env._(
+                    "You can't delete timesheets {ids}, it has already been invoiced"
+                ).format(ids=already_invoiced.ids)
             )
         return super().unlink()
