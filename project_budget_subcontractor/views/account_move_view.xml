@@ -9,10 +9,7 @@ License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
         <field type="xml" name="arch">
             <field name="invoice_date" position="after">
                 <field name="use_budget" invisible="1" />
-                <field
-                    name="budget_date"
-                    attrs="{'invisible': [('use_budget', '=', False)]}"
-                />
+                <field name="budget_date" invisible="not use_budget" />
             </field>
         </field>
     </record>

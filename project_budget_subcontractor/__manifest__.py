@@ -5,8 +5,8 @@
 {
     "name": "Project Budget Subcontractor",
     "summary": "Add budget to projects",
-    "version": "16.0.1.0.0",
-    "development_status": "Alpha",
+    "version": "18.0.1.0.0",
+    "development_status": "Beta",
     "category": "Uncategorized",
     "website": "https://github.com/akretion/subcontractor",
     "author": " Akretion",

@@ -2,7 +2,7 @@
 # @author Florian Mounier <florian.mounier@akretion.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-from odoo import _, api, fields, models
+from odoo import api, fields, models
 from odoo.exceptions import UserError
 
 
@@ -27,7 +27,7 @@ class AccountMove(models.Model):
             if move.use_budget and move.move_type in ["out_invoice", "out_refund"]:
                 if move.invoice_line_ids.filtered(lambda line: not line.project_id):
                     raise UserError(
-                        _(
+                        self.env._(
                             "You can't post a move containing lines without project "
                             "for a customer with budget enabled."
                         )

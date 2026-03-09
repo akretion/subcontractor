@@ -11,7 +11,7 @@ License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
                 <field name="use_budget" invisible="1" />
                 <group
                     string="Current Budget"
-                    attrs="{'invisible': [('current_budget_id', '=', False), ('use_budget', '=', False)]}"
+                    invisible="not current_budget_id and not use_budget"
                     colspan="2"
                 >
                     <group>
@@ -62,13 +62,9 @@ License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
 
             <page name="description" position="after">
                 <field name="use_budget" invisible="1" />
-                <page
-                    name="budget_page"
-                    string="Budgets"
-                    attrs="{'invisible': [('use_budget', '=', False)]}"
-                >
+                <page name="budget_page" string="Budgets" invisible="not use_budget">
                     <field name="budget_ids">
-                        <tree
+                        <list
                             editable="bottom"
                             decoration-info="id and id == parent.current_budget_id"
                         >
@@ -102,7 +98,7 @@ License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
                                 widget="monetary"
                                 options="{'currency_field': 'currency_id'}"
                             />
-                        </tree>
+                        </list>
                     </field>
                 </page>
             </page>
@@ -113,32 +109,29 @@ License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
         <field name="model">project.project</field>
         <field name="inherit_id" ref="project.view_project_kanban" />
         <field name="arch" type="xml">
-            <field name="analytic_account_id" position="after">
+            <xpath expr="//field[@name='allow_milestones']" position="after">
                 <field name="use_budget" />
                 <field name="current_budget_progress" />
                 <field name="current_time_progress" />
-            </field>
-            <div
-                class="o_project_kanban_boxes d-flex align-items-baseline"
-                position="inside"
-            >
+            </xpath>
+
+            <xpath expr="//div[hasclass('o_project_kanban_boxes')]" position="inside">
                 <a
-                    t-if="record.use_budget and record.current_budget_progress.raw_value > 0"
+                    t-if="record.use_budget.raw_value and record.current_budget_progress.raw_value > 0"
                     class="o_project_kanban_box o_project_timesheet_box"
                     type="open"
                     groups="project.group_project_user"
                 >
                     <div>
                         <t
-                        t-esc="+(record.current_budget_progress.raw_value * 100).toFixed(2)"
-                        t-options='{"widget": "float", "precision": 2}'
-                    />% / <t
-                        t-esc="+(record.current_time_progress.raw_value * 100).toFixed(2)"
-                        t-options='{"widget": "float", "precision": 2}'
+                        t-out="(record.current_budget_progress.raw_value * 100).toFixed(2)"
+                    />% /
+                        <t
+                        t-out="(record.current_time_progress.raw_value * 100).toFixed(2)"
                     />%
                     </div>
                 </a>
-            </div>
+            </xpath>
         </field>
     </record>
 </odoo>
