@@ -109,7 +109,6 @@ License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
         </field>
     </record>
 
-
     <record id="view_project_kanban" model="ir.ui.view">
         <field name="model">project.project</field>
         <field name="inherit_id" ref="project.view_project_kanban" />
@@ -131,12 +130,12 @@ License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
                 >
                     <div>
                         <t
-                            t-esc="+(record.current_budget_progress.raw_value * 100).toFixed(2)"
-                            t-options='{"widget": "float", "precision": 2}'
-                        />% / <t
-                            t-esc="+(record.current_time_progress.raw_value * 100).toFixed(2)"
-                            t-options='{"widget": "float", "precision": 2}'
-                        />%
+                        t-esc="+(record.current_budget_progress.raw_value * 100).toFixed(2)"
+                        t-options='{"widget": "float", "precision": 2}'
+                    />% / <t
+                        t-esc="+(record.current_time_progress.raw_value * 100).toFixed(2)"
+                        t-options='{"widget": "float", "precision": 2}'
+                    />%
                     </div>
                 </a>
             </div>
