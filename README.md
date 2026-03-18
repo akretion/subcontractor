@@ -23,6 +23,7 @@ addon | version | maintainers | summary
 --- | --- | --- | ---
 [account_invoice_subcontractor](account_invoice_subcontractor/) | 18.0.1.0.0 |  | Account Invoice Subcontractor
 [account_move_line_project](account_move_line_project/) | 18.0.1.0.0 |  | Add project on account move line
+[contract_invoice_project](contract_invoice_project/) | 18.0.1.0.0 | <a href='https://github.com/florian-dacosta'><img src='https://github.com/florian-dacosta.png' width='32' height='32' style='border-radius:50%;' alt='florian-dacosta'/></a> | Contract Invoice Project
 [project_invoicing_subcontractor](project_invoicing_subcontractor/) | 18.0.1.0.0 |  | Generate the subcontractor work automatically when creating an invoice from the project invoicing menu
 
 [//]: # (end addons)
