@@ -1,10 +1,11 @@
 [project]
 name = "odoo-addons-akretion-subcontractor"
-version = "18.0.20260318.0"
+version = "18.0.20260318.1"
 dependencies = [
     "odoo-addon-account_invoice_subcontractor==18.0.*",
     "odoo-addon-account_move_line_project==18.0.*",
     "odoo-addon-contract_invoice_project==18.0.*",
+    "odoo-addon-project_budget_subcontractor==18.0.*",
     "odoo-addon-project_invoicing_subcontractor==18.0.*",
 ]
 classifiers=[
