@@ -27,9 +27,8 @@
                 <field name="allocated_hours" />
             </xpath>
             <xpath expr="//field[@name='name']" position="replace">
-                <div class="d-flex align-items-baseline justify-content-between">
-                    <field name="name" class="fw-bold fs-5 text-truncate" />
-
+                <div class="d-flex align-items-start justify-content-between w-100">
+                    <field name="name" class="fw-bold fs-5" />
                     <div class="ms-2 flex-shrink-0">
                         <t t-set="inv_color" t-value="'text-success border-success'" />
                         <t
@@ -37,7 +36,6 @@
                             t-set="inv_color"
                             t-value="'text-danger border-danger'"
                         />
-
                         <div
                             t-attf-class="badge border {{ inv_color }} p-1 px-2"
                             style="font-size: 0.7rem; font-weight: bold; background: transparent;"
