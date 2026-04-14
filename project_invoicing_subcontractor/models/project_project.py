@@ -150,12 +150,7 @@ class ProjectProject(models.Model):
             # timesheet amount
             ts_amount = 0.0
             to_invoice_timesheets = self.env["account.analytic.line"].search(
-                [
-                    ("invoiceable_amount", ">", 0.0),
-                    ("invoice_id", "=", False),
-                    ("project_id", "=", project.id),
-                    ("project_id.invoicing_typology_id", "!=", False),
-                ]
+                project._get_to_invoice_timesheet_domain()
             )
             if to_invoice_timesheets:
                 invoiceable_time = (
@@ -170,6 +165,15 @@ class ProjectProject(models.Model):
             else:
                 health = "high"
             project.project_health_state = health
+
+    def _get_to_invoice_timesheet_domain(self):
+        self.ensure_one()
+        return [
+            ("invoiceable_amount", ">", 0.0),
+            ("invoice_id", "=", False),
+            ("project_id", "=", self.id),
+            ("project_id.invoicing_typology_id", "!=", False),
+        ]
 
     @api.depends(
         "partner_id", "invoicing_typology_id", "uom_id", "supplier_invoice_price_unit"
@@ -239,12 +243,7 @@ class ProjectProject(models.Model):
         self.ensure_one()
         action = self.env.ref("hr_timesheet.timesheet_action_all").sudo().read()[0]
         to_invoice_timesheets = self.env["account.analytic.line"].search(
-            [
-                ("invoiceable_amount", ">", 0.0),
-                ("invoice_id", "=", False),
-                ("project_id", "=", self.id),
-                ("project_id.invoicing_typology_id", "!=", False),
-            ]
+            self._get_to_invoice_timesheet_domain()
         )
         action["domain"] = [("id", "in", to_invoice_timesheets.ids)]
         action["context"] = {
