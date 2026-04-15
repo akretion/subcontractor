@@ -100,8 +100,11 @@ class AccountAnalyticLine(models.Model):
                 price = (1 - contribution) * price
                 record.invoiceable_price_no_commission = price
 
+    def _get_invoicing_project(self):
+        return self.project_id
+
     def _get_invoiceable_qty_with_project_unit(self, project=False):
-        project = project or self.mapped("project_id")
+        project = project or self._get_invoicing_project()
         project.ensure_one()
         return self._get_invoiceable_qty_with_unit(project.uom_id)
 
@@ -120,7 +123,7 @@ class AccountAnalyticLine(models.Model):
         if uom == hours_uom:
             return sum(self.mapped("invoiceable_amount"))
         elif uom == days_uom:
-            project = self.mapped("project_id")
+            project = self._get_invoicing_project()
             project.ensure_one()
             return project.convert_hours_to_days(sum(self.mapped("invoiceable_amount")))
         else:
