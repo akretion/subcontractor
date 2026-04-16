@@ -128,7 +128,11 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
                 rec.invoice_id = False
 
     @api.depends(
-        "to_invoice_partner_id", "invoicing_mode", "create_invoice", "force_project_id"
+        "to_invoice_partner_id",
+        "invoicing_mode",
+        "create_invoice",
+        "force_project_id",
+        "invoice_id",
     )
     def _compute_explanation(self):
         for rec in self:
