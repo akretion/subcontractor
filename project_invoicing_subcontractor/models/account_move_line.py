@@ -60,7 +60,7 @@ class AccountMoveLine(models.Model):
             elif move.supplier_invoice_ids:
                 if all(
                     [
-                        x.payment_state in ("paid", "reversed")
+                        x.payment_state in ("paid", "reversed", "in_payment")
                         for x in move.supplier_invoice_ids
                     ]
                 ):
