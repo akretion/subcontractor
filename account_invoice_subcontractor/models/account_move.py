@@ -21,6 +21,7 @@ class AccountMove(models.Model):
         column2="sub_invoice_id",
         string="Customer invoices",
         readonly=True,
+        copy=False,
     )
     subcontractor_invoice_ids = fields.Many2many(
         comodel_name="account.move",
@@ -29,6 +30,7 @@ class AccountMove(models.Model):
         column2="customer_invoice_id",
         string="Supplier invoices",
         readonly=True,
+        copy=False,
     )
     origin_customer_invoice_id = fields.Many2one(
         comodel_name="account.move",
