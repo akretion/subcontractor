@@ -26,6 +26,9 @@
                 <field name="customer_invoice_ids" invisible="1" />
                 <field name="subcontractor_invoice_ids" invisible="1" />
             </field>
+            <xpath expr="//field[@name='invoice_line_ids']/list" position="attributes">
+                <attribute name="open_form_view">1</attribute>
+            </xpath>
             <xpath expr="//list/field[@name='name']" position="after">
                 <field name="subcontracted" optional="hide" />
                 <field
