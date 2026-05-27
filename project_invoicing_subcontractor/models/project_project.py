@@ -84,6 +84,9 @@ class ProjectProject(models.Model):
         [("high", "High"), ("medium", "Medium"), ("low", "Low")],
         compute="_compute_prepaid_amount",
     )
+    # we need a company for now for invoice typology, seems better to have a company
+    # rather not having any by default.
+    company_id = fields.Many2one(default=lambda self: self.env.company)
 
     @api.depends("uom_id")
     def _compute_is_hour_uom_visible(self):
