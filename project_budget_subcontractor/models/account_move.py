@@ -25,7 +25,9 @@ class AccountMove(models.Model):
     def _post(self, soft=True):
         for move in self:
             if move.use_budget and move.move_type in ["out_invoice", "out_refund"]:
-                if move.invoice_line_ids.filtered(lambda line: not line.project_id):
+                if move.invoice_line_ids.filtered(
+                    lambda line: not line.project_id and line.display_type == "product"
+                ):
                     raise UserError(
                         self.env._(
                             "You can't post a move containing lines without project "
