@@ -13,6 +13,7 @@
         "hr",
         "account_invoice_inter_company",
         "sale",
+        "account_lock_date_update",  # For lock date wizard
     ],
     "data": [
         "data/cron_data.xml",
@@ -26,6 +27,7 @@
         "wizard/subcontractor_invoice_work_view.xml",
         "views/product_view.xml",
         "wizard/res_config_settings.xml",
+        "wizard/account_update_lock_date.xml",
     ],
     "demo": [
         "demo/demo.xml",

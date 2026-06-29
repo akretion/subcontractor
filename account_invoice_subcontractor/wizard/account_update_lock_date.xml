@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="account_update_lock_date_form_view" model="ir.ui.view">
+        <field name="model">account.update.lock_date</field>
+        <field
+            name="inherit_id"
+            ref="account_lock_date_update.account_update_lock_date_form_view"
+        />
+        <field name="arch" type="xml">
+            <field name="fiscalyear_lock_date" position="after">
+                <field name="cutoff_lock_date" options="{'warn_future': true}" />
+            </field>
+        </field>
+    </record>
+</odoo>
