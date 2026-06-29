@@ -9,6 +9,10 @@ class ResCompany(models.Model):
     commission_rate = fields.Float(
         help="Rate in % for the commission on subcontractor work", default=11.00
     )
+    cutoff_lock_date = fields.Date(
+        help="Start/End dates on subcontractor invoice lines will never be set before "
+        "this date."
+    )
 
     def _get_commission_rate(self):
         self.ensure_one()

@@ -308,8 +308,13 @@ class SubcontractorTimesheetInvoice(models.TransientModel):
             and hasattr(self.env["account.move.line"], "start_date")
             and hasattr(self.env["account.move.line"], "end_date")
         ):
+            force_date = invoice.company_id.cutoff_lock_date
             start_date = min(timesheet_lines.mapped("date"))
             end_date = max(timesheet_lines.mapped("date"))
+            if force_date and start_date < force_date:
+                start_date = force_date
+            if force_date and end_date < force_date:
+                end_date = force_date
             vals.update(
                 {
                     "start_date": start_date,

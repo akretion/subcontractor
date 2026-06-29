@@ -326,10 +326,20 @@ class SubcontractorWork(models.Model):
         if hasattr(self.sudo().invoice_line_id, "start_date") and hasattr(
             self.sudo().invoice_line_id, "end_date"
         ):
+            force_date = (
+                self.sudo().invoice_line_id.company_id.cutoff_lock_date
+                or self.subcontractor_company_id.cutoff_lock_date
+            )
+            start_date = self.sudo().invoice_line_id.start_date
+            end_date = self.sudo().invoice_line_id.end_date
+            if force_date and start_date and start_date < force_date:
+                start_date = force_date
+            if force_date and end_date and end_date < force_date:
+                end_date = force_date
             line_vals.update(
                 {
-                    "start_date": self.sudo().invoice_line_id.start_date,
-                    "end_date": self.sudo().invoice_line_id.end_date,
+                    "start_date": start_date,
+                    "end_date": end_date,
                 }
             )
         return line_vals
