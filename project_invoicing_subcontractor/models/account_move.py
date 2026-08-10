@@ -340,18 +340,6 @@ class AccountMove(models.Model):
                             "consistent with the chosen product"
                         ).format(line_name=line.name)
                     )
-                project_partner = line.project_id.partner_id
-                if (
-                    project_partner.commercial_partner_id
-                    != line.move_id.partner_id.commercial_partner_id
-                ):
-                    raise exceptions.ValidationError(
-                        self.env._(
-                            "Line {line_name} is not valid, the project is not "
-                            "consistent with the chosen customer"
-                        ).format(line_name=line.name)
-                    )
-
         if self.is_supplier_prepaid and not all(
             [
                 line.product_id.prepaid_revenue_account_id
