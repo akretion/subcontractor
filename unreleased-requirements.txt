@@ -1,0 +1,4 @@
+# Odoo addons that are neither on PyPI nor on the OCA wheelhouse
+
+# https://github.com/akretion/ak-odoo-incubator (18.0 branch)
+odoo-addon-project_time_in_day @ git+https://github.com/akretion/ak-odoo-incubator@18.0#subdirectory=project_time_in_day
