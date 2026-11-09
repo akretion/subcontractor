@@ -495,6 +495,15 @@ class SubcontractorWork(models.Model):
                     "You can't edit a subcontractor already invoiced {ids}"
                 ).format(ids=already_invoiced.ids)
             )
+        # If this is too blocking (why would it be ?) we may replace this by a check
+        # on invalid work amount (a constrains or something) so nobody can increase
+        # the subconractor amounts after an invoice validation
+        if any(field in vals for field in ["employee_id", "quantity"]) and any(
+            inv.state != "draft" for inv in self.invoice_id
+        ):
+            raise UserError(
+                self.env._("You can't edit a subcontractor on a already posted invoice")
+            )
         return super().write(vals)
 
     def unlink(self):
