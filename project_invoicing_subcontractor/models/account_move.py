@@ -488,7 +488,7 @@ class AccountMove(models.Model):
             if not has_child_task and inv_line.task_id.parent_id:
                 has_child_task = True
             if len(timesheet_tasks) > 1 or (
-                len(timesheet_tasks) == 1 and timesheet_tasks.id != inv_line.task_id
+                len(timesheet_tasks) == 1 and timesheet_tasks.id != inv_line.task_id.id
             ):
                 res = True
                 break

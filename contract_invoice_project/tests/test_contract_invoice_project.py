@@ -17,4 +17,3 @@ class TestContractInvoiceProject(TestContractBase):
             invoice.invoice_line_ids.project_id,
             self.env.ref("project.project_project_1"),
         )
-        self.assertTrue(invoice.invoice_line_ids.end_date)

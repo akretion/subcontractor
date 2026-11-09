@@ -7,7 +7,7 @@ from datetime import date, timedelta
 
 from odoo.exceptions import UserError
 from odoo.fields import Command
-from odoo.tests.common import Form, tagged
+from odoo.tests import Form, tagged
 
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
 
