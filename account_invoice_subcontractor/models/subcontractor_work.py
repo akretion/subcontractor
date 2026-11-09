@@ -23,13 +23,16 @@ class SubcontractorWork(models.Model):
     _name = "subcontractor.work"
     _description = "subcontractor work"
     _order = "id desc"
+    _check_company_auto = True
 
     @api.model
     def _get_subcontractor_type(self):
         return self.env["hr.employee"]._get_subcontractor_type()
 
     name = fields.Char(related="invoice_line_id.name", readonly=True)
-    employee_id = fields.Many2one("hr.employee", string="Employee", required=True)
+    employee_id = fields.Many2one(
+        "hr.employee", string="Employee", required=True, check_company=True
+    )
     invoice_line_id = fields.Many2one(
         comodel_name="account.move.line",
         string="Invoice Line",
@@ -491,6 +494,15 @@ class SubcontractorWork(models.Model):
                 self.env._(
                     "You can't edit a subcontractor already invoiced {ids}"
                 ).format(ids=already_invoiced.ids)
+            )
+        # If this is too blocking (why would it be ?) we may replace this by a check
+        # on invalid work amount (a constrains or something) so nobody can increase
+        # the subconractor amounts after an invoice validation
+        if any(field in vals for field in ["employee_id", "quantity"]) and any(
+            inv.state != "draft" for inv in self.invoice_id
+        ):
+            raise UserError(
+                self.env._("You can't edit a subcontractor on a already posted invoice")
             )
         return super().write(vals)
 
