@@ -23,13 +23,16 @@ class SubcontractorWork(models.Model):
     _name = "subcontractor.work"
     _description = "subcontractor work"
     _order = "id desc"
+    _check_company_auto = True
 
     @api.model
     def _get_subcontractor_type(self):
         return self.env["hr.employee"]._get_subcontractor_type()
 
     name = fields.Char(related="invoice_line_id.name", readonly=True)
-    employee_id = fields.Many2one("hr.employee", string="Employee", required=True)
+    employee_id = fields.Many2one(
+        "hr.employee", string="Employee", required=True, check_company=True
+    )
     invoice_line_id = fields.Many2one(
         comodel_name="account.move.line",
         string="Invoice Line",
